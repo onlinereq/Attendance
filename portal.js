@@ -4488,39 +4488,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if (stInput) stInput.addEventListener('keydown', (e) => handleStaffKeyNav(e, 'st-name-input', 'st-list', stVerify));
 });
 
-// 3. Virtual Keyboard Visibility & Auto-Scroll (No Block on Smartphone/Tablet)
+// 3. Virtual Keyboard Visibility (No Block on Smartphone/Tablet)
+// Uses a debounce to prevent rapid-fire layout recalculations from causing jumping.
 if (window.visualViewport) {
+  let _kbTimer = null;
   const handleViewportChange = () => {
-    const vh = window.visualViewport.height;
-    const wh = window.innerHeight;
-    const diff = wh - vh;
-    if (diff > 120) {
-      document.body.classList.add('keyboard-open');
-      document.documentElement.style.setProperty('--kb-height', `${diff}px`);
-      const activeEl = document.activeElement;
-      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
-        setTimeout(() => {
-          activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-        }, 80);
+    if (_kbTimer) clearTimeout(_kbTimer);
+    _kbTimer = setTimeout(() => {
+      const vh = window.visualViewport.height;
+      const wh = window.innerHeight;
+      const diff = wh - vh;
+      if (diff > 120) {
+        document.body.classList.add('keyboard-open');
+        document.documentElement.style.setProperty('--kb-height', `${diff}px`);
+      } else {
+        document.body.classList.remove('keyboard-open');
+        document.documentElement.style.setProperty('--kb-height', '0px');
       }
-    } else {
-      document.body.classList.remove('keyboard-open');
-      document.documentElement.style.setProperty('--kb-height', '0px');
-    }
+    }, 80);
   };
   window.visualViewport.addEventListener('resize', handleViewportChange);
   window.visualViewport.addEventListener('scroll', handleViewportChange);
 }
-
-// Auto-scroll input into view on touch/focus so keyboard never blocks info
-window.addEventListener('focusin', (e) => {
-  const target = e.target;
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-    setTimeout(() => {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-    }, 150);
-  }
-}, true);
 
 // 4. Calendar Modal Keyboard Navigation (Laptop/PC & Built-in Keyboards)
 document.addEventListener('keydown', (e) => {
