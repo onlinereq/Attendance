@@ -3448,24 +3448,31 @@ html,body{overflow-x:hidden;max-width:100vw}
   input[type="text"],
   input[type="number"],
   input[type="password"],
-  input[type="date"],
-  select,
   textarea {
     font-size: 16px !important; /* Prevents auto-zoom in iOS Safari */
     -webkit-appearance: none;
     appearance: none;
     border-radius: var(--radius-sm, 10px);
   }
+  /* Date and select keep native appearance for native pickers on mobile */
+  input[type="date"] {
+    font-size: 16px !important;
+  }
 
   /* 6. Leave Request 3-Column Split -> Clean Single Column on Smartphone */
+  /* NOTE: do NOT use display:flex!important here — it would override the JS-controlled
+     inline style="display:none" on #req-form before the staff name is chosen. */
   .split-layout {
-    display: flex !important;
     flex-direction: column !important;
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
     padding: 10px 12px 24px 12px !important;
     gap: 12px !important;
+  }
+  /* Only apply flex display when the element is actually being shown (not hidden by JS) */
+  .split-layout:not([style*="display:none"]):not([style*="display: none"]) {
+    display: flex;
   }
 
   .split-left.req-sidebar,
