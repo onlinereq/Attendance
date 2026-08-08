@@ -3393,4 +3393,109 @@ html,body{overflow-x:hidden;max-width:100vw}
   background: var(--surface);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   SMARTPHONE UI OPTIMIZATION & REMOVE DARKEN TOUR ON MOBILE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* 1. Remove Darken screen / spotlight tour overlay completely on smartphones */
+  #guided-tour-overlay,
+  .tour-overlay,
+  .tour-svg,
+  .tour-trigger-btn {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  .tour-active-target {
+    position: static !important;
+    z-index: auto !important;
+  }
+
+  /* 2. Global Mobile Website Layout & Scrolling */
+  html, body {
+    overflow-x: hidden !important;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: contain;
+  }
+
+  /* 3. Mobile View Sizing */
+  .view {
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* 4. Topbar Touch-Friendly Header */
+  .topbar {
+    height: 52px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-top: env(safe-area-inset-top);
+  }
+  .topbar-brand span {
+    font-size: 14px;
+  }
+  .back-btn {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+  .theme-btn, .sync-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* 5. Touch Inputs & Form Controls */
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents auto-zoom in iOS Safari */
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: var(--radius-sm, 10px);
+  }
+
+  /* 6. Leave Request 3-Column Split -> Clean Single Column on Smartphone */
+  .split-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 10px 12px 24px 12px !important;
+    gap: 12px !important;
+  }
+
+  .split-left.req-sidebar,
+  .split-middle.req-form-content,
+  .split-right.req-form-content {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* 7. Action Row & Continue Button */
+  .req-action-row {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: linear-gradient(180deg, transparent 0%, var(--bg, #f5f0eb) 20%) !important;
+    padding: 12px 0 max(16px, env(safe-area-inset-bottom)) 0 !important;
+    z-index: 20 !important;
+  }
+  .req-action-row .btn-p {
+    min-height: 48px !important;
+    font-size: 15px !important;
+    box-shadow: 0 4px 16px rgba(192, 39, 45, 0.35) !important;
+  }
+
+  /* 8. Popups & Modals Optimized for Smartphones */
+  .modal-box, #review-modal > div, #cal-modal > div {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+    max-height: 88dvh !important;
+  }
+}
+
+
 
