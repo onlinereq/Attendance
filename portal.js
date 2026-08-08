@@ -4556,6 +4556,11 @@ let _tourActive = false;
 let _tourAdvancingTimeout = null;
 
 function startGuidedTour(force = false) {
+  if (window.innerWidth <= 768 || window.matchMedia('(max-width: 768px)').matches) {
+    // Darken screen guide is disabled on smartphone sizes
+    return;
+  }
+
   const reqForm = document.getElementById('req-form');
   const reqView = document.getElementById('v-request');
   if (!reqForm || reqForm.style.display === 'none' || !reqView || !reqView.classList.contains('active')) {
@@ -4607,6 +4612,10 @@ function _attachTourInteractiveListeners() {
 }
 
 function renderTourStep(idx) {
+  if (window.innerWidth <= 768) {
+    closeGuidedTour(false);
+    return;
+  }
   if (!_tourActive || idx < 0 || idx >= TOUR_STEPS.length) return;
   _currentTourStep = idx;
   const step = TOUR_STEPS[idx];
@@ -4714,6 +4723,10 @@ function closeGuidedTour(completed = false) {
 }
 
 function _tourOnResize() {
+  if (window.innerWidth <= 768) {
+    if (_tourActive) closeGuidedTour(false);
+    return;
+  }
   if (_tourActive) {
     renderTourStep(_currentTourStep);
   }
