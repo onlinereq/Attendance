@@ -3419,9 +3419,11 @@ html,body{overflow-x:hidden;max-width:100vw}
     overscroll-behavior-y: contain;
   }
 
-  /* 3. Mobile View Sizing */
+  /* 3. Mobile View Sizing — use svh (small viewport height) which is fixed and
+     does NOT change when the browser address bar shows/hides on scroll.
+     dvh changes dynamically and is the main cause of the "drunk" jumping layout. */
   .view {
-    min-height: 100dvh;
+    min-height: 100svh;
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
 
@@ -3482,13 +3484,14 @@ html,body{overflow-x:hidden;max-width:100vw}
     padding: 0 !important;
   }
 
-  /* 7. Action Row & Continue Button */
+  /* 7. Action Row & Continue Button — static position on mobile.
+     position:sticky causes content to jump up/down as the sticky threshold
+     is crossed while scrolling. Static is stable. */
   .req-action-row {
-    position: sticky !important;
-    bottom: 0 !important;
-    background: linear-gradient(180deg, transparent 0%, var(--bg, #f5f0eb) 20%) !important;
+    position: static !important;
+    background: transparent !important;
     padding: 12px 0 max(16px, env(safe-area-inset-bottom)) 0 !important;
-    z-index: 20 !important;
+    z-index: auto !important;
   }
   .req-action-row .btn-p {
     min-height: 48px !important;
@@ -3504,5 +3507,15 @@ html,body{overflow-x:hidden;max-width:100vw}
   }
 }
 
-
-
+/* ── Disable translateY animations on mobile to prevent layout-shift jumping ── */
+@media (max-width: 768px) {
+  @keyframes riseIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  /* Prevent any will-change or transform from reserving composite layers that
+     cause repaints and visible jumps during scroll on low-end phones */
+  .fi, .fi2, .fi3, .card, .gate, .split-layout > * {
+    will-change: auto;
+  }
+}
