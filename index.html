@@ -493,7 +493,92 @@
 
 <body>
 
+  <!-- ══════════════════ TELEGRAM BROWSER GUARD ══════════════════ -->
+  <!-- Detect Telegram in-app browser & show a redirect prompt.
+       Runs synchronously before any other content renders. -->
+  <div id="tg-browser-guard" style="display:none;position:fixed;inset:0;z-index:9999999;
+    background:#1a1a2e;align-items:center;justify-content:center;flex-direction:column;
+    padding:32px 24px;text-align:center;font-family:'Outfit',sans-serif">
+    <div style="width:72px;height:72px;border-radius:50%;background:rgba(192,39,45,.15);
+      border:2px solid rgba(192,39,45,.35);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#c0272d" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    </div>
+    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-.01em">
+      Open in Browser
+    </div>
+    <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:28px;max-width:320px">
+      This portal cannot run inside Telegram's built-in browser.<br>
+      Please open it in your <strong style="color:#fff">default browser app</strong> for full functionality.
+    </div>
+    <button id="tg-open-btn" onclick="tgGuardOpen()" style="background:#c0272d;color:#fff;
+      border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:600;
+      cursor:pointer;width:100%;max-width:300px;margin-bottom:12px;letter-spacing:.01em">
+      Open in Browser
+    </button>
+    <div style="font-size:11.5px;color:rgba(255,255,255,.35);margin-top:8px" id="tg-url-display"></div>
+  </div>
+
+  <script>
+  (function() {
+    var ua = navigator.userAgent || '';
+    var url = window.location.href;
+
+    // Detect Telegram in-app browser signals
+    var isTgAndroid = /TelegramAndroid/i.test(ua);
+    var isTgIOS = /Telegram/i.test(ua);
+    var isTgWebApp = !!(window.TelegramWebviewProxy || (window.Telegram && window.Telegram.WebApp));
+
+    if (isTgAndroid || isTgIOS || isTgWebApp) {
+      var guard = document.getElementById('tg-browser-guard');
+      if (guard) {
+        guard.style.display = 'flex';
+        var urlEl = document.getElementById('tg-url-display');
+        if (urlEl) urlEl.textContent = url;
+      }
+    }
+
+    window.tgGuardOpen = function() {
+      var url = window.location.href;
+      var ua = navigator.userAgent || '';
+      // Android: try Chrome intent first, then fallback
+      if (/Android/i.test(ua)) {
+        try {
+          window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end;';
+          return;
+        } catch(e) {}
+      }
+      // iOS: copy to clipboard + show instruction since Safari cannot be force-opened from WebView
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          var btn = document.getElementById('tg-open-btn');
+          if (btn) btn.textContent = 'Link Copied — Paste in Safari or Chrome';
+        }).catch(function() { tgGuardFallback(url); });
+      } else {
+        tgGuardFallback(url);
+      }
+    };
+
+    window.tgGuardFallback = function(url) {
+      var el = document.createElement('textarea');
+      el.value = url;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(el);
+      var btn = document.getElementById('tg-open-btn');
+      if (btn) btn.textContent = 'Link Copied — Paste in Your Browser';
+    };
+  })();
+  </script>
+
   <!-- ══════════════════════ LOADING SPLASH ══════════════════════ -->
+
   <div id="app-splash"
     style="position:fixed;inset:0;z-index:999999;background:var(--bg, #f5f0eb);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s ease;padding:0 24px">
     <div
