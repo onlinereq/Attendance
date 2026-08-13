@@ -1841,7 +1841,7 @@ function renderStNotices() {
 }
 function stPrint(i) { fillPrintRecord(stHistory[i], stStaff); }
 
-let hrUser = null, hrToken = null, allReqs = [], hrFilter_ = 'All';
+let hrUser = null, hrToken = null, allReqs = [], hrFilter_ = 'All', hrSelectedReqs = new Set();
 async function hrLogin() {
   const user = document.getElementById('hr-user').value.trim(), pass = document.getElementById('hr-pass').value;
   if (!user || !pass) { document.getElementById('hr-lerr').textContent = tx('hrLerr'); gateSetError('hr-login'); return; }
@@ -1949,7 +1949,6 @@ function hrFilter(f) {
 
 const _hrSaving = new Set();
 const _hrDeleting = new Set();
-let hrSelectedReqs = new Set();
 
 function hrUpdateBulkUI() {
   const bar = document.getElementById('hr-bulk-bar');
