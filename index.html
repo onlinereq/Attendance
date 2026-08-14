@@ -1060,18 +1060,16 @@
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg></div>
           <div class="gate-title">Staff Select</div>
-          <div class="gate-sub">Type or select your Name</div>
-          <div id="nt-gate-actions" style="display:flex;gap:10px;align-items:stretch;width:100%">
-            <div class="gate-input" style="position:relative;flex:1">
-              <input type="text" id="nt-name-input" placeholder="Type or select Full Name..." autocomplete="off"
-                oninput="onStaffInput('nt-name-input','nt-idfb','nt-list')"
-                onfocus="showStaffDropdown('nt-name-input','nt-list')" style="padding-right:90px">
-              <button class="btn btn-s" style="position:absolute;right:6px;top:6px;bottom:6px;padding:0 12px;height:auto" onclick="ntClearSelectedStaff()" id="nt-gate-change-btn">
-                <span id="nt-gate-change-txt">Change</span>
-              </button>
-              <div id="nt-list" class="staff-dd-list"></div>
+          <div class="gate-sub">Enter your Full Name</div>
+          <div id="nt-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off"
+                 style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
-            <button class="btn btn-p" style="padding:0 24px;margin:0;background:#00AEEF;box-shadow:none;min-height:48px;width:auto;white-space:nowrap" onclick="ntVerify()" id="nt-gate-btn">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+            </div>
+            <button class="btn btn-p" style="margin:0;background:#00AEEF;box-shadow:none;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="ntVerify()" id="nt-gate-btn">
               <div class="spinner" id="nt-gate-sp"></div><span>Continue</span>
             </button>
           </div>
@@ -1231,18 +1229,16 @@
               <circle cx="12" cy="7" r="4" />
             </svg></div>
           <div class="gate-title" id="rg-title">Staff Select</div>
-          <div class="gate-sub" id="rg-sub">Type or select your Full Name</div>
-          <div id="r-gate-actions" style="display:flex;gap:10px;align-items:stretch;width:100%">
-            <div class="gate-input" style="position:relative;flex:1">
-              <input type="text" id="r-name-input" placeholder="Type or select Full Name..." autocomplete="off"
-                oninput="onStaffInput('r-name-input','r-idfb','r-list')"
-                onfocus="showStaffDropdown('r-name-input','r-list')" style="padding-right:90px">
-              <button class="btn btn-s" style="position:absolute;right:6px;top:6px;bottom:6px;padding:0 12px;height:auto" onclick="rClearSelectedStaff()" id="r-gate-change-btn">
-                <span id="r-gate-change-txt">Change</span>
-              </button>
-              <div id="r-list" class="staff-dd-list"></div>
+          <div class="gate-sub" id="rg-sub">Enter your Full Name</div>
+          <div id="r-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off"
+                 style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
-            <button class="btn btn-p" style="padding:0 24px;margin:0;min-height:48px;width:auto;white-space:nowrap" onclick="rVerify()" id="r-gate-btn">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+            </div>
+            <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="rVerify()" id="r-gate-btn">
               <div class="spinner" id="r-gate-sp"></div><span id="r-gate-txt">Continue</span>
             </button>
           </div>
@@ -1733,18 +1729,16 @@
               <line x1="6" y1="20" x2="6" y2="14" />
             </svg></div>
           <div class="gate-title" id="stg-title">View My Leave Status</div>
-          <div class="gate-sub" id="stg-sub">Type or select your Full Name</div>
-          <div id="st-gate-actions" style="display:flex;gap:10px;align-items:stretch;width:100%">
-            <div class="gate-input" style="position:relative;flex:1">
-              <input type="text" id="st-name-input" placeholder="Type or select Full Name..." autocomplete="off"
-                oninput="onStaffInput('st-name-input','st-idfb','st-list')"
-                onfocus="showStaffDropdown('st-name-input','st-list')" style="padding-right:90px">
-              <button class="btn btn-s" style="position:absolute;right:6px;top:6px;bottom:6px;padding:0 12px;height:auto" onclick="stClearSelectedStaff()" id="st-gate-change-btn">
-                <span id="st-gate-change-txt">Change</span>
-              </button>
-              <div id="st-list" class="staff-dd-list"></div>
+          <div class="gate-sub" id="stg-sub">Enter your Full Name</div>
+          <div id="st-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off"
+                 style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
-            <button class="btn btn-p" style="padding:0 24px;margin:0;min-height:48px;width:auto;white-space:nowrap" onclick="stVerify()" id="st-gate-btn">
+            <div class="gate-input" style="position:relative;width:100%">
+              <input type="text" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+            </div>
+            <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="stVerify()" id="st-gate-btn">
               <div class="spinner" id="st-gate-sp"></div><span id="st-gate-txt">View My Leave</span>
             </button>
           </div>
