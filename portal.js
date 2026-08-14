@@ -509,50 +509,20 @@ async function loadStaffCache() {
 }
 
 function saveUserDeviceMemory(staff) {
-  if (!staff) return;
-  try {
-    localStorage.setItem('saved_staff_user', JSON.stringify({
-      empId: staff.empId || '',
-      name: staff.name || '',
-      nameKh: staff.nameKh || '',
-      gender: staff.gender || '',
-      position: staff.position || '',
-      positionKh: staff.positionKh || '',
-      annualDays: staff.annualDays || 18,
-      usedDays: staff.usedDays || 0,
-      location: staff.location || 'Phnom Penh'
-    }));
-  } catch (e) { }
+  // Disabled for confidentiality
 }
 
 function getSavedUserDeviceMemory() {
-  try {
-    const s = localStorage.getItem('saved_staff_user');
-    return s ? JSON.parse(s) : null;
-  } catch (e) { return null; }
+  // Disabled for confidentiality
+  return null;
 }
 
 async function showStaffDropdown(inputId, listId) {
-  const staffList = await loadStaffCache();
-  if (!staffList || !staffList.length) return;
-  onStaffInput(inputId, '', listId);
+  return;
 }
 
 async function onStaffInput(inputId, fbId, listId) {
-  if (fbId) {
-    const fb = document.getElementById(fbId);
-    if (fb) fb.textContent = '';
-  }
-  const inputEl = document.getElementById(inputId);
-  if (inputEl && inputEl.dataset.selectedStaff) {
-    delete inputEl.dataset.selectedStaff;
-    updateStaffGateActions(inputId);
-  }
-  const listEl = document.getElementById(listId);
-  if (!inputEl || !listEl) return;
-
-  const query = inputEl.value.trim().toLowerCase();
-  const staffList = await loadStaffCache();
+  return;
 
   const filtered = staffList.filter(s => {
     if (!query) return true;
@@ -586,12 +556,14 @@ function updateStaffGateActions(inputId) {
 
 function rClearSelectedStaff() {
   const inputEl = document.getElementById('r-name-input');
+  const idEl = document.getElementById('r-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('r-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('r-name-input');
@@ -599,12 +571,14 @@ function rClearSelectedStaff() {
 
 function ntClearSelectedStaff() {
   const inputEl = document.getElementById('nt-name-input');
+  const idEl = document.getElementById('nt-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('nt-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('nt-name-input');
@@ -612,12 +586,14 @@ function ntClearSelectedStaff() {
 
 function stClearSelectedStaff() {
   const inputEl = document.getElementById('st-name-input');
+  const idEl = document.getElementById('st-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('st-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('st-name-input');
@@ -628,9 +604,11 @@ function selectStaffItem(inputId, listId, encodedStaff) {
     const staff = JSON.parse(decodeURIComponent(encodedStaff));
     const inputEl = document.getElementById(inputId);
     if (inputEl) {
-      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name) + ' (' + staff.empId + ')';
+      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name);
       inputEl.dataset.selectedStaff = JSON.stringify(staff);
     }
+    const idInputEl = document.getElementById(inputId.replace('name', 'id'));
+    if (idInputEl) idInputEl.value = staff.empId || '';
   } catch (e) { }
   const listEl = document.getElementById(listId);
   if (listEl) listEl.style.display = 'none';
@@ -646,13 +624,17 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   const saved = getSavedUserDeviceMemory();
   if (saved) {
-    const disp = (saved.name || '') + ' (' + saved.empId + ')';
+    const disp = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
     ['r-name-input', 'nt-name-input', 'st-name-input'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.value) {
         el.value = disp;
         el.dataset.selectedStaff = JSON.stringify(saved);
         updateStaffGateActions(id);
+      }
+      const idInputEl = document.getElementById(id.replace('name', 'id'));
+      if (idInputEl && !idInputEl.value) {
+        idInputEl.value = saved.empId || '';
       }
     });
   }
@@ -667,14 +649,17 @@ function rReset() {
   if (_rs) _rs.style.display = 'none';
   document.querySelectorAll('input[name=halfday-first][value="full"],input[name=halfday-last][value="full"],input[name=halfday-single][value="full"]').forEach(r => r.checked = true);
   const _rni = document.getElementById('r-name-input');
+  const _rii = document.getElementById('r-id-input');
   if (_rni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _rni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _rni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _rni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_rii) _rii.value = saved.empId || '';
     } else {
       _rni.value = '';
       delete _rni.dataset.selectedStaff;
+      if (_rii) _rii.value = '';
     }
   }
   updateStaffGateActions('r-name-input');
@@ -685,52 +670,47 @@ function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
 function setRStep(n) { for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('r-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('r-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('r-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('r-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('r-gate-btn');
+  const sp = document.getElementById('r-gate-sp');
+  const txt = document.getElementById('r-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  const staffList = await loadStaffCache();
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
 
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-
-  let fullStaff = null;
-  if (targetStaff && targetStaff.empId) {
-    const tid = String(targetStaff.empId).trim().toUpperCase();
-    fullStaff = staffList.find(s => String(s.empId).trim().toUpperCase() === tid || String(s.empId).replace(/^0+/, '') === tid.replace(/^0+/, ''));
-  }
-  if (!fullStaff && targetStaff && (targetStaff.name || targetStaff.nameKh)) {
-    const n = String(targetStaff.name || '').trim().toLowerCase();
-    const nk = String(targetStaff.nameKh || '').trim().toLowerCase();
-    fullStaff = staffList.find(s => (s.name && String(s.name).trim().toLowerCase() === n) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === nk));
-  }
-
-  if (!fullStaff) {
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    fullStaff = staffList.find(s => {
-      const idMatch = targetId && (String(s.empId).trim().toUpperCase() === targetId.toUpperCase() || String(s.empId).replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name && String(s.name).trim().toLowerCase() === cleanName) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === cleanName);
-      return idMatch || nameMatch;
-    });
-  }
-
-  if (fullStaff) {
-    targetStaff = Object.assign({}, fullStaff);
-  } else {
-    try {
-      const res = await apiPost('getStaff', { empId: rawInput, query: rawInput });
-      if (res && res.result === 'success' && res.staff) {
-        targetStaff = res.staff;
-      }
-    } catch (e) { }
-  }
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('r-gate'); return;
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('r-gate'); return;
   }
 
   if (!targetStaff.gender) targetStaff.gender = 'Male';
@@ -1513,14 +1493,17 @@ function stReset() {
   if (gate) gate.style.display = 'block';
   if (dash) dash.style.display = 'none';
   const _sni = document.getElementById('st-name-input');
+  const _sii = document.getElementById('st-id-input');
   if (_sni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _sni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _sni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _sni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_sii) _sii.value = saved.empId || '';
     } else {
       _sni.value = '';
       delete _sni.dataset.selectedStaff;
+      if (_sii) _sii.value = '';
     }
   }
   updateStaffGateActions('st-name-input');
@@ -1683,52 +1666,47 @@ function gateSetError(gateId) {
 }
 async function stVerify() {
   const inputEl = document.getElementById('st-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('st-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('st-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('st-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('st-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('st-gate-btn');
+  const sp = document.getElementById('st-gate-sp');
+  const txt = document.getElementById('st-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  const staffList = await loadStaffCache();
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
 
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-
-  let fullStaff = null;
-  if (targetStaff && targetStaff.empId) {
-    const tid = String(targetStaff.empId).trim().toUpperCase();
-    fullStaff = staffList.find(s => String(s.empId).trim().toUpperCase() === tid || String(s.empId).replace(/^0+/, '') === tid.replace(/^0+/, ''));
-  }
-  if (!fullStaff && targetStaff && (targetStaff.name || targetStaff.nameKh)) {
-    const n = String(targetStaff.name || '').trim().toLowerCase();
-    const nk = String(targetStaff.nameKh || '').trim().toLowerCase();
-    fullStaff = staffList.find(s => (s.name && String(s.name).trim().toLowerCase() === n) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === nk));
-  }
-
-  if (!fullStaff) {
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    fullStaff = staffList.find(s => {
-      const idMatch = targetId && (String(s.empId).trim().toUpperCase() === targetId.toUpperCase() || String(s.empId).replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name && String(s.name).trim().toLowerCase() === cleanName) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === cleanName);
-      return idMatch || nameMatch;
-    });
-  }
-
-  if (fullStaff) {
-    targetStaff = Object.assign({}, fullStaff);
-  } else {
-    try {
-      const res = await apiPost('getStaff', { empId: rawInput, query: rawInput });
-      if (res && res.result === 'success' && res.staff) {
-        targetStaff = res.staff;
-      }
-    } catch (e) { }
-  }
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('st-gate'); return;
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('st-gate'); return;
   }
 
   if (!targetStaff.gender) targetStaff.gender = 'Male';
@@ -2814,14 +2792,17 @@ function ntReset() {
   if (ntForm) ntForm.style.display = 'none';
   if (ntSuccess) ntSuccess.style.display = 'none';
   const _nni = document.getElementById('nt-name-input');
+  const _nii = document.getElementById('nt-id-input');
   if (_nni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _nni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _nni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _nni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_nii) _nii.value = saved.empId || '';
     } else {
       _nni.value = '';
       delete _nni.dataset.selectedStaff;
+      if (_nii) _nii.value = '';
     }
   }
   updateStaffGateActions('nt-name-input');
@@ -3015,28 +2996,47 @@ function ntNumpadClose() {
 }
 async function ntVerify() {
   const inputEl = document.getElementById('nt-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('nt-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('nt-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('nt-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('nt-gate-btn');
+  const sp = document.getElementById('nt-gate-sp');
+  const txt = document.getElementById('nt-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-  if (!targetStaff) {
-    const staffList = await loadStaffCache();
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    targetStaff = staffList.find(s => {
-      const idMatch = targetId && (s.empId === targetId || s.empId.replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name || '').toLowerCase() === cleanName || (s.nameKh || '').toLowerCase() === cleanName;
-      return idMatch || nameMatch;
-    });
-  }
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
 
-  if (!targetStaff) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return;
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
+
+  if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return;
   }
 
   ntStaff = targetStaff;
