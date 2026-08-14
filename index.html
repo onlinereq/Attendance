@@ -1063,14 +1063,14 @@
           <div class="gate-sub">Enter your Full Name</div>
           <div id="nt-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off"
+              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') ntVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') ntVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;background:#00AEEF;box-shadow:none;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="ntVerify()" id="nt-gate-btn">
-              <div class="spinner" id="nt-gate-sp"></div><span>Continue</span>
+              <div class="spinner" id="nt-gate-sp"></div><span id="nt-gate-txt">Continue</span>
             </button>
           </div>
           <div class="idfb" id="nt-idfb"></div>
@@ -1232,11 +1232,11 @@
           <div class="gate-sub" id="rg-sub">Enter your Full Name</div>
           <div id="r-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off"
+              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') rVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') rVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="rVerify()" id="r-gate-btn">
               <div class="spinner" id="r-gate-sp"></div><span id="r-gate-txt">Continue</span>
@@ -1732,11 +1732,11 @@
           <div class="gate-sub" id="stg-sub">Enter your Full Name</div>
           <div id="st-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off"
+              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') stVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="off" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') stVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="stVerify()" id="st-gate-btn">
               <div class="spinner" id="st-gate-sp"></div><span id="st-gate-txt">View My Leave</span>
@@ -1882,9 +1882,9 @@
           <div class="ltitle" id="hr-lt">HR Access</div>
           <div class="lsub" id="hr-ls">Authorised personnel only</div>
           <div class="lform">
-            <div class="field"><label id="hr-lu">Username</label><input type="text" id="hr-user" autocomplete="off"
+            <div class="field"><label id="hr-lu">Username</label><input type="text" id="hr-user" autocomplete="new-password"
                 onkeydown="if(event.key==='Enter')hrLogin()"></div>
-            <div class="field"><label id="hr-lp">Password</label><input type="password" id="hr-pass"
+            <div class="field"><label id="hr-lp">Password</label><input type="password" id="hr-pass" autocomplete="new-password"
                 onkeydown="if(event.key==='Enter')hrLogin()"></div>
             <div class="lerr" id="hr-lerr"></div>
             <button class="btn btn-p" onclick="hrLogin()" id="hr-lbtn">
