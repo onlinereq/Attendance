@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none
@@ -5809,9 +5811,10 @@ body {
 @media (max-width: 768px) {
 
   body {
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-text-size-adjust: 100%;
-    overscroll-behavior: none;
+    overscroll-behavior: auto;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -5822,8 +5825,9 @@ body {
   .view.active {
     height: 100dvh !important;
     min-height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   .view-body {
@@ -6757,6 +6761,7 @@ body {
   #v-home .topbar {
     display: none !important;
   }
+
   #v-home {
     justify-content: center !important;
     padding-top: env(safe-area-inset-top, 0px) !important;
@@ -6765,6 +6770,7 @@ body {
     padding-right: env(safe-area-inset-right, 0px) !important;
     box-sizing: border-box;
   }
+
   .home-cards {
     grid-template-columns: 1fr !important;
   }
