@@ -87,14 +87,14 @@ body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--txt);
-  min-height: 100vh;
+  min-height: var(--tg-viewport-height, 100vh);
   transition: background .3s, color .3s;
   -webkit-font-smoothing: antialiased;
 }
 
 .view {
   display: none;
-  min-height: 100vh;
+  min-height: var(--tg-viewport-height, 100vh);
   position: relative
 }
 
@@ -104,7 +104,7 @@ body {
 
 #v-request.active {
   display: flex !important;
-  height: 100vh;
+  height: var(--tg-viewport-height, 100vh);
   overflow: hidden
 }
 
@@ -306,7 +306,7 @@ body {
 #v-request {
   display: none;
   flex-direction: column;
-  height: 100vh;
+  height: var(--tg-viewport-height, 100vh);
   overflow: hidden
 }
 
@@ -330,7 +330,7 @@ body {
 }
 
 #v-home .wrap {
-  min-height: 100vh;
+  min-height: var(--tg-viewport-height, 100vh);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2379,7 +2379,7 @@ tbody td {
 #v-hr.active {
   display: flex !important;
   flex-direction: column;
-  height: 100vh;
+  height: var(--tg-viewport-height, 100vh);
   overflow: hidden;
 }
 
@@ -2405,8 +2405,8 @@ tbody td {
   gap: 16px;
   flex: 1;
   min-height: 0;
-  height: calc(100dvh - 54px);
-  max-height: calc(100dvh - 54px);
+  height: calc(var(--tg-viewport-height, var(--tg-viewport-height, 100vh)) - 54px);
+  max-height: calc(var(--tg-viewport-height, var(--tg-viewport-height, 100vh)) - 54px);
   padding: 14px;
   overflow: hidden;
   box-sizing: border-box;
@@ -3075,7 +3075,7 @@ tbody td {
 @media(max-width:860px) {
   #v-request.active {
     height: auto !important;
-    min-height: 100dvh;
+    min-height: var(--tg-viewport-height, var(--tg-viewport-height, 100vh));
     overflow-y: auto !important;
   }
 
@@ -4891,7 +4891,7 @@ body {
   .cal-modal-box {
     max-width: none !important;
     width: 100vw !important;
-    min-height: 100vh !important;
+    min-height: var(--tg-viewport-height, 100vh) !important;
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
@@ -5824,8 +5824,8 @@ body {
   }
 
   .view.active {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
+    height: var(--tg-viewport-height, var(--tg-viewport-height, 100vh)) !important;
+    min-height: var(--tg-viewport-height, var(--tg-viewport-height, 100vh)) !important;
     max-height: none !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -5896,19 +5896,7 @@ body {
     border-radius: 8px;
   }
 
-  #guided-tour-overlay,
-  .tour-overlay,
-  .tour-pulse-ring {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
 
-  .tour-active-target {
-    position: static !important;
-    z-index: auto !important;
-  }
 
   #v-home .wrap {
     padding: 16px 14px max(28px, env(safe-area-inset-bottom));
@@ -6777,3 +6765,7 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+.back-btn { display: none !important; }
+
+#hr-login { display: none !important; }
