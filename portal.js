@@ -1,5 +1,32 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYjeoCtNv3G9UScOl0AW2H3KZazvFF02Yxd8BX7qw6QJt16g_SRYZJYM1aZU-qvqOt/exec';
 
+// --- MOBILE APP INITIALIZATION ---
+document.addEventListener("touchstart", function() {}, {passive: true}); // Enable iOS :active pseudo-class on buttons
+
+if (window.Telegram && window.Telegram.WebApp) {
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  tg.enableClosingConfirmation();
+  tg.disableVerticalSwipes();
+  
+  function updateTgViewport() {
+    document.documentElement.style.setProperty('--tg-viewport-height', tg.viewportStableHeight + 'px');
+  }
+  updateTgViewport();
+  tg.onEvent('viewportChanged', updateTgViewport);
+  
+  tg.BackButton.onClick(() => {
+    // If in request flow and not on step 1, go to previous step.
+    const form = document.getElementById('req-form');
+    if (form && form.style.display !== 'none' && form.getAttribute('data-mobile-step') && parseInt(form.getAttribute('data-mobile-step')) > 1) {
+      if (typeof prevMobileStep === 'function') prevMobileStep();
+    } else {
+      goTo('home');
+    }
+  });
+}
+
 // ── GLOBAL ERROR TRACKING ────────────────────────
 window.addEventListener('error', function (e) {
   let context = '';
@@ -36,45 +63,36 @@ window.addEventListener('unhandledrejection', function (e) {
     })
   }).catch(() => { });
 });// ── THEME ───────────────────────────────────────
-let _dark = localStorage.getItem('theme') === 'dark';
+let _dark = false;
 function applyTheme() {
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) {
+    _dark = window.Telegram.WebApp.colorScheme === 'dark';
+    window.Telegram.WebApp.setHeaderColor('bg_color');
+    window.Telegram.WebApp.setBackgroundColor('bg_color');
+  } else {
+    _dark = localStorage.getItem('theme') === 'dark';
+  }
   document.documentElement.setAttribute('data-theme', _dark ? 'dark' : 'light');
   document.querySelectorAll('.theme-btn').forEach(b => b.innerHTML = _dark ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>');
 }
 function toggleTheme() {
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) return; // Managed by Telegram
   _dark = !_dark;
   localStorage.setItem('theme', _dark ? 'dark' : 'light');
   applyTheme();
 }
+if (window.Telegram && window.Telegram.WebApp) {
+  window.Telegram.WebApp.onEvent('themeChanged', applyTheme);
+}
 applyTheme();
 
-// ── TELEGRAM WEB APP INIT ───────────────────────
-let tg = null;
-let tgUser = null;
-if (window.Telegram && window.Telegram.WebApp) {
-  tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
-  if (tg.themeParams && tg.themeParams.bg_color) {
-    document.body.style.backgroundColor = tg.themeParams.bg_color;
-  }
-  if (tg.themeParams && tg.themeParams.text_color) {
-    document.body.style.color = tg.themeParams.text_color;
-  }
-  tgUser = tg.initDataUnsafe?.user;
-  // TODO: Flag for follow-up - tgUser should not be trusted for anything sensitive without server-side verification if app handles logins or payments.
-}
-
 // ── DEEP LINK ─────────────────────────────────────────────────────
-// When HR taps the Telegram link (?req=REQ-XXXXXXXX), auto-open HR view
 let _deepReq = new URLSearchParams(window.location.search).get('req') || '';
 if (_deepReq) {
   hrFilter_ = 'All';
   document.addEventListener('DOMContentLoaded', function () {
-    // Navigate to HR section — login gate will show by default
     document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
     const hv = document.getElementById('v-hr'); if (hv) hv.classList.add('active');
-    // Show a subtle hint so HR knows why they're here
     const lerr = document.getElementById('hr-lerr');
     if (lerr) lerr.textContent = 'Log in to review request ' + _deepReq;
   });
@@ -94,11 +112,14 @@ if (_deepReq) {
     }
   } catch (e) { sessionStorage.removeItem('hr_sess'); }
 })();
-// Begin silent background fetch immediately after session restore
 setTimeout(hrPreload, 100);
 
 // ── NAV ─────────────────────────────────────────
 function goTo(v) {
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.BackButton) {
+    if (v === 'home') window.Telegram.WebApp.BackButton.hide();
+    else window.Telegram.WebApp.BackButton.show();
+  }
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
   const targetView = document.getElementById('v-' + v);
   if (targetView) targetView.classList.add('active');
@@ -109,6 +130,9 @@ function goTo(v) {
     if (v === 'notice') ntReset();
     if (v === 'home') loadHomeLeaveBoard();
     if (v === 'hr') {
+      const tgUser = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) ? window.Telegram.WebApp.initDataUnsafe.user : null;
+      hrUser = hrUser || (tgUser ? tgUser.first_name : 'HR');
+      hrToken = hrToken || 'telegram-auth';
       if (hrUser) {
         const hrLogin = document.getElementById('hr-login');
         const hrDash = document.getElementById('hr-dash');
@@ -161,7 +185,6 @@ function applyLang() {
   s('h-nt-t', 'hNtT'); s('h-nt-d', 'hNtD'); s('nt-top-t', 'hNtT'); s('nt-st-t', 'ntStT'); s('hr-nt-st-t', 'ntStT');
   s('nt-gate-change-txt', 'btnChange'); s('r-gate-change-txt', 'btnChange'); s('st-gate-change-txt', 'btnChange');
   s('r-back', 'back'); s('r-title', 'reqLeaveTitle'); s('rg-title', 'enterEmpIdTitle'); s('rg-sub', 'rgSub'); s('r-gate-txt', 'rgBtn');
-  s('tour-btn-lbl', 'tourGuide');
   s('rsl1', 'rsl1'); s('rsl2', 'rsl2'); s('rsl3', 'rsl3'); s('rsl4', 'rsl4');
   s('rsh1', 'rsh1'); s('rsh2', 'rsh2'); s('rsh3', 'rsh3');
   s('rl-eid', 'lblEmpId'); s('rl-name', 'lblFullName'); s('rl-gen', 'lblGender'); s('rl-pos', 'lblPosition');
@@ -213,11 +236,8 @@ async function syncAll() {
   btn.classList.add('spinning');
   btn.disabled = true;
   try {
-    // Ping server to verify connectivity
     await apiGet('ping');
-    // Refresh HR data if logged in
     if (hrUser) await hrLoadData();
-    // Refresh status if viewing
     if (stStaff) {
       const res = await apiPost('getHistory', { empId: stStaff.empId, fullName: stStaff.name });
       if (res.result === 'success') { stHistory = res.history || []; renderStDash(); }
@@ -229,7 +249,12 @@ async function syncAll() {
 
 // ── TOAST ────────────────────────────────────────
 let _tt;
-function toast(msg, type = '') { const el = document.getElementById('toast'); requestAnimationFrame(() => { el.textContent = msg; el.className = 'show ' + type; }); clearTimeout(_tt); _tt = setTimeout(() => requestAnimationFrame(() => { el.className = ''; }), 3400); }
+function toast(msg, type = '') { 
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+    if (type === 'err') window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    else window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  }
+  const el = document.getElementById('toast'); requestAnimationFrame(() => { el.textContent = msg; el.className = 'show ' + type; }); clearTimeout(_tt); _tt = setTimeout(() => requestAnimationFrame(() => { el.className = ''; }), 3400); }
 function clearFieldErr() { document.querySelectorAll('.field-err').forEach(el => el.classList.remove('field-err')); const g = document.getElementById('ltype-grid'); if (g) g.classList.remove('tgrid-err'); }
 
 // ── HOLIDAYS & UTILS ─────────────────────────────────────
@@ -379,12 +404,23 @@ function hdLabel(v) { return v === 'morning' ? 'Morning' : v === 'afternoon' ? '
 
 function getActualDays(from, to) {
   if (!from || !to || from > to) return 0;
-  const wd = workDays(from, to);
+
+  const ltypeRadio = document.querySelector('input[name=ltype]:checked');
+  const spTypeEl = document.getElementById('rf-special-type');
+  const isMaternity = (ltypeRadio && ltypeRadio.value === 'Special Leave' && spTypeEl && spTypeEl.value === 'Maternity Leave');
+
+  let wd = workDays(from, to);
+  if (isMaternity) {
+    const dFrom = new Date(from + 'T00:00:00');
+    const dTo = new Date(to + 'T00:00:00');
+    wd = Math.round((dTo - dFrom) / (1000 * 60 * 60 * 24)) + 1;
+  }
+
   if (wd === 0) return 0;
   const single = from === to;
   const fv = hdGetFirst(), lv = single ? fv : hdGetLast();
   let d = wd;
-  const fNonWork = isNonWorkingDay(from), lNonWork = isNonWorkingDay(to);
+  const fNonWork = !isMaternity && isNonWorkingDay(from), lNonWork = !isMaternity && isNonWorkingDay(to);
   if (fv !== 'full' && !fNonWork) d -= 0.5;
   if (!single && lv !== 'full' && !lNonWork) d -= 0.5;
   return Math.max(0, d);
@@ -403,15 +439,12 @@ function getHalfNote(from, to) {
 function fmtDate(iso) { if (!iso) return '—'; const d = iso.includes('T') || iso.includes('Z') ? new Date(iso) : new Date(iso + 'T00:00:00'); return isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function fmtTimeVal(v) {
   if (!v) return '—';
-  // already HH:MM or HH:MM:SS
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(String(v).trim())) { const p = String(v).trim().split(':'); return p[0].padStart(2, '0') + ':' + p[1]; }
   const d = new Date(v);
   if (isNaN(d.getTime())) return String(v);
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
-  // GAS time-only values land on Dec 30 1899 — show just HH:MM
   if (d.getFullYear() === 1899) return hh + ':' + mm;
-  // real datetime — show DD-MMM-YYYY, HH:MM
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + hh + ':' + mm;
 }
 function todayISO() { return new Date().toISOString().split('T')[0]; }
@@ -428,7 +461,6 @@ function normalizeId(val) {
 }
 function isMock() { return !SCRIPT_URL.startsWith('https://script.google.com'); }
 function setReqBar(step) { }
-
 
 // ── DEVICE FINGERPRINT ──────────────────────────────────────
 function getFingerprint() { const nav = window.navigator, scr = window.screen; const raw = [nav.userAgent, nav.language, scr.width + 'x' + scr.height, scr.colorDepth, nav.hardwareConcurrency, nav.platform].join('|'); let h = 0; for (let i = 0; i < raw.length; i++) { h = Math.imul(31, h) + raw.charCodeAt(i) | 0; } return Math.abs(h).toString(36); }
@@ -467,14 +499,14 @@ async function apiPost(action, payload = {}) {
   if (isMock()) return { result: 'success' };
   const signed = await signRequest(action);
   const fp = getFingerprint();
-  const body = JSON.stringify({ action, ...payload, ...signed, fp });
+  const tgData = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp.initData : '';
+  const body = JSON.stringify({ action, ...payload, ...signed, fp, tgData });
   const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
   const data = await res.json();
   if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
   return data;
 }
 
-// Authenticated HR helper — auto-attaches token
 async function apiHR(action, data = {}) {
   return apiPost(action, { ...data, token: hrToken || '' });
 }
@@ -518,50 +550,20 @@ async function loadStaffCache() {
 }
 
 function saveUserDeviceMemory(staff) {
-  if (!staff) return;
-  try {
-    localStorage.setItem('saved_staff_user', JSON.stringify({
-      empId: staff.empId || '',
-      name: staff.name || '',
-      nameKh: staff.nameKh || '',
-      gender: staff.gender || '',
-      position: staff.position || '',
-      positionKh: staff.positionKh || '',
-      annualDays: staff.annualDays || 18,
-      usedDays: staff.usedDays || 0,
-      location: staff.location || 'Phnom Penh'
-    }));
-  } catch (e) { }
+  // Disabled for confidentiality
 }
 
 function getSavedUserDeviceMemory() {
-  try {
-    const s = localStorage.getItem('saved_staff_user');
-    return s ? JSON.parse(s) : null;
-  } catch (e) { return null; }
+  // Disabled for confidentiality
+  return null;
 }
 
 async function showStaffDropdown(inputId, listId) {
-  const staffList = await loadStaffCache();
-  if (!staffList || !staffList.length) return;
-  onStaffInput(inputId, '', listId);
+  return;
 }
 
 async function onStaffInput(inputId, fbId, listId) {
-  if (fbId) {
-    const fb = document.getElementById(fbId);
-    if (fb) fb.textContent = '';
-  }
-  const inputEl = document.getElementById(inputId);
-  if (inputEl && inputEl.dataset.selectedStaff) {
-    delete inputEl.dataset.selectedStaff;
-    updateStaffGateActions(inputId);
-  }
-  const listEl = document.getElementById(listId);
-  if (!inputEl || !listEl) return;
-
-  const query = inputEl.value.trim().toLowerCase();
-  const staffList = await loadStaffCache();
+  return;
 
   const filtered = staffList.filter(s => {
     if (!query) return true;
@@ -589,22 +591,20 @@ async function onStaffInput(inputId, fbId, listId) {
 function updateStaffGateActions(inputId) {
   const inputEl = document.getElementById(inputId);
   if (inputEl) {
-    if (inputEl.dataset.selectedStaff) {
-      inputEl.readOnly = true;
-    } else {
-      inputEl.readOnly = false;
-    }
+    inputEl.readOnly = false;
   }
 }
 
 function rClearSelectedStaff() {
   const inputEl = document.getElementById('r-name-input');
+  const idEl = document.getElementById('r-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('r-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('r-name-input');
@@ -612,12 +612,14 @@ function rClearSelectedStaff() {
 
 function ntClearSelectedStaff() {
   const inputEl = document.getElementById('nt-name-input');
+  const idEl = document.getElementById('nt-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('nt-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('nt-name-input');
@@ -625,12 +627,14 @@ function ntClearSelectedStaff() {
 
 function stClearSelectedStaff() {
   const inputEl = document.getElementById('st-name-input');
+  const idEl = document.getElementById('st-id-input');
   if (inputEl) {
     inputEl.value = '';
     delete inputEl.dataset.selectedStaff;
     inputEl.readOnly = false;
     inputEl.focus();
   }
+  if (idEl) idEl.value = '';
   const fb = document.getElementById('st-idfb');
   if (fb) fb.textContent = '';
   updateStaffGateActions('st-name-input');
@@ -641,9 +645,11 @@ function selectStaffItem(inputId, listId, encodedStaff) {
     const staff = JSON.parse(decodeURIComponent(encodedStaff));
     const inputEl = document.getElementById(inputId);
     if (inputEl) {
-      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name) + ' (' + staff.empId + ')';
+      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name);
       inputEl.dataset.selectedStaff = JSON.stringify(staff);
     }
+    const idInputEl = document.getElementById(inputId.replace('name', 'id'));
+    if (idInputEl) idInputEl.value = staff.empId || '';
   } catch (e) { }
   const listEl = document.getElementById(listId);
   if (listEl) listEl.style.display = 'none';
@@ -656,11 +662,10 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Auto-fill saved user memory on page load
 document.addEventListener('DOMContentLoaded', () => {
   const saved = getSavedUserDeviceMemory();
   if (saved) {
-    const disp = (saved.name || '') + ' (' + saved.empId + ')';
+    const disp = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
     ['r-name-input', 'nt-name-input', 'st-name-input'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.value) {
@@ -668,11 +673,14 @@ document.addEventListener('DOMContentLoaded', () => {
         el.dataset.selectedStaff = JSON.stringify(saved);
         updateStaffGateActions(id);
       }
+      const idInputEl = document.getElementById(id.replace('name', 'id'));
+      if (idInputEl && !idInputEl.value) {
+        idInputEl.value = saved.empId || '';
+      }
     });
   }
 });
 
-// ══════════════════ REQUEST ══════════════════════
 let rStaff = null;
 function rReset() {
   rStaff = null;
@@ -682,14 +690,17 @@ function rReset() {
   if (_rs) _rs.style.display = 'none';
   document.querySelectorAll('input[name=halfday-first][value="full"],input[name=halfday-last][value="full"],input[name=halfday-single][value="full"]').forEach(r => r.checked = true);
   const _rni = document.getElementById('r-name-input');
+  const _rii = document.getElementById('r-id-input');
   if (_rni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _rni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _rni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _rni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_rii) _rii.value = saved.empId || '';
     } else {
       _rni.value = '';
       delete _rni.dataset.selectedStaff;
+      if (_rii) _rii.value = '';
     }
   }
   updateStaffGateActions('r-name-input');
@@ -700,62 +711,54 @@ function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
 function setRStep(n) { for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('r-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('r-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('r-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('r-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('r-gate-btn');
+  const sp = document.getElementById('r-gate-sp');
+  const txt = document.getElementById('r-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  const staffList = await loadStaffCache();
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
 
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-
-  // Always resolve against full staff list to ensure all properties (gender, position, location, annualDays, etc.) exist
-  let fullStaff = null;
-  if (targetStaff && targetStaff.empId) {
-    const tid = String(targetStaff.empId).trim().toUpperCase();
-    fullStaff = staffList.find(s => String(s.empId).trim().toUpperCase() === tid || String(s.empId).replace(/^0+/, '') === tid.replace(/^0+/, ''));
-  }
-  if (!fullStaff && targetStaff && (targetStaff.name || targetStaff.nameKh)) {
-    const n = String(targetStaff.name || '').trim().toLowerCase();
-    const nk = String(targetStaff.nameKh || '').trim().toLowerCase();
-    fullStaff = staffList.find(s => (s.name && String(s.name).trim().toLowerCase() === n) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === nk));
-  }
-
-  if (!fullStaff) {
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    fullStaff = staffList.find(s => {
-      const idMatch = targetId && (String(s.empId).trim().toUpperCase() === targetId.toUpperCase() || String(s.empId).replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name && String(s.name).trim().toLowerCase() === cleanName) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === cleanName);
-      return idMatch || nameMatch;
-    });
-  }
-
-  if (fullStaff) {
-    targetStaff = Object.assign({}, fullStaff);
-  } else {
-    try {
-      const res = await apiPost('getStaff', { empId: rawInput, query: rawInput });
-      if (res && res.result === 'success' && res.staff) {
-        targetStaff = res.staff;
-      }
-    } catch (e) { }
-  }
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('r-gate'); return;
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('r-gate'); return;
   }
 
-  // Ensure default fallbacks for essential profile fields
   if (!targetStaff.gender) targetStaff.gender = 'Male';
   if (!targetStaff.location) targetStaff.location = 'Phnom Penh';
   if (targetStaff.annualDays === undefined || targetStaff.annualDays === null || isNaN(Number(targetStaff.annualDays))) targetStaff.annualDays = 18;
   if (targetStaff.usedDays === undefined || targetStaff.usedDays === null || isNaN(Number(targetStaff.usedDays))) targetStaff.usedDays = 0;
 
-  // Reconcile usedDays if 0 from history if available
   if (Number(targetStaff.usedDays) === 0 && _appInitData && _appInitData.history) {
     const sId = String(targetStaff.empId || '').toUpperCase();
     const sIdTrim = sId.replace(/^0+/, '');
@@ -816,7 +819,6 @@ function rLoadForm() {
   const av = document.getElementById('rf-avatar');
   if (av) av.textContent = (name.trim().charAt(0) || 'S').toUpperCase();
 
-  // Pre-fill dates with today (ISO format YYYY-MM-DD)
   const fromEl = document.getElementById('rf-from'), toEl = document.getElementById('rf-to');
   const tIso = todayISO();
   if (fromEl && !fromEl.value) { fromEl.value = tIso; fromEl.dataset.iso = tIso; }
@@ -824,12 +826,8 @@ function rLoadForm() {
   calcDays();
   updateRBal();
   if (typeof initBuiltInCalendar === 'function') initBuiltInCalendar();
-  setTimeout(() => {
-    if (typeof startGuidedTour === 'function') startGuidedTour();
-  }, 450);
 }
 
-// ── Mobile Wizard Navigation ──
 function nextMobileStep() {
   const form = document.getElementById('req-form');
   let step = parseInt(form.getAttribute('data-mobile-step') || '1');
@@ -871,8 +869,12 @@ function updateRBal() {
 
   const remDisplay = Number(rem) % 1 === 0 ? rem : rem.toFixed(1);
   const usedDisplay = Number(used) % 1 === 0 ? used : (+used).toFixed(1);
+  const specialUsed = Number(s.specialUsed) || 0;
+  const specialUsedDisplay = Number(specialUsed) % 1 === 0 ? specialUsed : (+specialUsed).toFixed(1);
+  
   const dayWord = LANG === 'kh' ? 'ថ្ងៃ' : (Number(remDisplay) === 1 ? 'day' : 'days');
   const usedDayWord = LANG === 'kh' ? 'ថ្ងៃ' : (Number(usedDisplay) === 1 ? 'day' : 'days');
+  const specialDayWord = LANG === 'kh' ? 'ថ្ងៃ' : (Number(specialUsedDisplay) === 1 ? 'day' : 'days');
   const totDayWord = LANG === 'kh' ? 'ថ្ងៃ' : (Number(tot) === 1 ? 'day' : 'days');
 
   const valEl = document.getElementById('r-bal-rem-val');
@@ -881,13 +883,32 @@ function updateRBal() {
   const lblEl = document.getElementById('r-bal-rem-lbl');
   if (lblEl) lblEl.textContent = LANG === 'kh' ? 'ថ្ងៃនៅសល់' : 'Days Left';
 
-  const usedValEl = document.getElementById('r-bal-used-val');
-  if (usedValEl) usedValEl.textContent = usedDisplay + ' ' + usedDayWord;
+  // Update labels
+  const lblTotEl = document.getElementById('r-bal-lbl-tot');
+  if (lblTotEl) lblTotEl.textContent = LANG === 'kh' ? 'ចំនួនថ្ងៃច្បាប់ប្រចាំឆ្នាំសរុប:' : 'Total Annual Days:';
+  
+  const lblAnuEl = document.getElementById('r-bal-lbl-anu');
+  if (lblAnuEl) lblAnuEl.textContent = LANG === 'kh' ? 'ច្បាប់ប្រចាំឆ្នាំបានប្រើ:' : 'Annual Leave Used:';
+  
+  const lblRemEl = document.getElementById('r-bal-lbl-rem');
+  if (lblRemEl) lblRemEl.textContent = LANG === 'kh' ? 'ច្បាប់ប្រចាំឆ្នាំនៅសល់:' : 'Annual Leave Left:';
 
-  const totValEl = document.getElementById('r-bal-tot-val');
-  if (totValEl) totValEl.textContent = tot + ' ' + totDayWord;
+  const lblSpuEl = document.getElementById('r-bal-lbl-spu');
+  if (lblSpuEl) lblSpuEl.textContent = LANG === 'kh' ? 'ច្បាប់ពិសេសបានប្រើ:' : 'Special Leave Used:';
 
-  // SVG Circle stroke-dashoffset: Circumference for r=48 is 2 * PI * 48 ≈ 301.59
+  // Update values
+  const valTotEl = document.getElementById('r-bal-val-tot');
+  if (valTotEl) valTotEl.textContent = tot + ' ' + totDayWord;
+
+  const valAnuEl = document.getElementById('r-bal-val-anu');
+  if (valAnuEl) valAnuEl.textContent = usedDisplay + ' ' + usedDayWord;
+  
+  const valRemEl = document.getElementById('r-bal-val-rem');
+  if (valRemEl) valRemEl.textContent = remDisplay + ' ' + dayWord;
+  
+  const valSpuEl = document.getElementById('r-bal-val-spu');
+  if (valSpuEl) valSpuEl.textContent = specialUsedDisplay + ' ' + specialDayWord;
+
   const circleBar = document.getElementById('r-bal-circle-bar');
   if (circleBar) {
     const C = 301.59;
@@ -940,7 +961,28 @@ let _cdT;
 function calcDays(now) {
   if (!now) { clearTimeout(_cdT); _cdT = setTimeout(() => calcDays(1), 30); return; }
   const from = getIsoDateVal('rf-from');
-  const to = getIsoDateVal('rf-to');
+  let to = getIsoDateVal('rf-to');
+  
+  const ltypeRadio = document.querySelector('input[name=ltype]:checked');
+  const spTypeEl = document.getElementById('rf-special-type');
+  const isMaternity = (ltypeRadio && ltypeRadio.value === 'Special Leave' && spTypeEl && spTypeEl.value === 'Maternity Leave');
+
+  if (isMaternity && from) {
+    const dFromTemp = new Date(from + 'T00:00:00');
+    dFromTemp.setDate(dFromTemp.getDate() + 89);
+    const toY = dFromTemp.getFullYear();
+    const toM = String(dFromTemp.getMonth() + 1).padStart(2, '0');
+    const toD = String(dFromTemp.getDate()).padStart(2, '0');
+    const newTo = `${toY}-${toM}-${toD}`;
+    to = newTo;
+    const toEl = document.getElementById('rf-to');
+    if (toEl && toEl.value !== newTo) {
+      toEl.value = newTo;
+      toEl.dataset.iso = newTo;
+      if (typeof renderBuiltInCalendar === 'function') renderBuiltInCalendar();
+    }
+  }
+
   const pill = document.getElementById('r-dpill');
   const row = document.getElementById('halfday-row');
   const noticeEl = document.getElementById('req-date-notice');
@@ -970,18 +1012,22 @@ function calcDays(now) {
     return;
   }
 
-  const wd = workDays(from, to);
+  let wd = workDays(from, to);
   const single = (from === to);
-  const weCount = weekendDays(from, to);
-  const holCount = holidayDays(from, to);
+  let weCount = weekendDays(from, to);
+  let holCount = holidayDays(from, to);
   const holsInRange = getHolidaysInRange(from, to);
 
-  // Total calendar days
   const dFrom = new Date(from + 'T00:00:00');
   const dTo = new Date(to + 'T00:00:00');
   const calDays = Math.round((dTo - dFrom) / (1000 * 60 * 60 * 24)) + 1;
 
-  // Render Date Notice Breakdown
+  if (isMaternity) {
+    wd = calDays;
+    weCount = 0;
+    holCount = 0;
+  }
+
   if (noticeEl) {
     if (wd === 0) {
       const skipReasons = [];
@@ -1045,7 +1091,6 @@ function calcDays(now) {
     if (singleDiv) singleDiv.style.display = single ? 'grid' : 'none';
     if (multiDiv) multiDiv.style.display = single ? 'none' : 'block';
   }
-  // Update date labels in multi picker
   if (!single) {
     const fd = document.getElementById('hd-first-date'), ld = document.getElementById('hd-last-date');
     if (fd) fd.textContent = fmtDate(from) + (isNonWorkingDay(from) ? ' (Non-working)' : '');
@@ -1108,7 +1153,6 @@ function rShowPreview() {
   const _missing = [];
   let firstErrEl = null;
 
-  // 1. Staff check
   if (!rStaff) {
     _missing.push('Staff identity (Please select your name)');
     const gateInput = document.getElementById('r-name-input');
@@ -1118,7 +1162,6 @@ function rShowPreview() {
     }
   }
 
-  // 2. From Date
   if (!from) {
     _missing.push('Start Date (From Date)');
     const fField = document.getElementById('f-rf-from');
@@ -1131,7 +1174,6 @@ function rShowPreview() {
     if (!firstErrEl) firstErrEl = fField || document.getElementById('rf-from');
   }
 
-  // 3. To Date
   if (!to) {
     _missing.push('End Date (To Date)');
     const tField = document.getElementById('f-rf-to');
@@ -1144,7 +1186,6 @@ function rShowPreview() {
     if (!firstErrEl) firstErrEl = tField || document.getElementById('rf-to');
   }
 
-  // 4. Date order
   if (from && to && from > to) {
     _missing.push('Valid Date Range (End date must be on or after start date)');
     const fField = document.getElementById('f-rf-from');
@@ -1159,7 +1200,6 @@ function rShowPreview() {
     if (!firstErrEl) firstErrEl = tField;
   }
 
-  // 5. Leave Type
   if (!ltype) {
     _missing.push('Leave Type');
     const g = document.getElementById('ltype-grid');
@@ -1184,7 +1224,6 @@ function rShowPreview() {
     if (!firstErrEl) firstErrEl = otherInput;
   }
 
-  // 6. Reason
   if (!rsn) {
     _missing.push('Reason / Description');
     const rCard = document.getElementById('rsc-reason');
@@ -1198,7 +1237,6 @@ function rShowPreview() {
     if (!firstErrEl) firstErrEl = rsnEl || rCard;
   }
 
-  // If validation errors exist, render glowing error summary and focus
   if (_missing.length > 0) {
     const summary = document.getElementById('req-err-summary');
     const list = document.getElementById('req-err-list');
@@ -1214,7 +1252,6 @@ function rShowPreview() {
     return;
   }
 
-  // 7. Check non-working days
   const days = getActualDays(from, to);
   if (days <= 0) {
     const fField = document.getElementById('f-rf-from');
@@ -1227,7 +1264,6 @@ function rShowPreview() {
     return;
   }
 
-  // 8. Overlap check against existing Pending/Approved requests
   if (rStaff._usedDates && rStaff._usedDates.length) {
     const conflict = rStaff._usedDates.find(r => from <= r.to && to >= r.from);
     if (conflict) {
@@ -1266,7 +1302,6 @@ function rShowPreview() {
   setRStep(3);
 }
 
-// ── Close review modal (back to form) ──
 function closeReviewModal() {
   const rm = document.getElementById('review-modal'); if (rm) rm.style.display = 'none'; setRStep(2);
 }
@@ -1327,10 +1362,8 @@ async function rConfirm() {
     _isSubmitting = false;
     return;
   }
-  // Store payload — actual submit happens in doConfirm() only
   _pendingPayload = { payload, from, to, days: String(days) };
   btn.disabled = false; sp.style.display = 'none'; txt.textContent = tx('conTxt');
-  // Show yellow warning modal — submit only if user clicks Confirm, not Cancel
   const m = document.getElementById('confirm-modal');
   m.classList.add('open'); m.style.display = 'flex';
 }
@@ -1345,7 +1378,6 @@ function cancelConfirmModal() {
   closeModal();
   _isSubmitting = false;
   _pendingPayload = null;
-  // Return user to review modal (where they came from)
   const rm = document.getElementById('review-modal');
   if (rm) rm.style.display = 'flex';
   setRStep(3);
@@ -1378,20 +1410,11 @@ function doConfirm() {
       loadHomeLeaveBoard();
     }
     if (!isMock()) {
-      // Fire-and-forget — update requestId in background when server responds
       apiPost('submitRequest', payload).then(function (res) {
         if (res && res.requestId && _lastSubmit) { _lastSubmit.requestId = res.requestId; }
         _appInitData = null;
         loadStaffCache().then(() => loadHomeLeaveBoard());
       }).catch(function () { });
-    }
-    
-    if (tg && tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
-      try {
-        tg.sendData(JSON.stringify({ action: 'submitRequest', data: payload }));
-        tg.close();
-        return; // Stop execution here since Telegram bot is handling it
-      } catch (e) { console.error('Telegram sendData failed:', e); }
     }
   }
   _isSubmitting = false;
@@ -1402,9 +1425,7 @@ function doConfirm() {
   suc.style.display = 'flex';
   setReqBar(0);
   if (_lastSubmit) { fillPrint(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days); }
-  // Populate rich success page
   rPopulateSuccess();
-  // Reset form fields
   document.getElementById('rf-from').value = '';
   document.getElementById('rf-to').value = '';
   document.getElementById('rf-rsn').value = '';
@@ -1418,7 +1439,6 @@ function rReprintLast() { if (_lastSubmit) fillPrint(_lastSubmit, _lastSubmit.fr
 function rPopulateSuccess() {
   const s = rStaff, d = _lastSubmit;
   if (!s || !d) return;
-  // Submitted summary
   const sumEl = document.getElementById('rsuc-summary');
   if (sumEl) {
     sumEl.innerHTML = [
@@ -1429,7 +1449,6 @@ function rPopulateSuccess() {
       ['Reason', d.reason || '—']
     ].map(([k, v]) => `<div class="rsuc-row"><span class="rsuc-key">${k}</span><span class="rsuc-val">${v}</span></div>`).join('');
   }
-  // Balance — calculate post-submission
   const balEl = document.getElementById('rsuc-balance');
   if (balEl) {
     const total = s.annualDays || 0;
@@ -1444,7 +1463,6 @@ function rPopulateSuccess() {
       `<div class="rsuc-bal-stat"><div class="rsuc-bal-num" style="color:${remColor}">${rem}</div><div class="rsuc-bal-lbl">Remaining</div></div>` +
       `<div style="grid-column:1/-1"><div class="balbar" style="margin-top:6px"><div class="balfill" style="width:${pct}%"></div></div></div>`;
   }
-  // Fetch fresh history in background
   const histEl = document.getElementById('rsuc-history');
   if (!histEl) return;
   histEl.innerHTML = `<div class="rsuc-loading"><svg style="animation:spin .7s linear infinite" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Loading…</div>`;
@@ -1473,8 +1491,6 @@ function fillPrintRecord(r, staff) {
   openPrint({ name, gender: gen, position: pos, empId: staff.empId || '', leaveType: LANG === 'kh' ? (r.typeKh || r.type) : r.type, days: String(r.days), reason: r.reason || '', dateFrom: r.from, dateTo: r.to, lang: LANG, requestId: r.id || '' });
 }
 
-
-// ══════════════════ STATUS ══════════════════════
 let stStaff = null, stHistory = [], stNotices = [], stHistYear = new Date().getFullYear();
 function stSetHistYear(val) { stHistYear = val === 'all' ? 'all' : parseInt(val, 10); renderStDash(); }
 function stRefreshAll() {
@@ -1515,14 +1531,17 @@ function stReset() {
   if (gate) gate.style.display = 'block';
   if (dash) dash.style.display = 'none';
   const _sni = document.getElementById('st-name-input');
+  const _sii = document.getElementById('st-id-input');
   if (_sni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _sni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _sni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _sni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_sii) _sii.value = saved.empId || '';
     } else {
       _sni.value = '';
       delete _sni.dataset.selectedStaff;
+      if (_sii) _sii.value = '';
     }
   }
   updateStaffGateActions('st-name-input');
@@ -1530,17 +1549,13 @@ function stReset() {
   if (fb) fb.textContent = '';
 }
 // ── VERIFY MESSAGE OVERLAY ───────────────────────────────────────
-// Shows sequential status messages while API call is in-flight.
-// If API resolves before messages finish, cancel() skips immediately.
 const GMO_MSGS = ['Verifying Credentials', 'Connecting to Cloud Server', 'Unlocking HR Dashboard'];
 const GMO_DUR = [1800, 1800, 2200]; // ms per message
 function _gmoStart(gateId, msgs, durs) {
   msgs = msgs || GMO_MSGS; durs = durs || GMO_DUR;
   const gate = document.getElementById(gateId);
   if (!gate) return { cancel: () => { } };
-  // Remove stale overlay
   const old = document.getElementById('gmo-' + gateId); if (old) old.remove();
-  // Build overlay
   const ov = document.createElement('div');
   ov.className = 'gmo-overlay'; ov.id = 'gmo-' + gateId;
   ov.innerHTML = `<div class="gmo-inner">
@@ -1608,17 +1623,13 @@ function _gmoStart(gateId, msgs, durs) {
   const n3 = document.getElementById('gmo-n3-' + gateId);
   const c1 = document.getElementById('gmo-c1-' + gateId);
   const c2 = document.getElementById('gmo-c2-' + gateId);
-  // Dots ticker
   let dn = 0;
   const dtick = setInterval(() => { dn = (dn + 1) % 4; if (dEl) dEl.textContent = '.'.repeat(dn); }, 350);
-  // Progress bar
   const total = durs.reduce((a, b) => a + b, 0);
   if (bEl) { bEl.style.transition = `width ${total}ms linear`; requestAnimationFrame(() => requestAnimationFrame(() => { bEl.style.width = '92%'; })) }
-  // Cancellable sleep via shared resolve
   let _cancelResolve;
   const _cancelSig = new Promise(r => { _cancelResolve = r; });
   function _csleep(ms) { return Promise.race([new Promise(r => setTimeout(r, ms)), _cancelSig]); }
-  // Pipeline node updater
   function setPipelineStep(step) {
     if (step === 0) {
       if (n1) n1.className = 'sp-node sp-active sp-circling';
@@ -1640,7 +1651,6 @@ function _gmoStart(gateId, msgs, durs) {
       if (c2) c2.className = 'sp-connector sp-conn-on';
     }
   }
-  // Message loop (runs in background, independent of API)
   (async () => {
     for (let i = 0; i < msgs.length; i++) {
       setPipelineStep(i);
@@ -1656,7 +1666,6 @@ function _gmoStart(gateId, msgs, durs) {
       tEl.textContent = msg;
     }
   }
-  // cancel(success) — call when verification and background loads finish
   function cancel(ok) {
     clearInterval(dtick);
     _cancelResolve(); // abort message loop immediately
@@ -1695,52 +1704,47 @@ function gateSetError(gateId) {
 }
 async function stVerify() {
   const inputEl = document.getElementById('st-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('st-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('st-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('st-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('st-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('st-gate-btn');
+  const sp = document.getElementById('st-gate-sp');
+  const txt = document.getElementById('st-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  const staffList = await loadStaffCache();
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
 
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-
-  let fullStaff = null;
-  if (targetStaff && targetStaff.empId) {
-    const tid = String(targetStaff.empId).trim().toUpperCase();
-    fullStaff = staffList.find(s => String(s.empId).trim().toUpperCase() === tid || String(s.empId).replace(/^0+/, '') === tid.replace(/^0+/, ''));
-  }
-  if (!fullStaff && targetStaff && (targetStaff.name || targetStaff.nameKh)) {
-    const n = String(targetStaff.name || '').trim().toLowerCase();
-    const nk = String(targetStaff.nameKh || '').trim().toLowerCase();
-    fullStaff = staffList.find(s => (s.name && String(s.name).trim().toLowerCase() === n) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === nk));
-  }
-
-  if (!fullStaff) {
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    fullStaff = staffList.find(s => {
-      const idMatch = targetId && (String(s.empId).trim().toUpperCase() === targetId.toUpperCase() || String(s.empId).replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name && String(s.name).trim().toLowerCase() === cleanName) || (s.nameKh && String(s.nameKh).trim().toLowerCase() === cleanName);
-      return idMatch || nameMatch;
-    });
-  }
-
-  if (fullStaff) {
-    targetStaff = Object.assign({}, fullStaff);
-  } else {
-    try {
-      const res = await apiPost('getStaff', { empId: rawInput, query: rawInput });
-      if (res && res.result === 'success' && res.staff) {
-        targetStaff = res.staff;
-      }
-    } catch (e) { }
-  }
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('st-gate'); return;
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('st-gate'); return;
   }
 
   if (!targetStaff.gender) targetStaff.gender = 'Male';
@@ -1748,7 +1752,6 @@ async function stVerify() {
   if (targetStaff.annualDays === undefined || targetStaff.annualDays === null || isNaN(Number(targetStaff.annualDays))) targetStaff.annualDays = 18;
   if (targetStaff.usedDays === undefined || targetStaff.usedDays === null || isNaN(Number(targetStaff.usedDays))) targetStaff.usedDays = 0;
 
-  // Instant transition using pre-fetched init data
   stStaff = targetStaff;
   saveUserDeviceMemory(stStaff);
   const sId = String(targetStaff.empId || '').toUpperCase();
@@ -1775,7 +1778,8 @@ function renderStDash() {
   const pos = LANG === 'kh' ? (s.positionKh || s.position || '') : (s.position || '');
   const annual = Number(s.annualDays) || 0;
   const used = Number(s.usedDays) || 0;
-  const rem = annual - used;
+  const specialUsed = Number(s.specialUsed) || 0;
+  const rem = Math.max(0, annual - used);
   const pct = annual > 0 ? Math.round(Math.max(0, (rem / annual) * 100)) : 0;
 
   const avEl = document.getElementById('st-avatar');
@@ -1789,11 +1793,25 @@ function renderStDash() {
 
   const totEl = document.getElementById('st-tot');
   if (totEl) totEl.textContent = annual;
+  const totLbl = document.getElementById('st-tot-lbl');
+  if (totLbl) totLbl.textContent = LANG === 'kh' ? 'ច្បាប់ប្រចាំឆ្នាំសរុប' : 'Annual Total';
+
   const usedEl = document.getElementById('st-used');
   if (usedEl) usedEl.textContent = used;
+  const usedLbl = document.getElementById('st-used-lbl');
+  if (usedLbl) usedLbl.textContent = LANG === 'kh' ? 'ច្បាប់ប្រចាំឆ្នាំបានប្រើ' : 'Annual Used';
+
   const remDisp = Number(rem) % 1 === 0 ? rem : rem.toFixed(1);
   const remEl = document.getElementById('st-rem');
   if (remEl) remEl.textContent = remDisp;
+  const remLbl = document.getElementById('st-rem-lbl');
+  if (remLbl) remLbl.textContent = LANG === 'kh' ? 'ច្បាប់ប្រចាំឆ្នាំនៅសល់' : 'Annual Left';
+
+  const spUsedDisp = Number(specialUsed) % 1 === 0 ? specialUsed : specialUsed.toFixed(1);
+  const spUsedEl = document.getElementById('st-sp-used');
+  if (spUsedEl) spUsedEl.textContent = spUsedDisp;
+  const spUsedLbl = document.getElementById('st-sp-used-lbl');
+  if (spUsedLbl) spUsedLbl.textContent = LANG === 'kh' ? 'ច្បាប់ពិសេសបានប្រើ' : 'Special Used';
 
   const fillEl = document.getElementById('st-bal-fill');
   if (fillEl) fillEl.style.width = pct + '%';
@@ -1839,8 +1857,7 @@ function renderStNotices() {
 }
 function stPrint(i) { fillPrintRecord(stHistory[i], stStaff); }
 
-// ══════════════════ HR ══════════════════════════
-let hrUser = null, hrToken = null, allReqs = [], hrFilter_ = 'All';
+let hrUser = null, hrToken = null, allReqs = [], hrFilter_ = 'All', hrSelectedReqs = new Set();
 async function hrLogin() {
   const user = document.getElementById('hr-user').value.trim(), pass = document.getElementById('hr-pass').value;
   if (!user || !pass) { document.getElementById('hr-lerr').textContent = tx('hrLerr'); gateSetError('hr-login'); return; }
@@ -1857,7 +1874,6 @@ async function hrLogin() {
       if (res.hmacKey) setHmacKey(res.hmacKey);
       sessionStorage.setItem('hr_sess', JSON.stringify({ user: hrUser, token: hrToken, hmacKey: res.hmacKey || '' }));
 
-      // Update text in waiting overlay and fetch all dashboard data before revealing dashboard
       if (_gmo.updateText) _gmo.updateText('Loading Dashboard Data');
       await hrLoadData(true);
 
@@ -1897,7 +1913,6 @@ async function hrLoadData(silent) {
       allReqs = []; allStaffList = []; noticesList = []; noticeStats = [];
       await new Promise(r => setTimeout(r, 400));
     } else {
-      // Restore from cache first for instant render
       const cReqs = cacheGet('hr_reqs'), cStaff = cacheGet('hr_staff'),
         cNl = cacheGet('hr_notices'), cNs = cacheGet('hr_noticestats');
       if (cReqs) { allReqs = cReqs; }
@@ -1908,7 +1923,6 @@ async function hrLoadData(silent) {
         hrRenderSummary(); hrRenderReqs(); hrRenderStaff();
         if (ld) ld.style.display = 'none';
       }
-      // Single authenticated call — avoids token rotation conflict
       const res = await apiPost('getAllData', { token: hrToken || '' });
       if (res.result === 'unauthorized') {
         if (!silent) { toast('Session expired — please log in again', 'bad'); hrLogout(); }
@@ -1935,23 +1949,120 @@ async function hrLoadData(silent) {
   finally { if (ld) ld.style.display = 'none'; }
 }
 
-// Background preload — called right after session restore, silently
 function hrPreload() {
   if (hrToken && hrUser) hrLoadData(true);
 }
 function hrRenderSummary() { const tot = allReqs.length, pend = allReqs.filter(r => r.status === 'Pending').length, appr = allReqs.filter(r => r.status === 'Approved').length, rej = allReqs.filter(r => r.status === 'Rejected').length; document.getElementById('hr-st').textContent = tot; document.getElementById('hr-sp').textContent = pend; document.getElementById('hr-sa').textContent = appr; document.getElementById('hr-sr').textContent = rej; }
-function hrFilter(f) { hrFilter_ = f; document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on')); const map = { 'All': 'hft-all', 'Pending': 'hft-pend', 'Approved': 'hft-appr', 'Rejected': 'hft-rej' }; document.getElementById(map[f]).classList.add('on'); hrRenderReqs(); }
+function hrFilter(f) { 
+  hrFilter_ = f; 
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('on')); 
+  const map = { 'All': 'hft-all', 'Pending': 'hft-pend', 'Approved': 'hft-appr', 'Rejected': 'hft-rej' }; 
+  document.getElementById(map[f]).classList.add('on'); 
+  hrSelectedReqs.clear();
+  hrUpdateBulkUI();
+  hrRenderReqs(); 
+}
+
 const _hrSaving = new Set();
 const _hrDeleting = new Set();
+
+function hrUpdateBulkUI() {
+  const bar = document.getElementById('hr-bulk-bar');
+  const countSpan = document.getElementById('hr-bulk-count');
+  const masterCheck = document.getElementById('hr-check-all');
+  if (!bar || !countSpan) return;
+  
+  if (hrSelectedReqs.size > 0) {
+    bar.style.display = 'flex';
+    countSpan.textContent = hrSelectedReqs.size + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+  
+  if (masterCheck) {
+    const visibleIds = (hrFilter_ === 'All' ? allReqs : allReqs.filter(r => r.status === hrFilter_)).map(r => String(r.id));
+    if (visibleIds.length > 0 && visibleIds.every(id => hrSelectedReqs.has(id))) {
+      masterCheck.checked = true;
+      masterCheck.indeterminate = false;
+    } else if (visibleIds.some(id => hrSelectedReqs.has(id))) {
+      masterCheck.checked = false;
+      masterCheck.indeterminate = true;
+    } else {
+      masterCheck.checked = false;
+      masterCheck.indeterminate = false;
+    }
+  }
+}
+
+function hrToggleRow(id, checked) {
+  if (checked) hrSelectedReqs.add(String(id));
+  else hrSelectedReqs.delete(String(id));
+  hrUpdateBulkUI();
+}
+
+function hrToggleAll(checked) {
+  const visible = hrFilter_ === 'All' ? allReqs : allReqs.filter(r => r.status === hrFilter_);
+  visible.forEach(r => {
+    if (checked) hrSelectedReqs.add(String(r.id));
+    else hrSelectedReqs.delete(String(r.id));
+    const cb = document.getElementById('hr-cb-' + r.id);
+    if (cb) cb.checked = checked;
+  });
+  hrUpdateBulkUI();
+}
+
+async function hrSubmitBulkAction(action) {
+  if (hrSelectedReqs.size === 0) return;
+  const actionText = action === 'Approved' ? 'approve' : action === 'Rejected' ? 'reject' : 'delete';
+  if (!confirm(`Are you sure you want to ${actionText} ${hrSelectedReqs.size} selected request(s)?`)) return;
+  
+  const ids = Array.from(hrSelectedReqs);
+  
+  ids.forEach(id => {
+    if (action === 'Delete') _hrDeleting.add(id);
+    else _hrSaving.add(id);
+  });
+  hrRenderReqs();
+  
+  try {
+    const res = await apiPost('batchAction', { action: action, ids: ids, hrUser, token: hrToken || '' });
+    if (res && res.result === 'success') {
+      toast(`Successfully processed ${res.count} requests.`, 'ok2');
+      if (action === 'Delete') {
+        allReqs = allReqs.filter(r => !ids.includes(String(r.id)));
+      } else {
+        allReqs.forEach(r => {
+          if (ids.includes(String(r.id))) r.status = action;
+        });
+      }
+      hrSelectedReqs.clear();
+    } else {
+      toast(res && res.error ? res.error : 'Bulk action failed.', 'bad');
+    }
+  } catch (e) {
+    toast('Connection error.', 'bad');
+  } finally {
+    ids.forEach(id => {
+      _hrSaving.delete(id);
+      _hrDeleting.delete(id);
+    });
+    hrRenderSummary();
+    hrRenderReqs();
+    hrUpdateBulkUI();
+  }
+}
+
 function hrRenderReqs() {
   const filtered = hrFilter_ === 'All' ? allReqs : allReqs.filter(r => r.status === hrFilter_);
   const tbody = document.getElementById('hr-tbody');
   document.getElementById('hr-nodata').style.display = filtered.length ? 'none' : 'block';
   tbody.innerHTML = filtered.map(r => {
-    const saving = _hrSaving.has(r.id);
-    const deleting = _hrDeleting.has(r.id);
+    const idStr = String(r.id);
+    const saving = _hrSaving.has(idStr);
+    const deleting = _hrDeleting.has(idStr);
     const busy = saving || deleting;
     const canActMain = r.status === 'Pending' && !busy;
+    const isSelected = hrSelectedReqs.has(idStr);
     const spin = `<svg style="animation:spin .7s linear infinite" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`;
     const delBtn = !busy ? `<button class="abtn abtn-del" onclick="hrDeleteRequest('${r.id}','${(r.empName || r.empId).replace(/'/g, "\\'")}','${r.from}')">Delete</button>` : '';
     const actionCell = deleting
@@ -1961,7 +2072,14 @@ function hrRenderReqs() {
         : canActMain
           ? `<button class="abtn abtn-ok" onclick="openStatusModal('${r.id}','Approved')">${tx('hrApprove')}</button><button class="abtn abtn-bad" onclick="openStatusModal('${r.id}','Rejected')">${tx('hrReject')}</button>${delBtn}`
           : delBtn || '<span style="font-size:11px;color:var(--txt3)">—</span>';
-    return `<tr id="hr-row-${r.id}" style="transition:background .2s,opacity .2s${busy ? ';opacity:.55' : ''}"><td style="font-size:10px;color:var(--txt3);font-family:monospace">${r.id || '—'}</td><td><div style="font-weight:500">${r.empName || r.empId}</div><div style="font-size:11px;color:var(--txt3)">${r.empId}</div></td><td>${r.type}</td><td>${fmtDate(r.from)}</td><td style="text-align:center;font-weight:600">${r.days}</td><td><span class="badge b-${(r.status || '').toLowerCase()}">${r.status}</span></td><td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${actionCell}</div></td></tr>`;
+    
+    return `<tr id="hr-row-${r.id}" style="transition:background .2s,opacity .2s${busy ? ';opacity:.55' : ''}">` +
+           `<td style="text-align:center"><input type="checkbox" id="hr-cb-${r.id}" onchange="hrToggleRow('${r.id}', this.checked)" ${isSelected ? 'checked' : ''} style="cursor:pointer"></td>` +
+           `<td style="font-size:10px;color:var(--txt3);font-family:monospace">${r.id || '—'}</td>` +
+           `<td><div style="font-weight:500">${r.empName || r.empId}</div><div style="font-size:11px;color:var(--txt3)">${r.empId}</div></td>` +
+           `<td>${r.type}</td><td>${fmtDate(r.from)}</td><td style="text-align:center;font-weight:600">${r.days}</td>` +
+           `<td><span class="badge b-${(r.status || '').toLowerCase()}">${r.status}</span></td>` +
+           `<td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${actionCell}</div></td></tr>`;
   }).join('');
   // ── Deep link: scroll to and highlight the linked request ────────
   if (_deepReq) {
@@ -1991,7 +2109,6 @@ async function hrUpdateStatus(reqId, ns, silent) {
     if (!isMock()) {
       const res = await apiPost('updateStatus', { requestId: reqId, status: ns, hrUser, silent, token: hrToken || '' });
       if (!res || res.result !== 'success') {
-        // Revert on failure
         allReqs[i].status = prevStatus;
         toast(res && res.error ? res.error : 'Save failed — reverted.', 'bad');
       }
@@ -2031,7 +2148,6 @@ function openStatusModal(reqId, ns) {
   const btn = document.getElementById('hr-sm-confirm-btn');
   btn.textContent = isApprove ? 'Approve' : 'Reject';
   btn.style.background = isApprove ? '#16a34a' : 'var(--red)';
-  // reset silent toggle
   const chk = document.getElementById('hr-silent-chk');
   if (chk) chk.checked = false;
   hrSilentToggleUI();
@@ -2068,16 +2184,13 @@ function hrDeleteNotice(empId, name, noticeType, date, time) {
 const _WS_FE = 8 * 60 + 30, _WE_FE = 17 * 60 + 30;
 function _parseTmFE(t) {
   if (!t) return null;
-  // HH:MM anywhere in the string (handles "17:00", "17:00:00", and GAS Date strings)
   const m = String(t).match(/(\d{1,2}):(\d{2})/);
   if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
-  // fallback: parse as Date object
   const d = new Date(t);
   return isNaN(d.getTime()) ? null : d.getHours() * 60 + d.getMinutes();
 }
 function _calcLateMinsFE(t) { const m = _parseTmFE(t); return m ? Math.max(0, m - _WS_FE) : 0; }
 function _calcEarlyMinsFE(t) { const m = _parseTmFE(t); return m ? Math.max(0, _WE_FE - m) : 0; }
-// Slide-to-confirm logic
 let _delSliding = false, _delStartX = 0, _delCurX = 0;
 function delSliderStart(e) {
   _delSliding = true;
@@ -2112,7 +2225,6 @@ function delSliderEnd() {
   document.removeEventListener('mouseup', delSliderEnd);
   document.removeEventListener('touchmove', delSliderMove);
   document.removeEventListener('touchend', delSliderEnd);
-  // Snap back if not confirmed
   resetDelSlider();
 }
 function resetDelSlider() {
@@ -2279,7 +2391,6 @@ function hrRenderAnalytics() {
   }
 }
 
-
 let allStaffList = [];
 let noticeStats = [], noticesList = [];
 // ── ANALYTICS FILTER STATE ─────────────────────────────────────
@@ -2290,13 +2401,11 @@ function anRestoreFilters() { const f = cacheGet('hr_anfilter'); if (f) anFilter
 function anApplyFilters() {
   if (!document.getElementById('hr-tab-analytics')) return;
   anRestoreFilters();
-  // Update UI to match state
   const pSel = document.getElementById('an-period');
   const ySel = document.getElementById('an-year');
   const mSel = document.getElementById('an-month');
   const sSel = document.getElementById('an-staff');
   if (pSel) pSel.value = anFilter.period;
-  // Populate year dropdown
   if (ySel) {
     const years = [...new Set(allReqs.map(r => { const d = new Date(r.from); return isNaN(d) ? null : d.getFullYear(); }).filter(Boolean))].sort((a, b) => b - a);
     const curY = new Date().getFullYear();
@@ -2304,9 +2413,7 @@ function anApplyFilters() {
     ySel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
     if (anFilter.year) ySel.value = anFilter.year;
   }
-  // Populate month
   if (mSel && anFilter.month) mSel.value = anFilter.month;
-  // Populate staff
   if (sSel) {
     const names = [...new Set(allReqs.map(r => r.empName || r.empId).filter(Boolean))].sort();
     sSel.innerHTML = '<option value="">All Staff</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
@@ -2343,7 +2450,6 @@ function anFilterReqs() {
   return reqs;
 }
 async function hrLoadNotices() {
-  // Data already loaded by hrLoadData — just render
   hrRenderAnalytics();
 }
 function hrRenderStaff() {
@@ -2360,7 +2466,7 @@ function hrRenderStaff() {
 }
 function hrTab(tab) {
   sessionStorage.setItem('hr_tab', tab);
-  ['req', 'staff', 'attendance', 'holidays', 'analytics', 'export'].forEach(t => {
+  ['req', 'staff', 'attendance', 'holidays', 'analytics', 'export', 'settings'].forEach(t => {
     const el = document.getElementById('hr-tab-' + t); if (el) el.style.display = tab === t ? 'block' : 'none';
     const btn = document.getElementById('nt-' + t); if (btn) btn.classList.toggle('on', tab === t);
   });
@@ -2370,9 +2476,7 @@ function hrTab(tab) {
   if (tab === 'holidays') hrRenderHolidays();
   if (tab === 'manual') hrManualInit();
 }
-// ══════════════════ EXPORT ══════════════════════
 function expInit() {
-  // Populate year dropdown from allReqs
   const years = [...new Set(allReqs.map(r => {
     const d = r.from || r.dateFrom || '';
     return d ? new Date(d).getFullYear() : null;
@@ -2380,7 +2484,6 @@ function expInit() {
   const yrSel = document.getElementById('exp-year');
   const curYr = yrSel.value;
   yrSel.innerHTML = '<option value="">All Years</option>' + years.map(y => `<option value="${y}"${y == curYr ? 'selected' : ''}>${y}</option>`).join('');
-  // Populate staff dropdown
   const staffMap = {};
   allReqs.forEach(r => { if (r.empId) staffMap[r.empId] = r.empName || r.empId; });
   const stSel = document.getElementById('exp-staff');
@@ -2445,7 +2548,6 @@ function expDownload() {
   const moName = mo ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][mo - 1] : 'All';
   const st = document.getElementById('exp-staff').value || 'All';
   const wb = XLSX.utils.book_new();
-  // Sheet 1 — Leave Requests
   const leaveHeaders = ['Req ID', 'Employee ID', 'Full Name', 'Position', 'Leave Type', 'From', 'To', 'Working Days', 'Reason', 'Status', 'Submitted', 'Location'];
   const leaveRows = leaveData.map(r => [
     r.id || '', r.empId || '', r.empName || '', r.position || '',
@@ -2456,7 +2558,6 @@ function expDownload() {
   ]);
   const ws1 = XLSX.utils.aoa_to_sheet([leaveHeaders, ...leaveRows]);
   XLSX.utils.book_append_sheet(wb, ws1, 'Leave Requests');
-  // Sheet 2 — Late & Early Notices
   const noticeHeaders = ['Employee ID', 'Full Name', 'Type', 'Date', 'Time', 'Return Time', 'Reason'];
   const noticeRows = noticeData.map(n => [
     n.empId || '', n.name || '', n.type || '', n.date || '', n.time || '', n.returnTime || '', n.reason || ''
@@ -2467,7 +2568,6 @@ function expDownload() {
   toast('XLSX downloaded', 'ok2');
 }
 
-// ══════════════════ RE-AUTH ══════════════════════════════════
 let _reauthResolve = null;
 function requireReauth(msg) {
   return new Promise(resolve => {
@@ -2491,7 +2591,6 @@ function submitReauth() {
   if (_reauthResolve) { _reauthResolve(pass); _reauthResolve = null; }
 }
 
-// ══════════════════ SYNC / REFRESH ══════════════════════════════
 function toggleAnStaffSort() {
   anStaffSort = anStaffSort === 'used' ? 'name' : 'used';
   const btn = document.getElementById('an-sort-btn');
@@ -2522,7 +2621,6 @@ async function stRefreshHistory() {
   } catch (e) { }
 }
 
-// ══════════════════ LATE / EARLY NOTICE ════════════════════════
 document.querySelectorAll('input[name=noticetype]').forEach(r => {
   r.addEventListener('click', () => {
     const lbl = document.getElementById('nt-time-lbl');
@@ -2569,7 +2667,6 @@ async function submitNotice() {
   finally { btn.disabled = false; sp.style.display = 'none'; }
 }
 
-// ══════════════════ NOTICE (LATE/EARLY) ══════════════════════
 let ntStaff = null;
 let _ntCurrentType = null; // 'late' | 'early'
 
@@ -2586,7 +2683,6 @@ function _ntBuildDrumCol(col, items) {
 function _ntDrumHighlight(col) {
   const idx = Math.round(col.scrollTop / DRUM_IH);
   col.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('drum-sel', i === idx));
-  // Sync manual inputs on HH/MM columns
   if (col.id === 'drum-hh' || col.id === 'drum-mm' || col.id === 'drum-ap') {
     const v = _ntDrumGet(col);
     if (col.id === 'drum-hh') { const e = document.getElementById('nt-m-hh'); if (e) e.value = v; }
@@ -2613,7 +2709,6 @@ function ntInitDrum() {
   _ntBuildDrumCol(hhCol, Array.from({ length: 12 }, (_, i) => { const v = String(i + 1).padStart(2, '0'); return { v, label: v }; }));
   _ntBuildDrumCol(mmCol, Array.from({ length: 60 }, (_, i) => { const v = String(i).padStart(2, '0'); return { v, label: v }; }));
   _ntBuildDrumCol(apCol, [{ v: 'AM', label: 'AM' }, { v: 'PM', label: 'PM' }]);
-  // Auto-set to current time with auto AM/PM
   const now = new Date();
   const h = now.getHours(), m = now.getMinutes();
   const isAM = h < 12;
@@ -2623,7 +2718,6 @@ function ntInitDrum() {
     _ntDrumSet(mmCol, String(m).padStart(2, '0'));
     _ntDrumSet(apCol, isAM ? 'AM' : 'PM');
     _ntDrumHighlight(hhCol); _ntDrumHighlight(mmCol); _ntDrumHighlight(apCol);
-    // Sync manual fields
     const mhh = document.getElementById('nt-m-hh');
     const mmm = document.getElementById('nt-m-mm');
     if (mhh) mhh.value = String(dispH).padStart(2, '0');
@@ -2659,15 +2753,12 @@ function ntManualAmPm(val) {
 }
 function ntOpenPicker(type) {
   _ntCurrentType = type;
-  // Set time label based on type
   const lbl = document.getElementById('nt-fs-time-lbl');
   if (lbl) lbl.textContent = type === 'late' ? 'Arrives at' : 'Leaving at';
-  // Populate staff info in form
   const fsName = document.getElementById('nt-fs-name');
   const fsId = document.getElementById('nt-fs-id');
   if (fsName && ntStaff) fsName.textContent = ntStaff.name;
   if (fsId && ntStaff) fsId.textContent = ntStaff.empId;
-  // Pre-set current time
   const now = new Date();
   const h = now.getHours(), m = now.getMinutes();
   const isAM = h < 12;
@@ -2677,15 +2768,12 @@ function ntOpenPicker(type) {
   if (hhEl) { hhEl.value = String(dispH).padStart(2, '0'); hhEl.textContent = String(dispH).padStart(2, '0'); }
   if (mmEl) { mmEl.value = String(m).padStart(2, '0'); mmEl.textContent = String(m).padStart(2, '0'); }
   ntFsAmPm(isAM ? 'AM' : 'PM');
-  // Clear reason
   const reason = document.getElementById('nt-fs-reason');
   if (reason) reason.value = '';
-  // Transition to form screen
   document.getElementById('nt-type-select').style.display = 'none';
   document.getElementById('nt-form-screen').style.display = 'block';
 }
 function ntClosePicker() {
-  // kept for compatibility; new flow uses ntBackToTypeSelect()
   document.getElementById('nt-form-screen').style.display = 'none';
   document.getElementById('nt-type-select').style.display = 'none';
   document.getElementById('nt-card-late')?.classList.remove('nt-card-active');
@@ -2742,14 +2830,17 @@ function ntReset() {
   if (ntForm) ntForm.style.display = 'none';
   if (ntSuccess) ntSuccess.style.display = 'none';
   const _nni = document.getElementById('nt-name-input');
+  const _nii = document.getElementById('nt-id-input');
   if (_nni) {
     const saved = getSavedUserDeviceMemory();
     if (saved) {
-      _nni.value = (saved.name || '') + ' (' + saved.empId + ')';
+      _nni.value = (LANG === 'kh' ? (saved.nameKh || saved.name) : saved.name) || saved.name || '';
       _nni.dataset.selectedStaff = JSON.stringify(saved);
+      if (_nii) _nii.value = saved.empId || '';
     } else {
       _nni.value = '';
       delete _nni.dataset.selectedStaff;
+      if (_nii) _nii.value = '';
     }
   }
   updateStaffGateActions('nt-name-input');
@@ -2794,13 +2885,13 @@ function ntUpdateDiff() {
   if (_ntCurrentType === 'late') {
     if (selectedMins <= 510) diffMins = 0;
     else if (selectedMins > 510 && selectedMins <= 720) diffMins = selectedMins - 510;
-    else if (selectedMins > 720 && selectedMins <= 780) diffMins = 210;
-    else if (selectedMins > 780) diffMins = 210 + (selectedMins - 780);
+    else if (selectedMins > 720 && selectedMins <= 780) diffMins = 0;
+    else if (selectedMins > 780) diffMins = selectedMins - 780;
   } else if (_ntCurrentType === 'early') {
     if (selectedMins >= 1050) diffMins = 0;
     else if (selectedMins >= 780 && selectedMins < 1050) diffMins = 1050 - selectedMins;
-    else if (selectedMins >= 720 && selectedMins < 780) diffMins = 270;
-    else if (selectedMins < 720) diffMins = 270 + (720 - Math.max(selectedMins, 510));
+    else if (selectedMins >= 720 && selectedMins < 780) diffMins = 0;
+    else if (selectedMins < 720) diffMins = 720 - Math.max(selectedMins, 510);
   }
 
   const diffEl = document.getElementById('nt-time-diff');
@@ -2943,31 +3034,49 @@ function ntNumpadClose() {
 }
 async function ntVerify() {
   const inputEl = document.getElementById('nt-name-input');
-  const rawInput = inputEl ? inputEl.value.trim() : '';
+  const idEl = document.getElementById('nt-id-input');
+  const rawInputName = inputEl ? inputEl.value.trim() : '';
+  const rawInputId = idEl ? idEl.value.trim() : '';
   const fb = document.getElementById('nt-idfb');
-  if (!rawInput) { fb.textContent = 'Please select or enter your Full Name.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return; }
+  
+  if (!rawInputName || !rawInputId) { 
+    fb.textContent = 'Please provide both your Full Name and Employee ID.'; 
+    fb.className = 'idfb err'; 
+    gateSetError('nt-gate'); 
+    return; 
+  }
+
+  const btn = document.getElementById('nt-gate-btn');
+  const sp = document.getElementById('nt-gate-sp');
+  const txt = document.getElementById('nt-gate-txt');
+  if (btn) btn.disabled = true;
+  if (sp) sp.style.display = 'block';
+  if (txt) txt.style.opacity = '0';
 
   let targetStaff = null;
-  if (inputEl.dataset.selectedStaff) {
-    try { targetStaff = JSON.parse(inputEl.dataset.selectedStaff); } catch (e) { }
-  }
-  if (!targetStaff) {
-    const staffList = await loadStaffCache();
-    const match = rawInput.match(/\(([^)]+)\)$/);
-    const targetId = match ? match[1].trim() : '';
-    const cleanName = rawInput.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-    targetStaff = staffList.find(s => {
-      const idMatch = targetId && (s.empId === targetId || s.empId.replace(/^0+/, '') === targetId.replace(/^0+/, ''));
-      const nameMatch = (s.name || '').toLowerCase() === cleanName || (s.nameKh || '').toLowerCase() === cleanName;
-      return idMatch || nameMatch;
-    });
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      let rs = res.staff;
+      let rsId = String(rs.empId).trim().toUpperCase();
+      let tid = rawInputId.toUpperCase();
+      let idMatch = (rsId === tid);
+      let n = String(rs.name || '').trim().toLowerCase();
+      let nk = String(rs.nameKh || '').trim().toLowerCase();
+      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
+      let nameMatch = (n === cleanName) || (nk === cleanName);
+      if (idMatch && nameMatch) targetStaff = rs;
+    }
+  } catch (e) { }
+
+  if (btn) btn.disabled = false;
+  if (sp) sp.style.display = 'none';
+  if (txt) txt.style.opacity = '1';
+
+  if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
+    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return;
   }
 
-  if (!targetStaff) {
-    fb.textContent = 'Staff name not found. Please select from the dropdown.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return;
-  }
-
-  // Instant transition! No API call needed since we have staff data from cache.
   ntStaff = targetStaff;
   saveUserDeviceMemory(ntStaff);
   document.getElementById('nt-gate').style.display = 'none';
@@ -2988,30 +3097,19 @@ async function ntSubmit() {
   btn.disabled = true; sp.style.display = 'block';
   try {
     if (!isMock()) {
-      const payload = {
+      const res = await apiPost('sendNotice', {
         noticeType: _ntCurrentType,
         name: ntStaff.name, empId: ntStaff.empId,
         time, returnTime: '—', reason,
         noticeDate: new Date().toLocaleDateString('en-GB')
-      };
-      
-      const res = await apiPost('sendNotice', payload);
+      });
       if (res.result !== 'success') throw new Error('failed');
-      
-      if (tg && tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
-        try {
-          tg.sendData(JSON.stringify({ action: 'submitNotice', data: payload }));
-          tg.close();
-          return;
-        } catch (e) { console.error('Telegram sendData failed:', e); }
-      }
     }
     document.getElementById('nt-form-screen').style.display = 'none';
     document.getElementById('nt-success').style.display = 'flex';
   } catch (e) { toast('Failed to send. Try again.', 'bad'); } finally { btn.disabled = false; sp.style.display = 'none'; }
 }
 
-// ══════════════════ SYNC/REFRESH ══════════════════════════════
 function syncRefresh() {
   const icon = document.getElementById('sync-icon');
   if (icon) icon.style.animation = 'spin .7s linear infinite';
@@ -3019,11 +3117,9 @@ function syncRefresh() {
     if (icon) icon.style.animation = '';
     toast('Synced', 'ok2');
   }, 1200);
-  // Force reload data if HR is logged in
   if (hrUser && hrToken) { hrLoadData(); }
 }
 
-// ══════════════════ ATTENDANCE ══════════════════════════════════
 const WORK_START_MINS = 8 * 60 + 30;  // 08:30
 const EARLY_THRESH_MINS = 8 * 60 + 20;  // 08:20 — 10 min early threshold
 const WORK_END_MINS = 17 * 60 + 30; // 17:30
@@ -3085,9 +3181,7 @@ function attnHandleUpload(input) {
         const empId = String(r[iId] || '').trim();
         let date = String(r[iDate] || '').trim();
         if (!empId || empId.startsWith('[') || !date || date.startsWith('[')) continue;
-        // Normalise: if YYYY-MM-DD convert to DD-MM-YYYY for display
         if (/^\d{4}-\d{2}-\d{2}$/.test(date)) { const p = date.split('-'); date = p[2] + '-' + p[1] + '-' + p[0]; }
-        // Also handle Excel serial date numbers
         if (/^\d{5}$/.test(date)) { const d = new Date(Math.round((Number(date) - 25569) * 86400 * 1000)); date = String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + d.getFullYear(); }
         const checkIn = String(iIn >= 0 ? r[iIn] || '' : '').trim();
         const checkOut = String(iOut >= 0 ? r[iOut] || '' : '').trim();
@@ -3173,7 +3267,6 @@ function hrManualInit() {
 function meShowSection(section) {
   document.getElementById('me-form-leave').style.display = section === 'leave' ? 'block' : 'none';
   document.getElementById('me-form-notice').style.display = section === 'notice' ? 'block' : 'none';
-  // highlight active button
   const bl = document.getElementById('me-btn-leave'), bn = document.getElementById('me-btn-notice');
   if (bl) { bl.style.background = section === 'leave' ? 'var(--red)' : 'var(--surface2)'; bl.style.color = section === 'leave' ? '#fff' : 'var(--txt2)'; bl.style.borderColor = section === 'leave' ? 'var(--red)' : 'var(--border)'; }
   if (bn) { bn.style.background = section === 'notice' ? 'var(--red)' : 'var(--surface2)'; bn.style.color = section === 'notice' ? '#fff' : 'var(--txt2)'; bn.style.borderColor = section === 'notice' ? 'var(--red)' : 'var(--border)'; }
@@ -3197,13 +3290,10 @@ async function hrManualLookup() {
   document.getElementById('me-pos').textContent = s.position;
   document.getElementById('me-result').style.display = 'block';
   document.getElementById('me-type-sel').style.display = 'block';
-  // reset forms
   document.getElementById('me-form-leave').style.display = 'none';
   document.getElementById('me-form-notice').style.display = 'none';
-  // reset leave form fields
   ['me-from', 'me-to', 'me-reason'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('me-days').value = '1';
-  // reset notice form fields
   document.getElementById('me-ntime').value = '';
   const _mnret = document.getElementById('me-nreturn'); if (_mnret) _mnret.value = '';
   document.getElementById('me-nreason').value = '';
@@ -3421,9 +3511,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  // Guaranteed fallback dismiss
-  setTimeout(dismissSplash, 2800);
-
   try {
     if (status) status.textContent = 'Loading staff data...';
     await loadStaffCache();
@@ -3433,10 +3520,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (status) status.textContent = 'Ready';
   }
 
-  if (window._triggerSplashFastForward) window._triggerSplashFastForward();
-  else window._splashFastForward = true;
+  window._splashReadyToDismiss = dismissSplash;
 
-  setTimeout(dismissSplash, 800);
+  if (window._splashAnimDone) {
+    dismissSplash();
+  } else {
+    if (window._triggerSplashFastForward) window._triggerSplashFastForward();
+    else window._splashFastForward = true;
+  }
 });
 
 // ── BUILT-IN POPUP DATE CALENDAR WITH WEEKEND BLACKOUT ───────────────────
@@ -3612,13 +3703,11 @@ function renderBuiltInCalendar() {
     <div class="cal-grid-days">
   `;
 
-  // Previous month trailing days
   for (let i = firstDayIdx - 1; i >= 0; i--) {
     const dayNum = prevLastDate - i;
     html += `<div class="cal-cell cal-off-month">${dayNum}</div>`;
   }
 
-  // Current month days
   for (let day = 1; day <= lastDate; day++) {
     const dateObj = new Date(_calYear, _calMonth, day);
     const yyyy = _calYear;
@@ -3661,7 +3750,6 @@ function renderBuiltInCalendar() {
     </div>`;
   }
 
-  // Next month leading days (Fixed 42 cells = 6 rows for 100% height stability)
   const totalCells = firstDayIdx + lastDate;
   const remainingCells = 42 - totalCells;
   for (let i = 1; i <= remainingCells; i++) {
@@ -3670,7 +3758,6 @@ function renderBuiltInCalendar() {
 
   html += `</div>`;
 
-  // Reserved Summary Bar below calendar (Maintains fixed height to prevent shape shifting)
   if (fromVal && toVal && fromVal <= toVal) {
     const wd = workDays(fromVal, toVal);
     const weCount = weekendDays(fromVal, toVal);
@@ -3764,7 +3851,6 @@ function calSelectDate(isoDate, isWknd, isHol) {
   renderBuiltInCalendar();
 }
 
-// ══════════════════ HR HOLIDAYS MANAGEMENT ══════════════════
 let _importedHolidaysPending = [];
 
 function hrGetCambodianHolidaysForYear(year) {
@@ -4023,7 +4109,6 @@ async function hrSyncHolidaysFromSheet() {
   }
 }
 
-// ── Export Template Logic ──
 function hrOpenHolidayExportModal() {
   const modal = document.getElementById('hr-hol-export-modal');
   if (!modal) return;
@@ -4099,7 +4184,6 @@ function hrDownloadHolidayTemplate() {
   toast(LANG === 'kh' ? `បានទាញយក Template ថ្ងៃបុណ្យឆ្នាំ ${targetYear}` : `Holiday template for year ${targetYear} downloaded successfully!`, 'good');
 }
 
-// ── Import & Translate Logic ──
 function hrOpenHolidayImportModal() {
   const modal = document.getElementById('hr-hol-import-modal');
   if (!modal) return;
@@ -4201,7 +4285,6 @@ function hrParseCSVLines(text) {
         curLine.push(curVal.trim());
         curVal = '';
       } else if (ch === '\r') {
-        // Skip
       } else if (ch === '\n') {
         curLine.push(curVal.trim());
         if (curLine.some(c => c.length > 0)) {
@@ -4456,16 +4539,12 @@ async function hrSubmitHolidayImport() {
   }
 }
 
-// ══════════════════ KEYBOARD & VIEWPORT ADAPTATION ENGINE ══════════════════
-
-// 1. Date Input Helpers (Keyboard & Touchscreen Numpad)
 function getIsoDateVal(id) {
   const el = typeof id === 'string' ? document.getElementById(id) : id;
   if (!el) return '';
   const val = (el.value || el.dataset.iso || '').trim();
   if (!val) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  // Convert DD/MM/YYYY or DD-MM-YYYY if typed in alternate format
   const dmyMatch = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (dmyMatch) {
     const d = dmyMatch[1].padStart(2, '0');
@@ -4478,7 +4557,6 @@ function getIsoDateVal(id) {
 
 function handleDateKeyInput(target, el) {
   let val = el.value.trim();
-  // Auto-format clean YYYY-MM-DD as user types pure digits (e.g. 20260815 -> 2026-08-15)
   const digits = val.replace(/\D/g, '');
   if (digits.length === 8 && !val.includes('-') && !val.includes('/')) {
     val = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
@@ -4538,7 +4616,6 @@ function validateToDate() {
   }
 }
 
-// 2. Staff Search Keyboard Navigation (ArrowUp/ArrowDown/Enter/Escape)
 function handleStaffKeyNav(e, inputId, listId, verifyFn) {
   const listEl = document.getElementById(listId);
   if (!listEl || listEl.style.display === 'none') {
@@ -4580,7 +4657,6 @@ function handleStaffKeyNav(e, inputId, listId, verifyFn) {
   }
 }
 
-// Attach keyboard navigation to staff gate inputs
 document.addEventListener('DOMContentLoaded', () => {
   const rInput = document.getElementById('r-name-input');
   if (rInput) rInput.addEventListener('keydown', (e) => handleStaffKeyNav(e, 'r-name-input', 'r-list', rVerify));
@@ -4592,15 +4668,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (stInput) stInput.addEventListener('keydown', (e) => handleStaffKeyNav(e, 'st-name-input', 'st-list', stVerify));
 });
 
-// 3. Virtual Keyboard Visibility (No Block on Smartphone/Tablet)
-// Uses a debounce to prevent rapid-fire layout recalculations from causing jumping.
 if (window.visualViewport) {
   let _kbTimer = null;
   const handleViewportChange = () => {
     if (_kbTimer) clearTimeout(_kbTimer);
     _kbTimer = setTimeout(() => {
       const vh = window.visualViewport.height;
-      const wh = window.innerHeight;
+      const wh = (window.Telegram?.WebApp?.viewportStableHeight || window.innerHeight);
       const diff = wh - vh;
       if (diff > 120) {
         document.body.classList.add('keyboard-open');
@@ -4615,7 +4689,6 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', handleViewportChange);
 }
 
-// 4. Calendar Modal Keyboard Navigation (Laptop/PC & Built-in Keyboards)
 document.addEventListener('keydown', (e) => {
   const calModal = document.getElementById('cal-modal');
   if (!calModal || calModal.style.display === 'none') return;
@@ -4635,9 +4708,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════
-// GUIDED INTERACTIVE SPOTLIGHT TOUR ENGINE (BORDERLESS & SILENT)
-// ═══════════════════════════════════════════════════════
 const TOUR_STEPS = [
   { targetId: 'rsc-dates' },
   { targetId: 'rsc-type' },
@@ -4645,193 +4715,251 @@ const TOUR_STEPS = [
 ];
 
 let _currentTourStep = 0;
-let _tourActive = false;
-let _tourAdvancingTimeout = null;
 
-function startGuidedTour(force = false) {
-  if (window.innerWidth <= 768 || window.matchMedia('(max-width: 768px)').matches) {
-    // Darken screen guide is disabled on smartphone sizes
-    return;
-  }
-
-  const reqForm = document.getElementById('req-form');
-  const reqView = document.getElementById('v-request');
-  if (!reqForm || reqForm.style.display === 'none' || !reqView || !reqView.classList.contains('active')) {
-    return;
-  }
-
-  const overlay = document.getElementById('guided-tour-overlay');
-  if (!overlay) return;
-
-  const prevBtn = document.getElementById('r-prev-btn');
-  if (prevBtn) prevBtn.classList.remove('btn-continue-glowing');
-
-  _tourActive = true;
-  _currentTourStep = 0;
-
-  overlay.style.display = 'block';
-
-  requestAnimationFrame(() => {
-    overlay.classList.add('active');
-    renderTourStep(0);
+// --- Custom Select UI Initialization ---
+function initCustomSelects() {
+  document.querySelectorAll('select:not(.no-custom)').forEach(select => {
+    if (select.parentNode.classList.contains('custom-select-wrapper')) return;
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper ' + (select.className || '');
+    // Only inherit non-layout breaking styles
+    wrapper.style.width = select.style.width || 'auto';
+    wrapper.style.margin = select.style.margin || '0';
+    wrapper.style.position = 'relative';
+    wrapper.style.display = select.style.display === 'none' ? 'none' : 'inline-block';
+    
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    
+    const originalDisplay = select.style.display;
+    select.style.display = 'none';
+    
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    // Inherit padding/borders if we want, or rely on CSS
+    if (select.style.padding) trigger.style.padding = select.style.padding;
+    if (select.style.borderRadius) trigger.style.borderRadius = select.style.borderRadius;
+    if (select.style.fontSize) trigger.style.fontSize = select.style.fontSize;
+    if (select.style.background) trigger.style.background = select.style.background;
+    if (select.style.color) trigger.style.color = select.style.color;
+    if (select.style.border) trigger.style.border = select.style.border;
+    
+    const textSpan = document.createElement('span');
+    textSpan.className = 'custom-select-text';
+    trigger.appendChild(textSpan);
+    
+    const icon = document.createElement('div');
+    icon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    icon.className = 'custom-select-icon';
+    trigger.appendChild(icon);
+    
+    const optionsContainer = document.createElement('div');
+    optionsContainer.className = 'custom-select-options';
+    
+    const updateTrigger = () => {
+      const selOpt = select.options[select.selectedIndex];
+      textSpan.textContent = selOpt ? selOpt.text : 'Select...';
+      // Sync display if it was toggled
+      if (select.style.display === 'none' && originalDisplay !== 'none' && !select.classList.contains('force-hide')) {
+        // leave it hidden but manage wrapper
+      }
+    };
+    updateTrigger();
+    
+    const buildOptions = () => {
+      optionsContainer.innerHTML = '';
+      Array.from(select.options).forEach((opt, index) => {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option' + (opt.selected ? ' selected' : '');
+        div.textContent = opt.text;
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
+          select.selectedIndex = index;
+          updateTrigger();
+          closeAllCustomSelects();
+          const evt = new Event('change', { bubbles: true });
+          select.dispatchEvent(evt);
+        });
+        optionsContainer.appendChild(div);
+      });
+    };
+    buildOptions();
+    
+    trigger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isOpen = optionsContainer.classList.contains('open');
+      closeAllCustomSelects();
+      if (!isOpen) {
+        buildOptions();
+        optionsContainer.classList.add('open');
+        trigger.classList.add('open');
+        
+        const rect = trigger.getBoundingClientRect();
+        if ((window.Telegram?.WebApp?.viewportStableHeight || window.innerHeight) - rect.bottom < 220 && rect.top > 220) {
+          optionsContainer.classList.add('drop-up');
+        } else {
+          optionsContainer.classList.remove('drop-up');
+        }
+      }
+    });
+    
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(optionsContainer);
+    
+    const observer = new MutationObserver(() => { updateTrigger(); buildOptions(); });
+    observer.observe(select, { childList: true, characterData: true, subtree: true });
   });
-
-  _attachTourInteractiveListeners();
-  window.addEventListener('resize', _tourOnResize);
-  window.addEventListener('scroll', _tourOnResize, true);
-  document.addEventListener('keydown', _tourOnKeyDown);
 }
 
-function _attachTourInteractiveListeners() {
-  const fromEl = document.getElementById('rf-from');
-  const toEl = document.getElementById('rf-to');
-  if (fromEl) fromEl.addEventListener('change', () => tourNotifyAction('date'), { passive: true });
-  if (toEl) toEl.addEventListener('change', () => tourNotifyAction('date'), { passive: true });
-
-  const rsnEl = document.getElementById('rf-rsn');
-  if (rsnEl) {
-    rsnEl.addEventListener('input', () => {
-      if (_tourActive) {
-        closeGuidedTour(true);
-      }
-    });
-    rsnEl.addEventListener('keydown', (e) => {
-      if (_tourActive && e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        closeGuidedTour(true);
-      }
-    });
-  }
+function closeAllCustomSelects() {
+  document.querySelectorAll('.custom-select-options.open').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.custom-select-trigger.open').forEach(el => el.classList.remove('open'));
 }
 
-function renderTourStep(idx) {
-  if (window.innerWidth <= 768) {
-    closeGuidedTour(false);
-    return;
-  }
-  if (!_tourActive || idx < 0 || idx >= TOUR_STEPS.length) return;
-  _currentTourStep = idx;
-  const step = TOUR_STEPS[idx];
+document.addEventListener('click', closeAllCustomSelects);
 
-  // Remove active target class from all cards
-  document.querySelectorAll('.req-section-card').forEach(c => c.classList.remove('tour-active-target'));
+// Trigger on load
+window.addEventListener('DOMContentLoaded', initCustomSelects);
+// Trigger immediately as well in case DOM is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(initCustomSelects, 100);
+}
 
-  const target = document.getElementById(step.targetId);
-  if (!target) return;
-
-  // Elevate active card above dark backdrop so user can interact with it directly
-  target.classList.add('tour-active-target');
-  target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-
-  const rect = target.getBoundingClientRect();
-  const pad = 4;
-  const x = Math.max(0, rect.left - pad);
-  const y = Math.max(0, rect.top - pad);
-  const w = rect.width + pad * 2;
-  const h = rect.height + pad * 2;
-
-  // Update Pulse Ring
-  const ring = document.getElementById('tour-pulse-ring');
-  if (ring) {
-    ring.style.transform = `translate(${x}px, ${y}px)`;
-    ring.style.width = `${w}px`;
-    ring.style.height = `${h}px`;
-  }
-
-  // Auto-focus interactive field if in step 2 (Reason)
-  if (idx === 2) {
-    setTimeout(() => {
-      const rsn = document.getElementById('rf-rsn');
-      if (rsn) rsn.focus();
-    }, 200);
+// --- Legacy Data Import ---
+function resetLegacyImport() {
+  document.getElementById('legacy-csv-file').value = '';
+  document.getElementById('legacy-file-name').textContent = 'No file chosen';
+  legacyDataToImport = null;
+  const btn = document.getElementById('legacy-import-btn');
+  if(btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
   }
 }
 
-function tourNotifyAction(actionType) {
-  if (!_tourActive) return;
-
-  if (actionType === 'date' && _currentTourStep === 0) {
-    if (_tourAdvancingTimeout) clearTimeout(_tourAdvancingTimeout);
-    _tourAdvancingTimeout = setTimeout(() => {
-      if (_tourActive && _currentTourStep === 0) {
-        nextTourStep();
-      }
-    }, 450);
-  } else if (actionType === 'type' && _currentTourStep === 1) {
-    if (_tourAdvancingTimeout) clearTimeout(_tourAdvancingTimeout);
-    _tourAdvancingTimeout = setTimeout(() => {
-      if (_tourActive && _currentTourStep === 1) {
-        nextTourStep();
-      }
-    }, 380);
-  } else if (actionType === 'reason') {
-    closeGuidedTour(true);
-  }
-}
-
-function nextTourStep() {
-  if (!_tourActive) return;
-  if (_currentTourStep < TOUR_STEPS.length - 1) {
-    renderTourStep(_currentTourStep + 1);
+function downloadLegacyTemplate() {
+  const typeEl = document.getElementById('legacy-data-type');
+  const type = typeEl ? typeEl.value : 'requests';
+  
+  let headers = [];
+  let filename = '';
+  if (type === 'notices') {
+    headers = ['Notice ID', 'Timestamp', 'Employee ID', 'Name', 'Notice Type', 'Effective Date', 'Time', 'Return Time', 'Reason / Details', 'Status'];
+    filename = 'Legacy_Notices_Template.csv';
   } else {
-    closeGuidedTour(true);
+    headers = ['Request ID', 'Timestamp', 'Employee ID', 'Name', 'Gender', 'Position', 'Leave Type', 'Date From', 'Date To', 'Working Days', 'Half First Day', 'Half Last Day', 'Reason', 'Submission Date', 'Submitted From', 'Status'];
+    filename = 'Legacy_Leave_Requests_Template.csv';
   }
+  
+  const csvContent = headers.join(',') + '\n';
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('download', filename);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
-function prevTourStep() {
-  if (!_tourActive) return;
-  if (_currentTourStep > 0) {
-    renderTourStep(_currentTourStep - 1);
-  }
-}
+let legacyDataToImport = null;
 
-function closeGuidedTour(completed = false) {
-  if (_tourAdvancingTimeout) clearTimeout(_tourAdvancingTimeout);
-
-  document.querySelectorAll('.req-section-card').forEach(c => c.classList.remove('tour-active-target'));
-
-  const overlay = document.getElementById('guided-tour-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 350);
-  }
-  _tourActive = false;
-  window.removeEventListener('resize', _tourOnResize);
-  window.removeEventListener('scroll', _tourOnResize, true);
-  document.removeEventListener('keydown', _tourOnKeyDown);
-
-  // When all steps are done or completed, add continuous glowing motion to the Continue button
-  const continueBtn = document.getElementById('r-prev-btn');
-  if (continueBtn) {
-    continueBtn.classList.add('btn-continue-glowing');
-    setTimeout(() => {
-      continueBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-    }, 250);
-  }
-}
-
-function _tourOnResize() {
-  if (window.innerWidth <= 768) {
-    if (_tourActive) closeGuidedTour(false);
+function handleLegacyFileSelect(event) {
+  const file = event.target.files[0];
+  const nameEl = document.getElementById('legacy-file-name');
+  const btn = document.getElementById('legacy-import-btn');
+  if (!file) {
+    nameEl.textContent = 'No file chosen';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+    legacyDataToImport = null;
     return;
   }
-  if (_tourActive) {
-    renderTourStep(_currentTourStep);
+  nameEl.textContent = file.name;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+    if (lines.length <= 1) {
+      toast('Error: File appears to be empty or missing data rows.', '');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+      return;
+    }
+    
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      let row = [];
+      let inQuotes = false;
+      let val = '';
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          row.push(val.trim());
+          val = '';
+        } else {
+          val += char;
+        }
+      }
+      row.push(val.trim());
+      data.push(row);
+    }
+    legacyDataToImport = data;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    toast(`Loaded ${data.length} records ready for import.`, '');
+  };
+  reader.readAsText(file);
+}
+
+async function importLegacyData() {
+  if (!legacyDataToImport || legacyDataToImport.length === 0) return;
+  
+  const typeEl = document.getElementById('legacy-data-type');
+  const dataType = typeEl ? typeEl.value : 'requests';
+  
+  const btn = document.getElementById('legacy-import-btn');
+  const ogText = btn.textContent;
+  btn.textContent = 'Importing...';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    const res = await callBackend('importLegacyData', { rows: legacyDataToImport, dataType: dataType });
+    if (res && res.result === 'success') {
+      toast(res.message, '');
+      resetLegacyImport();
+    } else {
+      toast(res?.message || 'Failed to import data.', '');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Error connecting to server.', '');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  } finally {
+    if (legacyDataToImport === null) {
+      if(btn) {
+        btn.textContent = 'Start Import';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
+    } else {
+      if(btn) btn.textContent = ogText;
+    }
   }
 }
 
-function _tourOnKeyDown(e) {
-  if (!_tourActive) return;
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    closeGuidedTour();
-  } else if (e.key === 'ArrowRight') {
-    e.preventDefault();
-    nextTourStep();
-  } else if (e.key === 'ArrowLeft') {
-    e.preventDefault();
-    prevTourStep();
-  }
-}
