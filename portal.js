@@ -131,8 +131,10 @@ function goTo(v) {
     if (v === 'home') loadHomeLeaveBoard();
     if (v === 'hr') {
       const tgUser = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) ? window.Telegram.WebApp.initDataUnsafe.user : null;
-      hrUser = hrUser || (tgUser ? tgUser.first_name : 'HR');
-      hrToken = hrToken || 'telegram-auth';
+      if (!hrUser && tgUser) {
+        hrUser = tgUser.first_name;
+        hrToken = hrToken || 'telegram-auth';
+      }
       if (hrUser) {
         const hrLogin = document.getElementById('hr-login');
         const hrDash = document.getElementById('hr-dash');
