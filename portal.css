@@ -6765,7 +6765,3 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
-
-.back-btn { display: none !important; }
-
-#hr-login { display: none !important; }
