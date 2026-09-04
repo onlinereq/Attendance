@@ -3484,7 +3484,7 @@ async function loadHomeLeaveBoard() {
         timingTag +
         statusBadge +
         `</div>` +
-        `<div style="font-size:11.5px;color:var(--txt3);margin-top:2px">${lType} · ID: ${l.empId || '—'}</div>` +
+        `<div style="font-size:11.5px;color:var(--txt3);margin-top:2px">${lType}</div>` +
         `</div>` +
         `</div>` +
         `<div style="text-align:right;flex-shrink:0">` +
