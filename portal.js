@@ -497,16 +497,34 @@ async function apiGet(action, params = {}) {
   if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
   return data;
 }
-async function apiPost(action, payload = {}) {
+async function apiPost(action, payload = {}, retryCount = 1) {
   if (isMock()) return { result: 'success' };
-  const signed = await signRequest(action);
-  const fp = getFingerprint();
-  const tgData = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp.initData : '';
-  const body = JSON.stringify({ action, ...payload, ...signed, fp, tgData });
-  const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
-  const data = await res.json();
-  if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
-  return data;
+  try {
+    const signed = await signRequest(action);
+    const fp = getFingerprint();
+    const tgData = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp.initData : '';
+    const body = JSON.stringify({ action, ...payload, ...signed, fp, tgData });
+    const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseErr) {
+      if (retryCount > 0) {
+        await new Promise(r => setTimeout(r, 1200));
+        return apiPost(action, payload, retryCount - 1);
+      }
+      throw parseErr;
+    }
+    if (data && data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
+    return data;
+  } catch (err) {
+    if (retryCount > 0) {
+      await new Promise(r => setTimeout(r, 1200));
+      return apiPost(action, payload, retryCount - 1);
+    }
+    throw err;
+  }
 }
 
 async function apiHR(action, data = {}) {
@@ -517,8 +535,118 @@ async function apiHR(action, data = {}) {
 function mockStaff(id) { return { result: 'notfound' }; }
 function mockHist(id) { return { result: 'notfound' }; }
 
+// ── ROBUST CREDENTIAL & IDENTITY MATCHERS ─────────────────────────
+function matchEmpId(idA, idB) {
+  if (!idA || !idB) return false;
+  const a = String(idA).trim().toUpperCase();
+  const b = String(idB).trim().toUpperCase();
+  if (a === b) return true;
+  // Match without leading zeros (e.g., '00024' vs '24')
+  const aNoZero = a.replace(/^0+/, '');
+  const bNoZero = b.replace(/^0+/, '');
+  if (aNoZero && aNoZero === bNoZero) return true;
+  // Match pure numeric digits (stripping any EMP, ID, # prefixes)
+  const aDigits = a.replace(/^[^0-9]+/, '').replace(/^0+/, '');
+  const bDigits = b.replace(/^[^0-9]+/, '').replace(/^0+/, '');
+  if (aDigits && aDigits === bDigits) return true;
+  return false;
+}
+
+function cleanNameForCompare(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/[\u00A0\u200B-\u200D\uFEFF]/g, ' ')
+    .replace(/\([^)]+\)$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function matchStaffName(nameSheet, nameKhSheet, inputName) {
+  const inp = cleanNameForCompare(inputName);
+  if (!inp) return false;
+  const n = cleanNameForCompare(nameSheet);
+  const nk = cleanNameForCompare(nameKhSheet);
+
+  if (n && n === inp) return true;
+  if (nk && nk === inp) return true;
+
+  // Check without spaces (common in Khmer script where spacing is arbitrary)
+  const inpNoSpace = inp.replace(/\s/g, '');
+  if (n && n.replace(/\s/g, '') === inpNoSpace) return true;
+  if (nk && nk.replace(/\s/g, '') === inpNoSpace) return true;
+
+  // Check reversed name order (First Last vs Last First)
+  const parts = inp.split(' ').filter(Boolean);
+  if (parts.length === 2) {
+    const rev = parts[1] + ' ' + parts[0];
+    if (n === rev || nk === rev) return true;
+  }
+
+  // Substring match for names with length >= 3
+  if (inp.length >= 3) {
+    if (n && (n.includes(inp) || inp.includes(n))) return true;
+    if (nk && (nk.includes(inp) || inp.includes(nk))) return true;
+  }
+  return false;
+}
+
+async function verifyStaffCredentials(rawInputName, rawInputId) {
+  let targetStaff = null;
+  let hasNetworkErr = false;
+
+  // 1. Attempt backend verification
+  try {
+    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName, name: rawInputName });
+    if (res && res.result === 'success' && res.staff) {
+      const rs = res.staff;
+      const idMatch = matchEmpId(rs.empId, rawInputId);
+      const nameMatch = matchStaffName(rs.name, rs.nameKh, rawInputName);
+      if (idMatch && nameMatch) {
+        targetStaff = rs;
+      }
+    }
+  } catch (e) {
+    hasNetworkErr = true;
+    console.warn('verifyStaffCredentials: API call failed, falling back to cache:', e);
+  }
+
+  // 2. Local cache fallback: check _appInitData.staffList
+  if (!targetStaff) {
+    const list = (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0)
+      ? _appInitData.staffList
+      : [];
+    if (list.length > 0) {
+      targetStaff = list.find(s => matchEmpId(s.empId, rawInputId) && matchStaffName(s.name, s.nameKh, rawInputName));
+    }
+  }
+
+  // 3. Fallback: try loading cache if empty
+  if (!targetStaff && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
+    try {
+      const staffList = await loadStaffCache();
+      if (staffList && staffList.length > 0) {
+        targetStaff = staffList.find(s => matchEmpId(s.empId, rawInputId) && matchStaffName(s.name, s.nameKh, rawInputName));
+      }
+    } catch (e) {}
+  }
+
+  return { targetStaff, hasNetworkErr };
+}
+
 // ── STAFF LIST & DEVICE MEMORY ──────────────────────────
 let _appInitData = null;
+
+// Restore immediately from session cache on load
+try {
+  const _savedCache = sessionStorage.getItem('app_init_cache');
+  if (_savedCache) {
+    const parsed = JSON.parse(_savedCache);
+    if (parsed && parsed.staffList && parsed.staffList.length > 0) {
+      _appInitData = parsed;
+    }
+  }
+} catch (e) {}
 
 async function loadStaffCache() {
   if (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0) return _appInitData.staffList;
@@ -533,6 +661,9 @@ async function loadStaffCache() {
       if (res.holidays && Array.isArray(res.holidays) && res.holidays.length > 0) {
         saveHolidaysCache(res.holidays);
       }
+      try {
+        sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+      } catch (e) {}
       if (_appInitData.staffList.length > 0) {
         return _appInitData.staffList;
       }
@@ -544,6 +675,9 @@ async function loadStaffCache() {
     if (resStaff && resStaff.result === 'success' && resStaff.staffList) {
       if (!_appInitData) _appInitData = { staffList: [], history: [], notices: [] };
       _appInitData.staffList = resStaff.staffList;
+      try {
+        sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+      } catch (e) {}
       return _appInitData.staffList;
     }
   } catch (e) { }
@@ -732,28 +866,21 @@ async function rVerify() {
   if (sp) sp.style.display = 'block';
   if (txt) txt.style.opacity = '0';
 
-  let targetStaff = null;
-  try {
-    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
-    if (res && res.result === 'success' && res.staff) {
-      let rs = res.staff;
-      let rsId = String(rs.empId).trim().toUpperCase();
-      let tid = rawInputId.toUpperCase();
-      let idMatch = (rsId === tid);
-      let n = String(rs.name || '').trim().toLowerCase();
-      let nk = String(rs.nameKh || '').trim().toLowerCase();
-      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-      let nameMatch = (n === cleanName) || (nk === cleanName);
-      if (idMatch && nameMatch) targetStaff = rs;
-    }
-  } catch (e) { }
+  const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
   if (btn) btn.disabled = false;
   if (sp) sp.style.display = 'none';
   if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('r-gate'); return;
+    if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
+      fb.textContent = 'Server is waking up. Please wait a few seconds and try again.';
+    } else {
+      fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.';
+    }
+    fb.className = 'idfb err';
+    gateSetError('r-gate');
+    return;
   }
 
   if (!targetStaff.gender) targetStaff.gender = 'Male';
@@ -1725,28 +1852,21 @@ async function stVerify() {
   if (sp) sp.style.display = 'block';
   if (txt) txt.style.opacity = '0';
 
-  let targetStaff = null;
-  try {
-    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
-    if (res && res.result === 'success' && res.staff) {
-      let rs = res.staff;
-      let rsId = String(rs.empId).trim().toUpperCase();
-      let tid = rawInputId.toUpperCase();
-      let idMatch = (rsId === tid);
-      let n = String(rs.name || '').trim().toLowerCase();
-      let nk = String(rs.nameKh || '').trim().toLowerCase();
-      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-      let nameMatch = (n === cleanName) || (nk === cleanName);
-      if (idMatch && nameMatch) targetStaff = rs;
-    }
-  } catch (e) { }
+  const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
   if (btn) btn.disabled = false;
   if (sp) sp.style.display = 'none';
   if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('st-gate'); return;
+    if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
+      fb.textContent = 'Server is waking up. Please wait a few seconds and try again.';
+    } else {
+      fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.';
+    }
+    fb.className = 'idfb err';
+    gateSetError('st-gate');
+    return;
   }
 
   if (!targetStaff.gender) targetStaff.gender = 'Male';
@@ -3055,28 +3175,21 @@ async function ntVerify() {
   if (sp) sp.style.display = 'block';
   if (txt) txt.style.opacity = '0';
 
-  let targetStaff = null;
-  try {
-    const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName });
-    if (res && res.result === 'success' && res.staff) {
-      let rs = res.staff;
-      let rsId = String(rs.empId).trim().toUpperCase();
-      let tid = rawInputId.toUpperCase();
-      let idMatch = (rsId === tid);
-      let n = String(rs.name || '').trim().toLowerCase();
-      let nk = String(rs.nameKh || '').trim().toLowerCase();
-      let cleanName = rawInputName.replace(/\([^)]+\)$/, '').trim().toLowerCase();
-      let nameMatch = (n === cleanName) || (nk === cleanName);
-      if (idMatch && nameMatch) targetStaff = rs;
-    }
-  } catch (e) { }
+  const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
   if (btn) btn.disabled = false;
   if (sp) sp.style.display = 'none';
   if (txt) txt.style.opacity = '1';
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
-    fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.'; fb.className = 'idfb err'; gateSetError('nt-gate'); return;
+    if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
+      fb.textContent = 'Server is waking up. Please wait a few seconds and try again.';
+    } else {
+      fb.textContent = 'Could not verify your credentials. Please check your Name and Employee ID.';
+    }
+    fb.className = 'idfb err';
+    gateSetError('nt-gate');
+    return;
   }
 
   ntStaff = targetStaff;
@@ -3364,7 +3477,7 @@ async function hrManualNoticeSubmit() {
 }
 
 async function wipeTestUser() {
-  if (!confirm('Wipe ALL data for test user johnwich / KMEOW007?\n\nThis deletes all their requests, notices, and attendance records, and resets their leave balance to 0.\n\nThis cannot be undone.')) return;
+  if (!confirm('Wipe ALL data for test user johnwich / KMEOW007?\r\n\r\nThis deletes all their requests, notices, and attendance records, and resets their leave balance to 0.\r\n\r\nThis cannot be undone.')) return;
   const btn = document.getElementById('wipe-test-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Wiping...'; }
   try {
@@ -4163,13 +4276,13 @@ function hrDownloadHolidayTemplate() {
     rows = hrGetCambodianHolidaysForYear(targetYear);
   }
 
-  let csvContent = '\uFEFFDate,Holiday Name (English),Holiday Name (Khmer),Type\r\n';
+  let csvContent = '\uFEFFDate,Holiday Name (English),Holiday Name (Khmer),Type\r\r\n';
   rows.forEach(r => {
     const d = r.date || r.dateISO || '';
     const n = `"${(r.name || '').replace(/"/g, '""')}"`;
     const nKh = `"${(r.nameKh || r.nameKhmer || '').replace(/"/g, '""')}"`;
     const t = `"${(r.type || 'Public Holiday').replace(/"/g, '""')}"`;
-    csvContent += `${d},${n},${nKh},${t}\r\n`;
+    csvContent += `${d},${n},${nKh},${t}\r\r\n`;
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -4287,7 +4400,7 @@ function hrParseCSVLines(text) {
         curLine.push(curVal.trim());
         curVal = '';
       } else if (ch === '\r') {
-      } else if (ch === '\n') {
+      } else if (ch === '\r\n') {
         curLine.push(curVal.trim());
         if (curLine.some(c => c.length > 0)) {
           lines.push(curLine);
@@ -4855,7 +4968,7 @@ function downloadLegacyTemplate() {
     filename = 'Legacy_Leave_Requests_Template.csv';
   }
   
-  const csvContent = headers.join(',') + '\n';
+  const csvContent = headers.join(',') + '\r\n';
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -4886,7 +4999,7 @@ function handleLegacyFileSelect(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const text = e.target.result;
-    const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+    const lines = text.split(/\r\r\n|\r\n/).filter(line => line.trim() !== '');
     if (lines.length <= 1) {
       toast('Error: File appears to be empty or missing data rows.', '');
       btn.disabled = true;
