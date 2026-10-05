@@ -1681,14 +1681,25 @@
           </div>
 
           <div class="rsuc-actions rsuc-fi4">
-            <button class="btn btn-g" onclick="rReset()" style="flex:1">← New Request</button>
-            <button class="btn btn-p" onclick="rReprintLast()" style="flex:1"><svg width="13" height="13"
+            <button class="btn btn-g" id="rsuc-new-btn" onclick="rReset()" style="flex:1;white-space:nowrap;justify-content:center;height:42px;border-radius:6px">← New Request</button>
+            <button class="btn btn-p" id="rsuc-reprint-btn" onclick="rReprintLast()" style="flex:1;white-space:nowrap;justify-content:center;height:42px;border-radius:6px"><svg width="13" height="13"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9" />
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg> Reprint</button>
+            <button class="btn btn-p" id="rsuc-tg-chat-btn" onclick="tgOpenChat()" style="display:none;flex:1;white-space:nowrap;justify-content:center;height:42px;border-radius:6px"><svg width="13" height="13"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg> Open chat</button>
+            <button class="btn btn-p" id="rsuc-tg-resend-btn" onclick="tgResendLastPdf()" style="display:none;flex:1;white-space:nowrap;justify-content:center;height:42px;border-radius:6px"><svg width="13" height="13"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10" />
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+              </svg> Resend</button>
           </div>
         </div>
       </div>
