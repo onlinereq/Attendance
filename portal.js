@@ -3,28 +3,36 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYjeoCtNv3G9UScOl0A
 // --- MOBILE APP INITIALIZATION ---
 document.addEventListener("touchstart", function() {}, {passive: true}); // Enable iOS :active pseudo-class on buttons
 
-if (window.Telegram && window.Telegram.WebApp) {
+const isTG = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
+
+if (isTG) {
   const tg = window.Telegram.WebApp;
   tg.ready();
   tg.expand();
-  tg.enableClosingConfirmation();
-  tg.disableVerticalSwipes();
+  if (typeof tg.enableClosingConfirmation === 'function') tg.enableClosingConfirmation();
+  if (typeof tg.disableVerticalSwipes === 'function') tg.disableVerticalSwipes();
   
   function updateTgViewport() {
-    document.documentElement.style.setProperty('--tg-viewport-height', tg.viewportStableHeight + 'px');
+    if (tg.viewportStableHeight) {
+      document.documentElement.style.setProperty('--tg-viewport-height', tg.viewportStableHeight + 'px');
+    }
   }
   updateTgViewport();
-  tg.onEvent('viewportChanged', updateTgViewport);
+  if (typeof tg.onEvent === 'function') {
+    tg.onEvent('viewportChanged', updateTgViewport);
+  }
   
-  tg.BackButton.onClick(() => {
-    // If in request flow and not on step 1, go to previous step.
-    const form = document.getElementById('req-form');
-    if (form && form.style.display !== 'none' && form.getAttribute('data-mobile-step') && parseInt(form.getAttribute('data-mobile-step')) > 1) {
-      if (typeof prevMobileStep === 'function') prevMobileStep();
-    } else {
-      goTo('home');
-    }
-  });
+  if (tg.BackButton && typeof tg.BackButton.onClick === 'function') {
+    tg.BackButton.onClick(() => {
+      // If in request flow and not on step 1, go to previous step.
+      const form = document.getElementById('req-form');
+      if (form && form.style.display !== 'none' && form.getAttribute('data-mobile-step') && parseInt(form.getAttribute('data-mobile-step')) > 1) {
+        if (typeof prevMobileStep === 'function') prevMobileStep();
+      } else {
+        goTo('home');
+      }
+    });
+  }
 }
 
 // ── GLOBAL ERROR TRACKING ────────────────────────
@@ -65,10 +73,10 @@ window.addEventListener('unhandledrejection', function (e) {
 });// ── THEME ───────────────────────────────────────
 let _dark = false;
 function applyTheme() {
-  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) {
+  if (isTG && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) {
     _dark = window.Telegram.WebApp.colorScheme === 'dark';
-    window.Telegram.WebApp.setHeaderColor('bg_color');
-    window.Telegram.WebApp.setBackgroundColor('bg_color');
+    if (typeof window.Telegram.WebApp.setHeaderColor === 'function') window.Telegram.WebApp.setHeaderColor('bg_color');
+    if (typeof window.Telegram.WebApp.setBackgroundColor === 'function') window.Telegram.WebApp.setBackgroundColor('bg_color');
   } else {
     _dark = localStorage.getItem('theme') === 'dark';
   }
@@ -76,12 +84,12 @@ function applyTheme() {
   document.querySelectorAll('.theme-btn').forEach(b => b.innerHTML = _dark ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>');
 }
 function toggleTheme() {
-  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) return; // Managed by Telegram
+  if (isTG && window.Telegram.WebApp && window.Telegram.WebApp.colorScheme) return; // Managed by Telegram
   _dark = !_dark;
   localStorage.setItem('theme', _dark ? 'dark' : 'light');
   applyTheme();
 }
-if (window.Telegram && window.Telegram.WebApp) {
+if (isTG && window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.onEvent === 'function') {
   window.Telegram.WebApp.onEvent('themeChanged', applyTheme);
 }
 applyTheme();
@@ -116,7 +124,7 @@ setTimeout(hrPreload, 100);
 
 // ── NAV ─────────────────────────────────────────
 function goTo(v) {
-  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.BackButton) {
+  if (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.BackButton) {
     if (v === 'home') window.Telegram.WebApp.BackButton.hide();
     else window.Telegram.WebApp.BackButton.show();
   }
@@ -130,7 +138,7 @@ function goTo(v) {
     if (v === 'notice') ntReset();
     if (v === 'home') loadHomeLeaveBoard();
     if (v === 'hr') {
-      const tgUser = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) ? window.Telegram.WebApp.initDataUnsafe.user : null;
+      const tgUser = (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) ? window.Telegram.WebApp.initDataUnsafe.user : null;
       if (!hrUser && tgUser) {
         hrUser = tgUser.first_name;
         hrToken = hrToken || 'telegram-auth';
@@ -179,7 +187,12 @@ T.kh.rgBtn = "បន្ត";
 T.en.btnChange = "Change";
 T.kh.btnChange = "ប្តូរឈ្មោះ";
 
-function tx(k) { return (T[LANG] || T.en)[k] || T.en[k] || k; }
+function tx(k) {
+  if (k === 'conTxt' && isTG) {
+    return LANG === 'kh' ? 'យល់ព្រម & ផ្ញើ PDF' : 'Confirm & Send PDF';
+  }
+  return (T[LANG] || T.en)[k] || T.en[k] || k;
+}
 function setLang(l) { LANG = l; localStorage.setItem('lang', l); document.querySelectorAll('.lb').forEach(b => b.classList.remove('on')); document.querySelectorAll('.lb[data-lang="' + l + '"]').forEach(b => b.classList.add('on')); applyLang(); }
 function applyLang() {
   const s = (id, k) => { const e = document.getElementById(id); if (e) e.textContent = tx(k); };
@@ -252,7 +265,7 @@ async function syncAll() {
 // ── TOAST ────────────────────────────────────────
 let _tt;
 function toast(msg, type = '') { 
-  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+  if (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
     if (type === 'err') window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
     else window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
@@ -491,7 +504,13 @@ async function apiGet(action, params = {}) {
   if (isMock()) return { result: 'mock' };
   const signed = await signRequest(action);
   const fp = getFingerprint();
-  const qs = new URLSearchParams({ action, ...params, ...signed, fp }).toString();
+  const rawInitData = isTG ? window.Telegram.WebApp.initData : '';
+  const qsParams = { action, ...params, ...signed, fp };
+  if (rawInitData) {
+    qsParams.initData = rawInitData;
+    qsParams.tgData = rawInitData;
+  }
+  const qs = new URLSearchParams(qsParams).toString();
   const res = await fetch(SCRIPT_URL + '?' + qs);
   const data = await res.json();
   if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
@@ -499,11 +518,20 @@ async function apiGet(action, params = {}) {
 }
 async function apiPost(action, payload = {}, retryCount = 1) {
   if (isMock()) return { result: 'success' };
+  // Non-idempotent mutations must never auto-retry to prevent double-saving or duplicate notifications
+  const NON_RETRYABLE = [
+    'submitRequest', 'sendNotice', 'submitNotice', 'manualEntry', 'manualNotice',
+    'convertLateToLeave', 'updateStatus', 'updateRequestStatus', 'batchAction',
+    'deleteRequest', 'deleteNotice', 'addHoliday', 'deleteHoliday', 'sendLeavePdfToChat'
+  ];
+  if (NON_RETRYABLE.includes(action)) {
+    retryCount = 0;
+  }
   try {
     const signed = await signRequest(action);
     const fp = getFingerprint();
-    const tgData = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp.initData : '';
-    const body = JSON.stringify({ action, ...payload, ...signed, fp, tgData });
+    const rawInitData = isTG ? window.Telegram.WebApp.initData : '';
+    const body = JSON.stringify({ action, ...payload, ...signed, fp, initData: rawInitData, tgData: rawInitData });
     const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
     const text = await res.text();
     let data;
@@ -1452,7 +1480,8 @@ async function rConfirm() {
     return;
   }
   const halfNote = getHalfNote(from, to);
-  const payload = { employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: LANG.toUpperCase(), timestamp: new Date().toISOString() };
+  const clientReqId = 'REQ-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const payload = { clientRequestId: clientReqId, employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: LANG.toUpperCase(), timestamp: new Date().toISOString() };
   if (isTraining) {
     if (_appInitData) {
       if (!_appInitData.history) _appInitData.history = [];
@@ -1516,6 +1545,7 @@ function doConfirm() {
   if (_pendingPayload) {
     const { payload, from, to, days } = _pendingPayload;
     _lastSubmit = { ...payload, from, to, days, requestId: '' };
+    _lastTgSubmitResult = null;
     if (_appInitData) {
       if (!_appInitData.history) _appInitData.history = [];
       _appInitData.history.unshift({
@@ -1541,9 +1571,17 @@ function doConfirm() {
     if (!isMock()) {
       apiPost('submitRequest', payload).then(function (res) {
         if (res && res.requestId && _lastSubmit) { _lastSubmit.requestId = res.requestId; }
+        _lastTgSubmitResult = res;
         _appInitData = null;
         loadStaffCache().then(() => loadHomeLeaveBoard());
-      }).catch(function () { });
+        if (isTG) {
+          updateTgSuccessUI(res);
+        }
+      }).catch(function (err) {
+        if (isTG) {
+          updateTgSuccessUI({ result: 'error', pdfSent: false, error: (err && err.message) || 'Network error' });
+        }
+      });
     }
   }
   _isSubmitting = false;
@@ -1553,7 +1591,7 @@ function doConfirm() {
   const suc = document.getElementById('r-success');
   suc.style.display = 'flex';
   setReqBar(0);
-  if (_lastSubmit) { fillPrint(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days); }
+  if (!isTG && _lastSubmit) { fillPrint(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days); }
   rPopulateSuccess();
   document.getElementById('rf-from').value = '';
   document.getElementById('rf-to').value = '';
@@ -1565,9 +1603,100 @@ function doConfirm() {
   document.getElementById('halfday-row').style.display = 'none';
 }
 function rReprintLast() { if (_lastSubmit) fillPrint(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days); }
+
+let _lastTgSubmitResult = null;
+
+function updateTgSuccessUI(res) {
+  const subEl = document.querySelector('.rsuc-sub') || document.getElementById('rsuc-sub');
+  const reprintBtn = document.getElementById('rsuc-reprint-btn');
+  const chatBtn = document.getElementById('rsuc-tg-chat-btn');
+  const resendBtn = document.getElementById('rsuc-tg-resend-btn');
+
+  if (reprintBtn) reprintBtn.style.display = 'none';
+
+  if (!res) {
+    if (subEl) subEl.textContent = LANG === 'kh' ? 'កំពុងផ្ញើទម្រង់ PDF ទៅកាន់ Telegram របស់អ្នក...' : 'Sending PDF form to your Telegram chat...';
+    if (chatBtn) chatBtn.style.display = 'none';
+    if (resendBtn) resendBtn.style.display = 'none';
+    return;
+  }
+
+  if (res.pdfSent) {
+    if (subEl) subEl.textContent = LANG === 'kh' ? 'ទម្រង់របស់អ្នកត្រូវបានផ្ញើទៅកាន់ Telegram របស់អ្នកហើយ' : 'Your form was sent to your Telegram chat';
+    if (chatBtn) chatBtn.style.display = 'inline-flex';
+    if (resendBtn) resendBtn.style.display = 'none';
+  } else {
+    if (subEl) subEl.textContent = LANG === 'kh' ? 'សូមចុច Start លើ Bot ជាមុនសិន រួចចុច ផ្ញើម្តងទៀត' : 'Please press Start on the bot, then tap Resend';
+    if (chatBtn) chatBtn.style.display = 'none';
+    if (resendBtn) resendBtn.style.display = 'inline-flex';
+  }
+}
+
+function tgOpenChat() {
+  if (isTG && window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
+    window.Telegram.WebApp.close();
+  }
+}
+
+async function tgResendLastPdf() {
+  const reqId = _lastSubmit ? (_lastSubmit.requestId || '') : '';
+  if (!reqId) {
+    toast(LANG === 'kh' ? 'រកមិនឃើញលេខកូដសំណើ' : 'Request ID not found', 'bad');
+    return;
+  }
+  const resendBtn = document.getElementById('rsuc-tg-resend-btn');
+  if (resendBtn) resendBtn.disabled = true;
+  toast(LANG === 'kh' ? 'កំពុងព្យាយាមផ្ញើម្តងទៀត...' : 'Retrying...', 'ok2');
+  try {
+    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId });
+    _lastTgSubmitResult = res;
+    updateTgSuccessUI(res);
+    if (res && res.result === 'success' && res.pdfSent) {
+      toast(LANG === 'kh' ? 'បានផ្ញើជោគជ័យ' : 'PDF sent successfully', 'ok2');
+    } else {
+      toast((res && (res.message || res.error)) || (LANG === 'kh' ? 'ផ្ញើមិនបានជោគជ័យ' : 'Failed to send PDF'), 'bad');
+    }
+  } catch (err) {
+    toast(LANG === 'kh' ? 'មានបញ្ហាក្នុងការផ្ញើ' : 'Error sending PDF', 'bad');
+  } finally {
+    if (resendBtn) resendBtn.disabled = false;
+  }
+}
+
+async function stSendPdfToChat(reqId) {
+  if (!reqId) return;
+  toast(LANG === 'kh' ? 'កំពុងផ្ញើ PDF ទៅ Telegram...' : 'Sending PDF to Telegram...', 'ok2');
+  try {
+    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId });
+    if (res && res.result === 'success' && res.pdfSent) {
+      toast(LANG === 'kh' ? 'បានផ្ញើទម្រង់ PDF ទៅកាន់ Telegram របស់អ្នកហើយ' : 'PDF form sent to your Telegram chat!', 'ok2');
+    } else if (res && res.needStart) {
+      toast(LANG === 'kh' ? 'សូមចុច Start លើ Bot ជាមុនសិន រួចព្យាយាមម្តងទៀត' : 'Please press Start on the bot first, then try again.', 'bad');
+    } else {
+      toast((res && (res.message || res.error)) || (LANG === 'kh' ? 'មិនអាចផ្ញើ PDF បានទេ' : 'Failed to send PDF to Telegram.'), 'bad');
+    }
+  } catch (err) {
+    toast(LANG === 'kh' ? 'មានបញ្ហាក្នុងការផ្ញើ PDF' : 'Error sending PDF to Telegram.', 'bad');
+  }
+}
+
 function rPopulateSuccess() {
   const s = rStaff, d = _lastSubmit;
   if (!s || !d) return;
+
+  if (isTG) {
+    updateTgSuccessUI(_lastTgSubmitResult);
+  } else {
+    const reprintBtn = document.getElementById('rsuc-reprint-btn');
+    if (reprintBtn) reprintBtn.style.display = 'inline-flex';
+    const chatBtn = document.getElementById('rsuc-tg-chat-btn');
+    if (chatBtn) chatBtn.style.display = 'none';
+    const resendBtn = document.getElementById('rsuc-tg-resend-btn');
+    if (resendBtn) resendBtn.style.display = 'none';
+    const subEl = document.querySelector('.rsuc-sub') || document.getElementById('rsuc-sub');
+    if (subEl) subEl.textContent = LANG === 'kh' ? 'សំណើរបស់អ្នកត្រូវបានកត់ត្រាទុក។ សូមបោះពុម្ព និងចុះហត្ថលេខាដើម្បីបញ្ចប់។' : 'Your request has been recorded. Print and sign to finalise.';
+  }
+
   const sumEl = document.getElementById('rsuc-summary');
   if (sumEl) {
     sumEl.innerHTML = [
@@ -1958,9 +2087,16 @@ function renderStDash() {
       tbody.innerHTML = filtered.map((r, i) => {
         const typeD = LANG === 'kh' ? (r.typeKh || r.type) : r.type;
         const origIdx = (stHistory || []).indexOf(r);
-        return `<tr><td style="font-size:10px;color:var(--txt3);font-family:monospace">${r.id || ''}</td><td style="font-weight:500">${typeD || ''}</td><td>${fmtDate(r.from)}</td><td>${fmtDate(r.to)}</td><td style="text-align:center;font-weight:600">${r.days || ''}</td><td><span class="badge b-${(r.status || '').toLowerCase()}">${r.status || ''}</span></td><td><button class="pbtn" onclick="stPrint(${origIdx})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button></td></tr>`;
+        const actionBtn = isTG ?
+          `<button class="pbtn" onclick="stSendPdfToChat('${r.id}')" title="Send PDF to chat"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` :
+          `<button class="pbtn" onclick="stPrint(${origIdx})" title="Print"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>`;
+        return `<tr><td style="font-size:10px;color:var(--txt3);font-family:monospace">${r.id || ''}</td><td style="font-weight:500">${typeD || ''}</td><td>${fmtDate(r.from)}</td><td>${fmtDate(r.to)}</td><td style="text-align:center;font-weight:600">${r.days || ''}</td><td><span class="badge b-${(r.status || '').toLowerCase()}">${r.status || ''}</span></td><td>${actionBtn}</td></tr>`;
       }).join('');
     }
+  }
+  const th7 = document.getElementById('st-th7');
+  if (th7) {
+    th7.textContent = isTG ? (LANG === 'kh' ? 'ផ្ញើ PDF' : 'Send PDF to chat') : (LANG === 'kh' ? 'បោះពុម្ព' : 'Print');
   }
   renderStNotices();
 }
@@ -2768,11 +2904,13 @@ async function submitNotice() {
   const btn = document.getElementById('nt-btn'), sp = document.getElementById('nt-sp');
   btn.disabled = true; sp.style.display = 'block';
   try {
+    const clientNotId = 'NOT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
     const payload = {
+      clientRequestId: clientNotId,
       noticeType: type, name, empId: empid, time, returnTime: returnTime || '—', reason,
-      noticeDate: new Date().toLocaleDateString('en-GB')
+      noticeDate: todayISO()
     };
-    const res = await apiPost('sendNotice', payload);
+    const res = await apiPost('sendNotice', payload, 0);
     if (res.result === 'success' || isMock()) {
       toast('Notice sent!', 'ok2');
       document.getElementById('nt-name').value = '';
@@ -3212,12 +3350,14 @@ async function ntSubmit() {
   btn.disabled = true; sp.style.display = 'block';
   try {
     if (!isMock()) {
+      const clientNotId = 'NOT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
       const res = await apiPost('sendNotice', {
+        clientRequestId: clientNotId,
         noticeType: _ntCurrentType,
         name: ntStaff.name, empId: ntStaff.empId,
         time, returnTime: '—', reason,
-        noticeDate: new Date().toLocaleDateString('en-GB')
-      });
+        noticeDate: todayISO()
+      }, 0);
       if (res.result !== 'success') throw new Error('failed');
     }
     document.getElementById('nt-form-screen').style.display = 'none';
@@ -4789,7 +4929,7 @@ if (window.visualViewport) {
     if (_kbTimer) clearTimeout(_kbTimer);
     _kbTimer = setTimeout(() => {
       const vh = window.visualViewport.height;
-      const wh = (window.Telegram?.WebApp?.viewportStableHeight || window.innerHeight);
+      const wh = ((isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.viewportStableHeight) || window.innerHeight);
       const diff = wh - vh;
       if (diff > 120) {
         document.body.classList.add('keyboard-open');
@@ -4911,7 +5051,7 @@ function initCustomSelects() {
         trigger.classList.add('open');
         
         const rect = trigger.getBoundingClientRect();
-        if ((window.Telegram?.WebApp?.viewportStableHeight || window.innerHeight) - rect.bottom < 220 && rect.top > 220) {
+        if ((((isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.viewportStableHeight) || window.innerHeight) - rect.bottom < 220) && rect.top > 220) {
           optionsContainer.classList.add('drop-up');
         } else {
           optionsContainer.classList.remove('drop-up');
