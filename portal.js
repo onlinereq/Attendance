@@ -138,12 +138,7 @@ function goTo(v) {
     if (v === 'notice') ntReset();
     if (v === 'home') loadHomeLeaveBoard();
     if (v === 'hr') {
-      const tgUser = (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) ? window.Telegram.WebApp.initDataUnsafe.user : null;
-      if (!hrUser && tgUser) {
-        hrUser = tgUser.first_name;
-        hrToken = hrToken || 'telegram-auth';
-      }
-      if (hrUser) {
+      if (hrUser && hrToken) {
         const hrLogin = document.getElementById('hr-login');
         const hrDash = document.getElementById('hr-dash');
         if (hrLogin) hrLogin.style.display = 'none';
@@ -504,7 +499,8 @@ async function apiGet(action, params = {}) {
   if (isMock()) return { result: 'mock' };
   const signed = await signRequest(action);
   const fp = getFingerprint();
-  const rawInitData = isTG ? window.Telegram.WebApp.initData : '';
+  const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
+  const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
   const qsParams = { action, ...params, ...signed, fp };
   if (rawInitData) {
     qsParams.initData = rawInitData;
@@ -530,7 +526,8 @@ async function apiPost(action, payload = {}, retryCount = 1) {
   try {
     const signed = await signRequest(action);
     const fp = getFingerprint();
-    const rawInitData = isTG ? window.Telegram.WebApp.initData : '';
+    const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
+    const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
     const body = JSON.stringify({ action, ...payload, ...signed, fp, initData: rawInitData, tgData: rawInitData });
     const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
     const text = await res.text();
