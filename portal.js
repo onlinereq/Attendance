@@ -681,11 +681,30 @@ let _appInitLoadingPromise = null;
 async function fetchAppInitData() {
   if (_appInitLoadingPromise) return _appInitLoadingPromise;
   _appInitLoadingPromise = (async () => {
+    // 1. Fetch staff list first so staff verification and selection work immediately on all devices
     try {
-      const res = await apiPost('getAppInitData', {}, 2);
+      const resStaff = await apiPost('getAllStaff', {}, 1);
+      if (resStaff && resStaff.result === 'success' && resStaff.staffList && resStaff.staffList.length > 0) {
+        if (!_appInitData) {
+          _appInitData = { staffList: [], history: [], notices: [], _cachedAt: Date.now() };
+        }
+        _appInitData.staffList = resStaff.staffList;
+        try {
+          const s = JSON.stringify(_appInitData);
+          sessionStorage.setItem('app_init_cache', s);
+          localStorage.setItem('app_init_cache', s);
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.warn('getAllStaff load error:', e);
+    }
+
+    // 2. Fetch full getAppInitData for complete history, notices & holidays
+    try {
+      const res = await apiPost('getAppInitData', {}, 1);
       if (res && res.result === 'success') {
         _appInitData = {
-          staffList: res.staffList || res.staff || (_appInitData ? _appInitData.staffList : []),
+          staffList: (res.staffList && res.staffList.length > 0) ? res.staffList : (_appInitData ? _appInitData.staffList : []),
           history: res.history || res.requests || [],
           notices: res.notices || [],
           _cachedAt: Date.now()
