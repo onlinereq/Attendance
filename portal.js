@@ -41,7 +41,7 @@ window.addEventListener('error', function (e) {
   if (typeof rStaff !== 'undefined' && rStaff) context += 'Staff: ' + (rStaff.name || rStaff.empId) + ' | ';
   if (typeof hrToken !== 'undefined' && hrToken) context += 'HR Logged In';
 
-  fetch(SCRIPT_URL, {
+  fetch(SCRIPT_URL + '?action=logError', {
     method: 'POST',
     body: JSON.stringify({
       action: 'logError',
@@ -59,7 +59,7 @@ window.addEventListener('unhandledrejection', function (e) {
   if (typeof rStaff !== 'undefined' && rStaff) context += 'Staff: ' + (rStaff.name || rStaff.empId) + ' | ';
   if (typeof hrToken !== 'undefined' && hrToken) context += 'HR Logged In';
 
-  fetch(SCRIPT_URL, {
+  fetch(SCRIPT_URL + '?action=logError', {
     method: 'POST',
     body: JSON.stringify({
       action: 'logError',
@@ -100,9 +100,9 @@ if (_deepReq) {
     const raw = sessionStorage.getItem('hr_sess');
     if (!raw) return;
     const s = JSON.parse(raw);
-    if (s.token && s.user && s.hmacKey) {
+    if (s.token && s.user) {
       hrUser = s.user; hrToken = s.token;
-      setHmacKey(s.hmacKey);
+      if (s.hmacKey) setHmacKey(s.hmacKey);
     } else {
       sessionStorage.removeItem('hr_sess');
     }
@@ -519,10 +519,11 @@ async function apiPost(action, payload = {}, retryCount = 1) {
     const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
     const body = JSON.stringify({ action, ...payload, ...signed, fp, initData: rawInitData, tgData: rawInitData });
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 35000);
+    const timer = setTimeout(() => controller.abort(), 45000);
     let res;
     try {
-      res = await fetch(SCRIPT_URL, {
+      const postUrl = SCRIPT_URL + (SCRIPT_URL.includes('?') ? '&' : '?') + 'action=' + encodeURIComponent(action);
+      res = await fetch(postUrl, {
         method: 'POST',
         mode: 'cors',
         credentials: 'omit',
@@ -2729,13 +2730,13 @@ async function hrLoadData(silent) {
         if (ld) ld.style.display = 'none';
       }
       const res = await apiPost('getAllData', { token: hrToken || '' });
-      if (res.result === 'unauthorized') {
+      if (res && res.result === 'unauthorized') {
         if (!silent) { toast('Session expired — please log in again', 'bad'); hrLogout(); }
         return;
       }
-      if (res.result === 'success') {
-        allReqs = res.requests || [];
-        allStaffList = res.staff || [];
+      if (res && res.result === 'success') {
+        allReqs = res.requests || res.history || [];
+        allStaffList = res.staff || res.staffList || [];
         noticesList = res.notices || [];
         noticeStats = res.stats || [];
         if (res.holidays && Array.isArray(res.holidays) && res.holidays.length > 0) {
@@ -2750,7 +2751,10 @@ async function hrLoadData(silent) {
     hrRenderSummary(); hrRenderReqs(); hrRenderStaff();
     if (typeof hrRenderHolidays === 'function') hrRenderHolidays();
     anApplyFilters();
-  } catch (e) { if (!silent) toast('Error loading data', 'bad'); }
+  } catch (e) {
+    console.error('hrLoadData error:', e);
+    if (!silent) toast('Error loading data', 'bad');
+  }
   finally { if (ld) ld.style.display = 'none'; }
 }
 
@@ -2869,7 +2873,7 @@ function hrRenderReqs() {
     const canActMain = r.status === 'Pending' && !busy;
     const isSelected = hrSelectedReqs.has(idStr);
     const spin = `<svg style="animation:spin .7s linear infinite" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`;
-    const delBtn = !busy ? `<button class="abtn abtn-del" onclick="hrDeleteRequest('${r.id}','${(r.empName || r.empId).replace(/'/g, "\\'")}','${r.from}')">Delete</button>` : '';
+    const delBtn = !busy ? `<button class="abtn abtn-del" onclick="hrDeleteRequest('${r.id}','${String(r.empName || r.empId || 'Staff').replace(/'/g, "\\'")}','${r.from}')">Delete</button>` : '';
     const actionCell = deleting
       ? `<span style="font-size:11px;color:var(--red);display:flex;align-items:center;gap:5px">${spin}Deleting…</span>`
       : saving
@@ -2881,7 +2885,7 @@ function hrRenderReqs() {
     return `<tr id="hr-row-${r.id}" style="transition:background .2s,opacity .2s${busy ? ';opacity:.55' : ''}">` +
            `<td style="text-align:center"><input type="checkbox" id="hr-cb-${r.id}" onchange="hrToggleRow('${r.id}', this.checked)" ${isSelected ? 'checked' : ''} style="cursor:pointer"></td>` +
            `<td style="font-size:10px;color:var(--txt3);font-family:monospace">${r.id || '—'}</td>` +
-           `<td><div style="font-weight:500">${r.empName || r.empId}</div><div style="font-size:11px;color:var(--txt3)">${r.empId}</div></td>` +
+           `<td><div style="font-weight:500">${r.empName || r.empId || 'Staff'}</div><div style="font-size:11px;color:var(--txt3)">${r.empId || ''}</div></td>` +
            `<td>${r.type}</td><td>${fmtDate(r.from)}</td><td style="text-align:center;font-weight:600">${r.days}</td>` +
            `<td><span class="badge b-${(r.status || '').toLowerCase()}">${r.status}</span></td>` +
            `<td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${actionCell}</div></td></tr>`;
