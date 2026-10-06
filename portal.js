@@ -1779,53 +1779,60 @@ function rPopulateSuccess() {
 const DEFAULT_PRINT_CSS = `
 *{margin:0;padding:0;box-sizing:border-box}
 #tg-pdf-container{
-  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Battambang',sans-serif;font-size:11pt;color:#111;
+  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Battambang',sans-serif;font-size:11pt;color:#000000;
+}
+#tg-pdf-container, #tg-pdf-container *{
+  color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
 }
 #tg-pdf-container .page{
   width:794px !important;
-  min-height:1123px !important;
+  height:1122px !important;
+  max-height:1122px !important;
+  min-height:1122px !important;
   background:#ffffff !important;
   margin:0 !important;
-  padding:15mm 18mm 15mm !important;
+  padding:12mm 18mm 12mm !important;
   box-shadow:none !important;
   box-sizing:border-box !important;
   display:flex !important;
   flex-direction:column !important;
   justify-content:space-between !important;
+  overflow:hidden !important;
   font-family:'Battambang',sans-serif !important;
   font-size:11pt !important;
-  color:#111 !important;
+  color:#000000 !important;
 }
 #tg-pdf-container .content{flex:1}
 #tg-pdf-container .pf-header-row{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-bottom:5mm}
-#tg-pdf-container .pf-logo{height:100px;object-fit:contain;display:block;margin:0 0 0 auto}
-#tg-pdf-container .pf-title{font-family:'Moul',serif;font-size:13.5pt;text-align:center;margin-bottom:6mm;line-height:2;color:#111}
-#tg-pdf-container .pf-body-section{margin-bottom:4mm}
-#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Battambang',sans-serif;font-size:11pt;line-height:2.1;margin:0}
+#tg-pdf-container .pf-logo{height:95px;object-fit:contain;display:block;margin:0 0 0 auto}
+#tg-pdf-container .pf-title{font-family:'Moul',serif;font-size:13.5pt;text-align:center;margin-bottom:3mm;line-height:1.8;color:#000000}
+#tg-pdf-container .pf-body-section{margin-bottom:2.5mm}
+#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Battambang',sans-serif;font-size:11pt;line-height:1.9;margin:0;color:#000000}
 #tg-pdf-container .pf-para{text-align:justify}
-#tg-pdf-container .pf-to-section{text-align:center;margin:4mm 0}
-#tg-pdf-container .pf-to-section p{font-family:'Moul',serif;font-size:11pt;line-height:2}
-#tg-pdf-container .pf-bold{font-family:'Moul',serif}
-#tg-pdf-container .pf-via-section{margin:4mm 0}
-#tg-pdf-container .pf-via-row{display:flex;align-items:baseline;font-size:11pt;line-height:2.1}
-#tg-pdf-container .pf-via-lbl{font-family:'Moul',serif;min-width:25mm;white-space:nowrap;font-size:10.5pt}
-#tg-pdf-container .pf-colon{margin:0 3mm}
-#tg-pdf-container .pf-sp{display:inline-block;min-width:20mm;padding:0 3px;vertical-align:bottom;font-weight:bold;text-align:center}
-#tg-pdf-container .pf-date-row{text-align:right;font-size:11pt;line-height:2;margin:4mm 0 3mm}
-#tg-pdf-container .pf-sig-table{width:100%;border-collapse:collapse;margin-top:6mm}
-#tg-pdf-container .pf-sig-cell{width:50%;vertical-align:top;padding:0 6mm}
+#tg-pdf-container .pf-to-section{text-align:center;margin:2.5mm 0}
+#tg-pdf-container .pf-to-section p{font-family:'Moul',serif;font-size:11pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-bold{font-family:'Moul',serif;color:#000000}
+#tg-pdf-container .pf-via-section{margin:2.5mm 0}
+#tg-pdf-container .pf-via-row{display:flex;align-items:baseline;font-size:11pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-via-lbl{font-family:'Moul',serif;min-width:25mm;white-space:nowrap;font-size:10.5pt;color:#000000}
+#tg-pdf-container .pf-colon{margin:0 3mm;color:#000000}
+#tg-pdf-container .pf-sp{display:inline-block;min-width:20mm;padding:0 3px;vertical-align:bottom;font-weight:bold;text-align:center;color:#000000}
+#tg-pdf-container .pf-date-row{text-align:right;font-size:11pt;line-height:1.9;margin:2.5mm 0 2mm;color:#000000}
+#tg-pdf-container .pf-sig-table{width:100%;border-collapse:collapse;margin-top:3mm}
+#tg-pdf-container .pf-sig-cell{width:50%;vertical-align:top;padding:0 6mm;color:#000000}
 #tg-pdf-container .pf-sig-right{text-align:right}
-#tg-pdf-container .pf-sig-label{font-family:'Moul',serif;font-size:10.5pt;line-height:2}
-#tg-pdf-container .pf-sig-sublabel{font-family:'Battambang',sans-serif;font-size:11pt}
-#tg-pdf-container .pf-sig-space{height:22mm}
-#tg-pdf-container .pf-footer{border-top:2.5pt solid #000;padding:2mm 0 0;margin-top:8mm}
+#tg-pdf-container .pf-sig-label{font-family:'Moul',serif;font-size:10.5pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-sig-sublabel{font-family:'Battambang',sans-serif;font-size:11pt;color:#000000}
+#tg-pdf-container .pf-sig-space{height:16mm}
+#tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
 #tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
 #tg-pdf-container .pf-footer-left{flex:1}
-#tg-pdf-container .pf-footer-co{font-family:'Moul',serif;font-size:8pt;color:#111;display:block;margin-bottom:.5mm}
-#tg-pdf-container .pf-footer-kh{font-family:'Battambang',sans-serif;font-size:8.5pt;color:#444;line-height:1.6;display:block}
-#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#444;line-height:1.5;display:block}
-#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#222;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
-#tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#d0d0d0;letter-spacing:.4px;margin-bottom:1.5mm}
+#tg-pdf-container .pf-footer-co{font-family:'Moul',serif;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
+#tg-pdf-container .pf-footer-kh{font-family:'Battambang',sans-serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
+#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;line-height:1.5;display:block}
+#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
+#tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
 `;
 
 const DEFAULT_PRINT_HTML = `
@@ -2010,6 +2017,12 @@ async function generateTelegramLeavePdf(printData) {
       #tg-pdf-container {
         width: 794px !important;
         background: #ffffff !important;
+        color: #000000 !important;
+      }
+      #tg-pdf-container,
+      #tg-pdf-container * {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
       }
       #tg-pdf-container .print-bar,
       #tg-pdf-container .tg-banner {
@@ -2017,11 +2030,38 @@ async function generateTelegramLeavePdf(printData) {
       }
       #tg-pdf-container .page {
         width: 794px !important;
-        min-height: 1123px !important;
+        height: 1122px !important;
+        max-height: 1122px !important;
+        min-height: 1122px !important;
         background: #ffffff !important;
         margin: 0 !important;
+        padding: 12mm 18mm 12mm !important;
         box-shadow: none !important;
         box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+        color: #000000 !important;
+      }
+      #tg-pdf-container .pf-header-row { margin-bottom: 5mm !important; }
+      #tg-pdf-container .pf-logo { height: 95px !important; }
+      #tg-pdf-container .pf-title { margin-bottom: 3mm !important; line-height: 1.8 !important; color: #000000 !important; }
+      #tg-pdf-container .pf-body-section { margin-bottom: 2.5mm !important; }
+      #tg-pdf-container .pf-to-section { margin: 2.5mm 0 !important; }
+      #tg-pdf-container .pf-via-section { margin: 2.5mm 0 !important; }
+      #tg-pdf-container .pf-line, #tg-pdf-container .pf-para { line-height: 1.9 !important; color: #000000 !important; }
+      #tg-pdf-container .pf-via-row { line-height: 1.9 !important; color: #000000 !important; }
+      #tg-pdf-container .pf-date-row { margin: 2.5mm 0 2mm !important; color: #000000 !important; }
+      #tg-pdf-container .pf-sig-table { margin-top: 3mm !important; }
+      #tg-pdf-container .pf-sig-space { height: 16mm !important; }
+      #tg-pdf-container .pf-footer { margin-top: 4mm !important; border-top: 2.5pt solid #000000 !important; }
+      #tg-pdf-container .pf-footer-co,
+      #tg-pdf-container .pf-footer-kh,
+      #tg-pdf-container .pf-footer-en,
+      #tg-pdf-container .pf-footer-right,
+      #tg-pdf-container .pf-reqid {
+        color: #000000 !important;
       }
     </style>
     ${tmpl.html}
@@ -2088,15 +2128,15 @@ async function generateTelegramLeavePdf(printData) {
   const a4Ratio = pageHeightMm / pageWidthMm;
   const pageCanvasHeight = Math.round(canvas.width * a4Ratio);
 
-  if (canvas.height <= pageCanvasHeight + 4) {
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  if (canvas.height <= pageCanvasHeight * 1.15) {
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
   } else {
     let remainingHeight = canvas.height;
     let sourceY = 0;
     let pageNum = 0;
 
-    while (remainingHeight > 0) {
+    while (remainingHeight > 150) {
       if (pageNum > 0) {
         pdf.addPage('a4', 'portrait');
       }
@@ -2116,7 +2156,7 @@ async function generateTelegramLeavePdf(printData) {
         0, 0, canvas.width, currentSliceHeight
       );
 
-      const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+      const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.98);
       pdf.addImage(sliceImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
 
       sourceY += currentSliceHeight;
