@@ -1588,6 +1588,8 @@ function doConfirm() {
                 requestId: res.requestId,
                 employeeId: _lastSubmit ? (_lastSubmit.employeeId || '') : '',
                 name: _lastSubmit ? (_lastSubmit.name || '') : '',
+                dateFrom: _lastSubmit ? (_lastSubmit.from || '') : '',
+                dateTo: _lastSubmit ? (_lastSubmit.to || '') : '',
                 telegramId: (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) ? window.Telegram.WebApp.initDataUnsafe.user.id : '',
                 pdfBase64: pdfBase64
               });
@@ -1676,7 +1678,13 @@ async function tgResendLastPdf() {
     const printObj = buildPrintData(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days);
     printObj.requestId = reqId;
     const pdfBase64 = await generateTelegramLeavePdf(printObj);
-    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId, pdfBase64: pdfBase64 });
+    const res = await apiPost('sendLeavePdfToChat', {
+      requestId: reqId,
+      pdfBase64: pdfBase64,
+      dateFrom: _lastSubmit ? (_lastSubmit.from || '') : '',
+      dateTo: _lastSubmit ? (_lastSubmit.to || '') : '',
+      name: _lastSubmit ? (_lastSubmit.name || '') : ''
+    });
     _lastTgSubmitResult = res;
     updateTgSuccessUI(res);
     if (res && res.result === 'success' && res.pdfSent) {
@@ -1713,7 +1721,14 @@ async function stSendPdfToChat(reqId) {
     }
 
     const pdfBase64 = await generateTelegramLeavePdf(printObj);
-    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId, pdfBase64: pdfBase64 });
+    const res = await apiPost('sendLeavePdfToChat', {
+      requestId: reqId,
+      pdfBase64: pdfBase64,
+      employeeId: (rec && (rec.empId || rec.employeeId)) || (_lastSubmit && _lastSubmit.employeeId) || '',
+      name: (rec && (rec.empName || rec.name)) || (_lastSubmit && _lastSubmit.name) || '',
+      dateFrom: (printObj && printObj.from) || '',
+      dateTo: (printObj && printObj.to) || ''
+    });
     if (res && res.result === 'success' && res.pdfSent) {
       toast(LANG === 'kh' ? 'បានផ្ញើទម្រង់ PDF ទៅកាន់ Telegram របស់អ្នកហើយ' : 'PDF form sent to your Telegram chat!', 'ok2');
     } else if (res && res.needStart) {
