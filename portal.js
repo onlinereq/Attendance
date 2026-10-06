@@ -1566,13 +1566,33 @@ function doConfirm() {
       loadHomeLeaveBoard();
     }
     if (!isMock()) {
-      apiPost('submitRequest', payload).then(function (res) {
+      if (isTG) {
+        updateTgSuccessUI(null);
+      }
+      apiPost('submitRequest', payload).then(async function (res) {
         if (res && res.requestId && _lastSubmit) { _lastSubmit.requestId = res.requestId; }
         _lastTgSubmitResult = res;
         _appInitData = null;
         loadStaffCache().then(() => loadHomeLeaveBoard());
         if (isTG) {
-          updateTgSuccessUI(res);
+          if (res && res.result === 'success' && res.requestId) {
+            try {
+              const printObj = buildPrintData(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days);
+              printObj.requestId = res.requestId;
+              const pdfBase64 = await generateTelegramLeavePdf(printObj);
+              const sendRes = await apiPost('sendLeavePdfToChat', {
+                requestId: res.requestId,
+                pdfBase64: pdfBase64
+              });
+              _lastTgSubmitResult = sendRes;
+              updateTgSuccessUI(sendRes);
+            } catch (pdfErr) {
+              console.error('Telegram PDF error:', pdfErr);
+              updateTgSuccessUI({ result: 'error', pdfSent: false, error: (pdfErr && pdfErr.message) || 'PDF generation failed' });
+            }
+          } else {
+            updateTgSuccessUI(res);
+          }
         }
       }).catch(function (err) {
         if (isTG) {
@@ -1644,8 +1664,12 @@ async function tgResendLastPdf() {
   const resendBtn = document.getElementById('rsuc-tg-resend-btn');
   if (resendBtn) resendBtn.disabled = true;
   toast(LANG === 'kh' ? 'កំពុងព្យាយាមផ្ញើម្តងទៀត...' : 'Retrying...', 'ok2');
+  updateTgSuccessUI(null);
   try {
-    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId });
+    const printObj = buildPrintData(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days);
+    printObj.requestId = reqId;
+    const pdfBase64 = await generateTelegramLeavePdf(printObj);
+    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId, pdfBase64: pdfBase64 });
     _lastTgSubmitResult = res;
     updateTgSuccessUI(res);
     if (res && res.result === 'success' && res.pdfSent) {
@@ -1654,6 +1678,7 @@ async function tgResendLastPdf() {
       toast((res && (res.message || res.error)) || (LANG === 'kh' ? 'ផ្ញើមិនបានជោគជ័យ' : 'Failed to send PDF'), 'bad');
     }
   } catch (err) {
+    updateTgSuccessUI({ result: 'error', pdfSent: false });
     toast(LANG === 'kh' ? 'មានបញ្ហាក្នុងការផ្ញើ' : 'Error sending PDF', 'bad');
   } finally {
     if (resendBtn) resendBtn.disabled = false;
@@ -1664,7 +1689,24 @@ async function stSendPdfToChat(reqId) {
   if (!reqId) return;
   toast(LANG === 'kh' ? 'កំពុងផ្ញើ PDF ទៅ Telegram...' : 'Sending PDF to Telegram...', 'ok2');
   try {
-    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId });
+    const rec = (stHistory && stHistory.find(r => r.id === reqId)) ||
+                (_appInitData && _appInitData.history && _appInitData.history.find(r => r.id === reqId));
+    let printObj = null;
+    if (rec) {
+      printObj = buildPrintDataFromRecord(rec, stStaff);
+      printObj.requestId = reqId;
+    } else if (_lastSubmit && _lastSubmit.requestId === reqId) {
+      printObj = buildPrintData(_lastSubmit, _lastSubmit.from, _lastSubmit.to, _lastSubmit.days);
+      printObj.requestId = reqId;
+    }
+
+    if (!printObj) {
+      toast(LANG === 'kh' ? 'រកមិនឃើញព័ត៌មានសំណើ' : 'Request details not found', 'bad');
+      return;
+    }
+
+    const pdfBase64 = await generateTelegramLeavePdf(printObj);
+    const res = await apiPost('sendLeavePdfToChat', { requestId: reqId, pdfBase64: pdfBase64 });
     if (res && res.result === 'success' && res.pdfSent) {
       toast(LANG === 'kh' ? 'បានផ្ញើទម្រង់ PDF ទៅកាន់ Telegram របស់អ្នកហើយ' : 'PDF form sent to your Telegram chat!', 'ok2');
     } else if (res && res.needStart) {
@@ -1673,6 +1715,7 @@ async function stSendPdfToChat(reqId) {
       toast((res && (res.message || res.error)) || (LANG === 'kh' ? 'មិនអាចផ្ញើ PDF បានទេ' : 'Failed to send PDF to Telegram.'), 'bad');
     }
   } catch (err) {
+    console.error('stSendPdfToChat error:', err);
     toast(LANG === 'kh' ? 'មានបញ្ហាក្នុងការផ្ញើ PDF' : 'Error sending PDF to Telegram.', 'bad');
   }
 }
@@ -1732,18 +1775,436 @@ function rPopulateSuccess() {
   }).catch(() => { histEl.innerHTML = `<div style="font-size:13px;color:var(--txt3)">Could not load history.</div>`; });
 }
 
-// ── PRINT FILL ───────────────────────────────────
+// ── PRINT TEMPLATE & TELEGRAM PDF GENERATION ────────
+const DEFAULT_PRINT_CSS = `
+*{margin:0;padding:0;box-sizing:border-box}
+#tg-pdf-container{
+  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Battambang',sans-serif;font-size:11pt;color:#111;
+}
+#tg-pdf-container .page{
+  width:794px !important;
+  min-height:1123px !important;
+  background:#ffffff !important;
+  margin:0 !important;
+  padding:15mm 18mm 15mm !important;
+  box-shadow:none !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:space-between !important;
+  font-family:'Battambang',sans-serif !important;
+  font-size:11pt !important;
+  color:#111 !important;
+}
+#tg-pdf-container .content{flex:1}
+#tg-pdf-container .pf-header-row{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-bottom:5mm}
+#tg-pdf-container .pf-logo{height:100px;object-fit:contain;display:block;margin:0 0 0 auto}
+#tg-pdf-container .pf-title{font-family:'Moul',serif;font-size:13.5pt;text-align:center;margin-bottom:6mm;line-height:2;color:#111}
+#tg-pdf-container .pf-body-section{margin-bottom:4mm}
+#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Battambang',sans-serif;font-size:11pt;line-height:2.1;margin:0}
+#tg-pdf-container .pf-para{text-align:justify}
+#tg-pdf-container .pf-to-section{text-align:center;margin:4mm 0}
+#tg-pdf-container .pf-to-section p{font-family:'Moul',serif;font-size:11pt;line-height:2}
+#tg-pdf-container .pf-bold{font-family:'Moul',serif}
+#tg-pdf-container .pf-via-section{margin:4mm 0}
+#tg-pdf-container .pf-via-row{display:flex;align-items:baseline;font-size:11pt;line-height:2.1}
+#tg-pdf-container .pf-via-lbl{font-family:'Moul',serif;min-width:25mm;white-space:nowrap;font-size:10.5pt}
+#tg-pdf-container .pf-colon{margin:0 3mm}
+#tg-pdf-container .pf-sp{display:inline-block;min-width:20mm;padding:0 3px;vertical-align:bottom;font-weight:bold;text-align:center}
+#tg-pdf-container .pf-date-row{text-align:right;font-size:11pt;line-height:2;margin:4mm 0 3mm}
+#tg-pdf-container .pf-sig-table{width:100%;border-collapse:collapse;margin-top:6mm}
+#tg-pdf-container .pf-sig-cell{width:50%;vertical-align:top;padding:0 6mm}
+#tg-pdf-container .pf-sig-right{text-align:right}
+#tg-pdf-container .pf-sig-label{font-family:'Moul',serif;font-size:10.5pt;line-height:2}
+#tg-pdf-container .pf-sig-sublabel{font-family:'Battambang',sans-serif;font-size:11pt}
+#tg-pdf-container .pf-sig-space{height:22mm}
+#tg-pdf-container .pf-footer{border-top:2.5pt solid #000;padding:2mm 0 0;margin-top:8mm}
+#tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
+#tg-pdf-container .pf-footer-left{flex:1}
+#tg-pdf-container .pf-footer-co{font-family:'Moul',serif;font-size:8pt;color:#111;display:block;margin-bottom:.5mm}
+#tg-pdf-container .pf-footer-kh{font-family:'Battambang',sans-serif;font-size:8.5pt;color:#444;line-height:1.6;display:block}
+#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#444;line-height:1.5;display:block}
+#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#222;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
+#tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#d0d0d0;letter-spacing:.4px;margin-bottom:1.5mm}
+`;
+
+const DEFAULT_PRINT_HTML = `
+<div class="page">
+  <div class="content">
+    <div class="pf-header-row">
+      <img class="pf-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-CW6a4wJIDlcEt69O4YWV3bg0TdGrP4WtrQ&s" alt="Lockton IBS" crossorigin="anonymous">
+    </div>
+    <div class="pf-title">លិខិតស្នើសុំច្បាប់ឈប់សម្រាកប្រចាំឆ្នាំ</div>
+    <div class="pf-body-section">
+      <p class="pf-line" style="text-align:center">ខ្ញុំបាទ/នាងខ្ញុំ ឈ្មោះ<span class="pf-sp" id="pf-name"></span>ភេទ<span class="pf-sp" style="min-width:14mm" id="pf-gender"></span>បច្ចុប្បន្នមានតួនាទីជា<span class="pf-sp" style="min-width:40mm" id="pf-position"></span></p>
+      <p class="pf-line">លេខអត្តសញ្ញាណ<span class="pf-sp" style="min-width:30mm" id="pf-empid"></span>បម្រើការងារនៅ ការិយាល័យកណ្តាល។</p>
+    </div>
+    <div class="pf-to-section">
+      <p>សូមគោរពជូន</p>
+      <p>លោកប្រធានក្រុមហ៊ុន</p>
+      <p>ក្រុមហ៊ុន ឡុកតុន អាយប៊ីអេស អ៊ីសួរេន ប្រូឃើ (ខេមបូឌា) ឯ.ក</p>
+    </div>
+    <div class="pf-via-section">
+      <div class="pf-via-row"><span class="pf-via-lbl">តាមរយៈ</span><span class="pf-colon">៖</span><span>ប្រធានផ្នែករដ្ឋបាល និងធនធានមនុស្ស</span></div>
+      <div class="pf-via-row"><span class="pf-via-lbl">កម្មវត្ថុ</span><span class="pf-colon">៖</span><span>សំណើ សុំច្បាប់ ៖ <strong id="pf-leavetype" style="font-family:'Battambang',sans-serif;font-weight:700"></strong></span></div>
+    </div>
+    <div class="pf-body-section">
+      <p class="pf-para" style="text-align:center">តបតាមសេចក្តីចែងក្នុងកម្មវត្ថុ ខាងលើ ខ្ញុំបាទ/នាងខ្ញុំ សូមជម្រាបជូនលោកប្រធានក្រុម ប្រឹក្សាភិបាល មេត្តាជ្រាបថា ៖</p>
+      <p class="pf-para">ខ្ញុំបាទ/នាងខ្ញុំ ស្នើសុំអនុញ្ញាត សុំច្បាប់ឈប់សម្រាក ចំនួន<span class="pf-sp" id="pf-days" style="min-width:10mm"></span>ថ្ងៃ គិតចាប់ពីថ្ងៃទី<span class="pf-sp" id="pf-from-day" style="min-width:8mm"></span>ខែ<span class="pf-sp" id="pf-from-month" style="min-width:16mm"></span>ឆ្នាំ<span class="pf-sp" id="pf-from-year" style="min-width:14mm"></span></p>
+      <p class="pf-para">ដល់ថ្ងៃទី<span class="pf-sp" id="pf-to-day" style="min-width:8mm"></span>ខែ<span class="pf-sp" id="pf-to-month" style="min-width:16mm"></span>ឆ្នាំ<span class="pf-sp" id="pf-to-year" style="min-width:14mm"></span> ។</p>
+      <p class="pf-para">ដោយខ្ញុំបាទ/នាងខ្ញុំ <span id="pf-reason1" style="font-weight:700"></span> ។</p>
+    </div>
+    <div class="pf-body-section">
+      <p class="pf-para">&#x200B;&#x2003;&#x2003;អាស្រ័យដូចបានជម្រាបជូនខាងលើ សូម​លោក​ប្រធាន​ក្រុម​ប្រឹក្សាភិបាល មេត្តាពិនិត្យ និង​អនុម័ត​លើ​ការ​ស្នើ​សុំ​ច្បាប់​ឈប់​សម្រាក​របស់​ខ្ញុំ​បាទ​/​នាង​ខ្ញុំ​ ដោយ​សេចក្តី​អនុគ្រោះ។</p>
+      <p class="pf-para">សូម​លោក​ប្រធាន​ក្រុម​ប្រឹក្សាភិបាល ទទួល​នូវ​ការ​គោរព​អំពី​ខ្ញុំ​បាទ/​នាង​ខ្ញុំ។</p>
+    </div>
+    <div class="pf-date-row">
+      ធ្វើនៅ<span class="pf-sp" id="pf-loc" style="min-width:28mm"></span>ថ្ងៃទី<span class="pf-sp" id="pf-sign-day" style="min-width:10mm"></span>ខែ<span class="pf-sp" id="pf-sign-month" style="min-width:16mm"></span>ឆ្នាំ<span class="pf-sp" id="pf-sign-year" style="min-width:16mm"></span>
+    </div>
+    <table class="pf-sig-table" style="margin-top:4mm">
+      <tr>
+        <td class="pf-sig-cell" style="padding-left:0;padding-right:10mm;width:50%">
+          <div style="height:1.5em"></div>
+          <div class="pf-sig-label">បានឃើញ និងអនុម័តលើការស្នើសុំ</div>
+          <div class="pf-sig-sublabel" style="padding-left:60px">ប្រធានក្រុមហ៊ុន</div>
+          <div class="pf-sig-space"></div>
+        </td>
+        <td class="pf-sig-cell pf-sig-right" style="padding-left:10mm;padding-right:0;width:50%;vertical-align:top">
+          <div class="pf-sig-label" style="padding-right:30px">ហត្ថលេខា និង ឈ្មោះបុគ្គលិក</div>
+          <div class="pf-sig-space"></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="pf-footer-wrap">
+    <div class="pf-reqid" id="pf-reqid"></div>
+    <div class="pf-footer">
+      <div class="pf-footer-inner">
+        <div class="pf-footer-left">
+          <span class="pf-footer-co">LOCKTON IBS INSURANCE BROKERS (CAMBODIA) CO., LTD.</span>
+          <span class="pf-footer-kh">អគារ Diamond Twin Tower, ជាន់ទី18, បន្ទប់លេខ S1809, កោះពេជ្រ, រាជធានីភ្នំពេញ</span>
+          <span class="pf-footer-en">Diamond Twin Tower, 18th Floor, Unit S1809, Diamond Island, Phnom Penh, Cambodia</span>
+        </div>
+        <div class="pf-footer-right">
+          +855 (0) 23 988 111<br>+855 (0) 89 788 111<br>www.lockton-ibs.com
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+let _cachedPrintTemplate = null;
+async function getPrintTemplateAndCss() {
+  if (_cachedPrintTemplate) return _cachedPrintTemplate;
+  try {
+    const res = await fetch('print/index.html');
+    if (res.ok) {
+      const htmlText = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+      const pageEl = doc.querySelector('.page');
+      const styleEl = doc.querySelector('style');
+      if (pageEl && styleEl) {
+        _cachedPrintTemplate = {
+          html: pageEl.outerHTML,
+          css: styleEl.textContent
+        };
+        return _cachedPrintTemplate;
+      }
+    }
+  } catch (e) {}
+  _cachedPrintTemplate = {
+    html: DEFAULT_PRINT_HTML,
+    css: DEFAULT_PRINT_CSS
+  };
+  return _cachedPrintTemplate;
+}
+
+async function ensurePdfLibraries() {
+  if (typeof window.html2canvas === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Failed to load html2canvas'));
+      document.head.appendChild(s);
+    });
+  }
+  const hasJsPdf = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  if (!hasJsPdf) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Failed to load jsPDF'));
+      document.head.appendChild(s);
+    });
+  }
+}
+
+function fillPrintTemplateElements(rootEl, data) {
+  const mEN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const mKH = ['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ'];
+
+  function parseDate(iso, lang) {
+    if (!iso) return { day: '', month: '', year: '' };
+    const d = iso.includes('T') || iso.includes('Z') ? new Date(iso) : new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return { day: '', month: '', year: '' };
+    return {
+      day: d.getDate(),
+      month: (lang === 'kh' ? mKH : mEN)[d.getMonth()],
+      year: d.getFullYear()
+    };
+  }
+
+  function set(id, v) {
+    const el = rootEl.querySelector('#' + id);
+    if (el) el.textContent = v || '';
+  }
+
+  const lang = data.lang || 'en';
+  set('pf-name', data.name);
+  set('pf-gender', data.gender);
+  set('pf-position', data.position);
+  set('pf-empid', data.empId);
+  set('pf-leavetype', data.leaveType);
+  set('pf-days', data.days);
+  set('pf-reason1', data.reason);
+  set('pf-loc', 'ភ្នំពេញ');
+
+  const fd = parseDate(data.dateFrom, lang);
+  const td = parseDate(data.dateTo, lang);
+  const today = parseDate(new Date().toISOString(), lang);
+
+  set('pf-from-day', fd.day);
+  set('pf-from-month', fd.month);
+  set('pf-from-year', fd.year);
+  set('pf-to-day', td.day);
+  set('pf-to-month', td.month);
+  set('pf-to-year', td.year);
+  set('pf-sign-day', today.day);
+  set('pf-sign-month', today.month);
+  set('pf-sign-year', today.year);
+  if (data.requestId) {
+    set('pf-reqid', data.requestId);
+  }
+}
+
+async function generateTelegramLeavePdf(printData) {
+  await ensurePdfLibraries();
+  const tmpl = await getPrintTemplateAndCss();
+
+  let container = document.getElementById('tg-pdf-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'tg-pdf-container';
+    container.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(container);
+  }
+
+  container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;pointer-events:none;';
+  container.innerHTML = `
+    <style>
+      ${tmpl.css}
+      #tg-pdf-container {
+        width: 794px !important;
+        background: #ffffff !important;
+      }
+      #tg-pdf-container .print-bar,
+      #tg-pdf-container .tg-banner {
+        display: none !important;
+      }
+      #tg-pdf-container .page {
+        width: 794px !important;
+        min-height: 1123px !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        box-sizing: border-box !important;
+      }
+    </style>
+    ${tmpl.html}
+  `;
+
+  const pageEl = container.querySelector('.page') || container;
+  fillPrintTemplateElements(pageEl, printData);
+
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (e) {}
+  }
+
+  const imgs = Array.from(pageEl.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => {
+    if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+      setTimeout(resolve, 3000);
+    });
+  }));
+
+  await new Promise(r => setTimeout(r, 60));
+
+  let canvas;
+  try {
+    canvas = await window.html2canvas(pageEl, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 794
+    });
+  } catch (canvasErr) {
+    console.warn('html2canvas standard capture failed, retrying without external images:', canvasErr);
+    const logo = pageEl.querySelector('.pf-logo');
+    if (logo) logo.style.visibility = 'hidden';
+    canvas = await window.html2canvas(pageEl, {
+      scale: 2,
+      useCORS: false,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 794
+    });
+  }
+
+  const jsPdfClass = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+  if (!jsPdfClass) {
+    throw new Error('jsPDF library not initialized');
+  }
+
+  const pdf = new jsPdfClass({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pageWidthMm = 210;
+  const pageHeightMm = 297;
+  const a4Ratio = pageHeightMm / pageWidthMm;
+  const pageCanvasHeight = Math.round(canvas.width * a4Ratio);
+
+  if (canvas.height <= pageCanvasHeight + 4) {
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
+  } else {
+    let remainingHeight = canvas.height;
+    let sourceY = 0;
+    let pageNum = 0;
+
+    while (remainingHeight > 0) {
+      if (pageNum > 0) {
+        pdf.addPage('a4', 'portrait');
+      }
+
+      const currentSliceHeight = Math.min(remainingHeight, pageCanvasHeight);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = pageCanvasHeight;
+
+      const ctx = sliceCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sliceCanvas.width, pageCanvasHeight);
+
+      ctx.drawImage(
+        canvas,
+        0, sourceY, canvas.width, currentSliceHeight,
+        0, 0, canvas.width, currentSliceHeight
+      );
+
+      const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(sliceImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
+
+      sourceY += currentSliceHeight;
+      remainingHeight -= currentSliceHeight;
+      pageNum++;
+    }
+  }
+
+  let pdfBase64 = '';
+  try {
+    const dataUri = pdf.output('datauristring');
+    if (dataUri && dataUri.includes(',')) {
+      pdfBase64 = dataUri.split(',')[1];
+    }
+  } catch (e) {}
+
+  if (!pdfBase64) {
+    try {
+      const arrayBuf = pdf.output('arraybuffer');
+      let bin = '';
+      const u8 = new Uint8Array(arrayBuf);
+      for (let i = 0; i < u8.byteLength; i++) {
+        bin += String.fromCharCode(u8[i]);
+      }
+      pdfBase64 = window.btoa(bin);
+    } catch (e) {}
+  }
+
+  container.innerHTML = '';
+
+  if (!pdfBase64) {
+    throw new Error('Failed to generate base64 PDF string');
+  }
+
+  return pdfBase64;
+}
+
+function buildPrintData(d, from, to, days) {
+  const s = rStaff || stStaff || {};
+  const lang = d.lang || LANG || 'en';
+  const name = lang === 'kh' ? (s.nameKh || s.name || d.name) : (s.name || d.name);
+  const pos = lang === 'kh' ? (s.positionKh || s.position || d.position) : (s.position || d.position);
+  const gen = formatGender(d.gender || s.gender, lang);
+  return {
+    name,
+    gender: gen,
+    position: pos,
+    empId: s.empId || d.employeeId || d.empId || '',
+    leaveType: d.leaveType || d.type || '',
+    days: String(days || d.days || d.workingDays || 1),
+    reason: d.reason || '',
+    dateFrom: from || d.dateFrom || d.from || '',
+    dateTo: to || d.dateTo || d.to || '',
+    lang: lang,
+    requestId: d.requestId || d.id || ''
+  };
+}
+
+function buildPrintDataFromRecord(r, staff) {
+  const s = staff || stStaff || rStaff || {};
+  const lang = LANG || 'en';
+  const name = lang === 'kh' ? (s.nameKh || s.name || r.name) : (s.name || r.name);
+  const pos = lang === 'kh' ? (s.positionKh || s.position || r.position) : (s.position || r.position);
+  const gen = formatGender(s.gender || r.gender, lang);
+  return {
+    name,
+    gender: gen,
+    position: pos,
+    empId: s.empId || r.empId || '',
+    leaveType: lang === 'kh' ? (r.typeKh || r.type || r.leaveType) : (r.type || r.leaveType),
+    days: String(r.days || r.workingDays || 1),
+    reason: r.reason || '',
+    dateFrom: r.from || r.dateFrom || '',
+    dateTo: r.to || r.dateTo || '',
+    lang: lang,
+    requestId: r.id || r.requestId || ''
+  };
+}
+
 function openPrint(data) {
   localStorage.setItem('lbs_print_data', JSON.stringify(data));
   window.open('print/index.html', '_blank');
 }
 function fillPrint(d, from, to, days) {
-  const s = rStaff, name = LANG === 'kh' ? (s.nameKh || s.name) : s.name, pos = LANG === 'kh' ? (s.positionKh || s.position) : s.position, gen = formatGender(s.gender, LANG);
-  openPrint({ name, gender: gen, position: pos, empId: s.empId, leaveType: d.leaveType, days: String(days), reason: d.reason || '', dateFrom: from, dateTo: to, lang: LANG, requestId: d.requestId || '' });
+  openPrint(buildPrintData(d, from, to, days));
 }
 function fillPrintRecord(r, staff) {
-  const name = LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name, pos = LANG === 'kh' ? (staff.positionKh || staff.position) : staff.position, gen = formatGender(staff.gender, LANG);
-  openPrint({ name, gender: gen, position: pos, empId: staff.empId || '', leaveType: LANG === 'kh' ? (r.typeKh || r.type) : r.type, days: String(r.days), reason: r.reason || '', dateFrom: r.from, dateTo: r.to, lang: LANG, requestId: r.id || '' });
+  openPrint(buildPrintDataFromRecord(r, staff));
 }
 
 let stStaff = null, stHistory = [], stNotices = [], stHistYear = new Date().getFullYear();
