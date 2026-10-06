@@ -51,28 +51,6 @@
   --font-disp: 'Playfair Display', serif;
 }
 
-[data-theme="dark"] {
-  --bg: #0e0e0c;
-  --surface: #161614;
-  --surface2: #1e1e1b;
-  --surface3: #252522;
-  --border: #2a2a26;
-  --border2: #363632;
-  --txt: #f0ece4;
-  --txt2: #8a8780;
-  --txt3: #54524e;
-  --red: #d4393f;
-  --red-soft: rgba(212, 57, 63, .1);
-  --red-softer: rgba(212, 57, 63, .06);
-  --ok: #2ecc71;
-  --ok-soft: rgba(46, 204, 113, .1);
-  --warn: #e8b94a;
-  --warn-soft: rgba(232, 185, 74, .1);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .3);
-  --shadow: 0 4px 16px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, .6);
-}
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -252,19 +230,7 @@ body {
   background: var(--surface2)
 }
 
-.theme-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .18s;
-}
+.theme-btn { display: none !important; }
 
 .theme-btn:hover {
   background: var(--surface3);
@@ -2247,10 +2213,7 @@ tbody td {
     font-size: 10.5px
   }
 
-  .theme-btn {
-    width: 32px;
-    height: 32px
-  }
+  .theme-btn { display: none !important; }
 
   #v-home .wrap {
     padding: 28px 16px 40px
@@ -3335,10 +3298,7 @@ tbody td {
     font-size: 10.5px
   }
 
-  .theme-btn {
-    width: 32px;
-    height: 32px
-  }
+  .theme-btn { display: none !important; }
 
   #v-home .wrap {
     padding: 28px 16px 40px
@@ -3701,9 +3661,7 @@ tbody td {
   transition: border-color .18s, color .18s, background .18s
 }
 
-.theme-btn {
-  transition: background .18s, border-color .18s
-}
+.theme-btn { display: none !important; }
 
 .lb {
   transition: background .18s, color .18s
@@ -3807,10 +3765,7 @@ tbody td {
     height: 28px
   }
 
-  .theme-btn {
-    width: 28px;
-    height: 28px
-  }
+  .theme-btn { display: none !important; }
 
   .topbar-steps {
     display: none
@@ -4454,11 +4409,7 @@ body {
   }
 
   .sync-btn,
-  .theme-btn {
-    width: 28px !important;
-    height: 28px !important;
-    flex-shrink: 0
-  }
+  .theme-btn { display: none !important; }
 
   .ver {
     display: none !important
@@ -4981,11 +4932,6 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-[data-theme="dark"] .cal-target-tabs {
-  background: var(--surface2);
-  border-color: var(--border);
-}
-
 .cal-tab-btn {
   display: flex;
   flex-direction: column;
@@ -5001,30 +4947,15 @@ body {
   text-align: left;
 }
 
-[data-theme="dark"] .cal-tab-btn {
-  color: var(--txt2);
-}
-
 .cal-tab-btn:hover {
   background: rgba(255, 255, 255, 0.6);
   color: #0f172a;
-}
-
-[data-theme="dark"] .cal-tab-btn:hover {
-  background: var(--surface3);
-  color: var(--txt);
 }
 
 .cal-tab-btn.active {
   background: #ffffff !important;
   border-color: #16a34a !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-}
-
-[data-theme="dark"] .cal-tab-btn.active {
-  background: var(--surface3) !important;
-  border-color: var(--ok) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
 }
 
 .cal-tab-label {
@@ -5039,22 +4970,10 @@ body {
   color: #15803d !important;
 }
 
-[data-theme="dark"] .cal-tab-label {
-  color: var(--txt3);
-}
-
-[data-theme="dark"] .cal-tab-btn.active .cal-tab-label {
-  color: var(--ok) !important;
-}
-
 .cal-tab-val {
   font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
-}
-
-[data-theme="dark"] .cal-tab-val {
-  color: var(--txt);
 }
 
 .cal-tab-arrow {
@@ -5063,10 +4982,6 @@ body {
   justify-content: center;
   color: #94a3b8;
   user-select: none;
-}
-
-[data-theme="dark"] .cal-tab-arrow {
-  color: var(--txt3);
 }
 
 .cal-header-bar {
@@ -5109,18 +5024,6 @@ body {
   color: #0f172a;
 }
 
-[data-theme="dark"] .cal-nav-btn {
-  background: var(--surface2);
-  border-color: var(--border2);
-  color: var(--txt);
-}
-
-[data-theme="dark"] .cal-nav-btn:hover {
-  background: var(--surface3);
-  border-color: var(--border);
-  color: var(--txt);
-}
-
 .cal-month-title {
   font-size: 14px;
   font-weight: 700;
@@ -5130,10 +5033,6 @@ body {
   text-align: center;
 }
 
-[data-theme="dark"] .cal-month-title {
-  color: var(--txt);
-}
-
 .cal-legend {
   display: flex;
   align-items: center;
@@ -5141,10 +5040,6 @@ body {
   font-size: 11px;
   font-weight: 500;
   color: #475569;
-}
-
-[data-theme="dark"] .cal-legend {
-  color: var(--txt2);
 }
 
 .cal-leg-item {
@@ -5165,29 +5060,14 @@ body {
   border: 1px solid #cbd5e1;
 }
 
-[data-theme="dark"] .leg-work {
-  background: var(--border2);
-  border-color: var(--border);
-}
-
 .leg-wknd {
   background: #fee2e2;
   border: 1px solid #fca5a5;
 }
 
-[data-theme="dark"] .leg-wknd {
-  background: rgba(239, 68, 68, 0.25);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-}
-
 .leg-hol {
   background: #fef3c7;
   border: 1px solid #fde68a;
-}
-
-[data-theme="dark"] .leg-hol {
-  background: rgba(245, 158, 11, 0.3);
-  border: 1px solid rgba(245, 158, 11, 0.6);
 }
 
 .leg-sel {
@@ -5212,19 +5092,10 @@ body {
   letter-spacing: 0.04em;
 }
 
-[data-theme="dark"] .cal-hdr-day {
-  color: var(--txt2);
-}
-
 .cal-hdr-wknd {
   color: #dc2626 !important;
   background: #fee2e2 !important;
   border-radius: 6px;
-}
-
-[data-theme="dark"] .cal-hdr-wknd {
-  color: #f87171 !important;
-  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 .cal-grid-days {
@@ -5252,23 +5123,11 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-[data-theme="dark"] .cal-cell {
-  color: var(--txt);
-  background: var(--surface2);
-  border-color: var(--border);
-}
-
 .cal-cell:not(.cal-off-month):not(.cal-day-wknd):not(.cal-day-hol):hover {
   border-color: #16a34a !important;
   background: #f0fdf4 !important;
   color: #15803d !important;
   transform: translateY(-1px);
-}
-
-[data-theme="dark"] .cal-cell:not(.cal-off-month):not(.cal-day-wknd):not(.cal-day-hol):hover {
-  border-color: var(--ok) !important;
-  background: rgba(46, 204, 113, 0.15) !important;
-  color: #ffffff !important;
 }
 
 .cal-off-month {
@@ -5279,24 +5138,12 @@ body {
   cursor: default !important;
 }
 
-[data-theme="dark"] .cal-off-month {
-  color: var(--txt3) !important;
-  opacity: 0.25 !important;
-}
-
 .cal-day-wknd {
   background: #fef2f2 !important;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(239, 68, 68, 0.08) 4px, rgba(239, 68, 68, 0.08) 8px) !important;
   border: 1px solid #fecaca !important;
   color: #b91c1c !important;
   cursor: not-allowed !important;
-}
-
-[data-theme="dark"] .cal-day-wknd {
-  background: rgba(239, 68, 68, 0.08) !important;
-  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(239, 68, 68, 0.12) 4px, rgba(239, 68, 68, 0.12) 8px) !important;
-  border: 1px solid rgba(239, 68, 68, 0.25) !important;
-  color: #fca5a5 !important;
 }
 
 .cal-wknd-badge {
@@ -5313,25 +5160,11 @@ body {
   line-height: 1;
 }
 
-[data-theme="dark"] .cal-wknd-badge {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
 .cal-day-hol {
   background: #fffbeb !important;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(245, 158, 11, 0.1) 4px, rgba(245, 158, 11, 0.1) 8px) !important;
   border: 1px solid #fde68a !important;
   color: #007CA3 !important;
-  cursor: not-allowed !important;
-}
-
-[data-theme="dark"] .cal-day-hol {
-  background: rgba(245, 158, 11, 0.12) !important;
-  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(245, 158, 11, 0.18) 4px, rgba(245, 158, 11, 0.18) 8px) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  color: #fbbf24 !important;
   cursor: not-allowed !important;
 }
 
@@ -5353,12 +5186,6 @@ body {
   white-space: nowrap;
 }
 
-[data-theme="dark"] .cal-hol-badge {
-  color: #fde68a;
-  background: rgba(245, 158, 11, 0.25);
-  border-color: rgba(245, 158, 11, 0.45);
-}
-
 .cal-day-start,
 .cal-day-end {
   background: #16a34a !important;
@@ -5377,34 +5204,16 @@ body {
   border-radius: 6px;
 }
 
-[data-theme="dark"] .cal-day-in-range {
-  background: rgba(34, 197, 94, 0.2) !important;
-  border-color: rgba(34, 197, 94, 0.4) !important;
-  color: #86efac !important;
-}
-
 .cal-day-wknd-in-range {
   background: #fee2e2 !important;
   border-color: #fca5a5 !important;
   color: #b91c1c !important;
 }
 
-[data-theme="dark"] .cal-day-wknd-in-range {
-  background: rgba(239, 68, 68, 0.15) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
-  color: #fca5a5 !important;
-}
-
 .cal-day-hol-in-range {
   background: #fef3c7 !important;
   border-color: #fde68a !important;
   color: #007CA3 !important;
-}
-
-[data-theme="dark"] .cal-day-hol-in-range {
-  background: rgba(245, 158, 11, 0.22) !important;
-  border-color: rgba(245, 158, 11, 0.45) !important;
-  color: #fde68a !important;
 }
 
 .cal-summary-bar {
@@ -5432,18 +5241,6 @@ body {
   color: var(--txt3);
 }
 
-[data-theme="dark"] .cal-summary-bar {
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.25);
-  color: var(--txt);
-}
-
-[data-theme="dark"] .cal-summary-bar.cal-summary-empty {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed var(--border);
-  color: var(--txt3);
-}
-
 .cal-sum-left {
   display: flex;
   align-items: center;
@@ -5458,12 +5255,6 @@ body {
   border-radius: 6px;
   border: 1px solid #bbf7d0;
   font-size: 11px;
-}
-
-[data-theme="dark"] .cal-sum-badge {
-  color: #86efac;
-  background: rgba(34, 197, 94, 0.18);
-  border-color: rgba(34, 197, 94, 0.35);
 }
 
 .field.field-err .date-wrap,
@@ -5502,10 +5293,6 @@ body {
   animation: riseIn 0.2s ease;
 }
 
-[data-theme="dark"] .field-msg-err {
-  color: #f87171;
-}
-
 .req-err-summary {
   background: #fef2f2;
   border: 1.5px solid #f87171;
@@ -5515,12 +5302,6 @@ body {
   color: #991b1b;
   box-shadow: 0 4px 18px rgba(239, 68, 68, 0.15);
   animation: riseIn 0.3s ease both;
-}
-
-[data-theme="dark"] .req-err-summary {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #fca5a5;
 }
 
 .req-err-head {
@@ -5558,12 +5339,6 @@ body {
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
 }
 
-[data-theme="dark"] .date-notice-warn {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fde68a;
-}
-
 .date-notice-info {
   background: #f0fdf4;
   border: 1.5px solid #bbf7d0;
@@ -5571,22 +5346,10 @@ body {
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.08);
 }
 
-[data-theme="dark"] .date-notice-info {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.3);
-  color: #86efac;
-}
-
 .date-notice-err {
   background: #fef2f2;
   border: 1.5px solid #fca5a5;
   color: #991b1b;
-}
-
-[data-theme="dark"] .date-notice-err {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
 }
 
 .tour-overlay {
