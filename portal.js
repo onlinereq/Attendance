@@ -495,7 +495,7 @@ async function apiGet(action, params = {}) {
     qsParams.tgData = rawInitData;
   }
   const qs = new URLSearchParams(qsParams).toString();
-  const res = await fetch(SCRIPT_URL + '?' + qs);
+  const res = await fetch(SCRIPT_URL + '?' + qs, { mode: 'cors', credentials: 'omit' });
   const data = await res.json();
   if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
   return data;
@@ -518,7 +518,13 @@ async function apiPost(action, payload = {}, retryCount = 1) {
     const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
     const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
     const body = JSON.stringify({ action, ...payload, ...signed, fp, initData: rawInitData, tgData: rawInitData });
-    const res = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body });
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'text/plain' },
+      body
+    });
     const text = await res.text();
     let data;
     try {
@@ -609,7 +615,16 @@ async function verifyStaffCredentials(rawInputName, rawInputId) {
   let targetStaff = null;
   let hasNetworkErr = false;
 
-  // 1. Attempt backend verification
+  // 1. Fast local cache check first (instant response if available)
+  const list = (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0)
+    ? _appInitData.staffList
+    : [];
+  if (list.length > 0) {
+    targetStaff = list.find(s => matchEmpId(s.empId, rawInputId) && matchStaffName(s.name, s.nameKh, rawInputName));
+    if (targetStaff) return { targetStaff, hasNetworkErr: false };
+  }
+
+  // 2. Attempt backend verification
   try {
     const res = await apiPost('getStaff', { empId: rawInputId, query: rawInputName, name: rawInputName });
     if (res && res.result === 'success' && res.staff) {
@@ -625,17 +640,7 @@ async function verifyStaffCredentials(rawInputName, rawInputId) {
     console.warn('verifyStaffCredentials: API call failed, falling back to cache:', e);
   }
 
-  // 2. Local cache fallback: check _appInitData.staffList
-  if (!targetStaff) {
-    const list = (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0)
-      ? _appInitData.staffList
-      : [];
-    if (list.length > 0) {
-      targetStaff = list.find(s => matchEmpId(s.empId, rawInputId) && matchStaffName(s.name, s.nameKh, rawInputName));
-    }
-  }
-
-  // 3. Fallback: try loading cache if empty
+  // 3. Fallback: try loading cache if still empty
   if (!targetStaff && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
     try {
       const staffList = await loadStaffCache();
@@ -651,9 +656,9 @@ async function verifyStaffCredentials(rawInputName, rawInputId) {
 // ── STAFF LIST & DEVICE MEMORY ──────────────────────────
 let _appInitData = null;
 
-// Restore immediately from session cache on load
+// Restore immediately from session or local cache on load
 try {
-  const _savedCache = sessionStorage.getItem('app_init_cache');
+  const _savedCache = sessionStorage.getItem('app_init_cache') || localStorage.getItem('app_init_cache');
   if (_savedCache) {
     const parsed = JSON.parse(_savedCache);
     if (parsed && parsed.staffList && parsed.staffList.length > 0) {
@@ -662,41 +667,51 @@ try {
   }
 } catch (e) {}
 
+let _staffLoadingPromise = null;
+
 async function loadStaffCache() {
   if (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0) return _appInitData.staffList;
-  try {
-    const res = await apiPost('getAppInitData', {});
-    if (res && res.result === 'success') {
-      _appInitData = {
-        staffList: res.staffList || res.staff || [],
-        history: res.history || [],
-        notices: res.notices || []
-      };
-      if (res.holidays && Array.isArray(res.holidays) && res.holidays.length > 0) {
-        saveHolidaysCache(res.holidays);
-      }
-      try {
-        sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
-      } catch (e) {}
-      if (_appInitData.staffList.length > 0) {
-        return _appInitData.staffList;
-      }
-    }
-  } catch (e) { }
+  if (_staffLoadingPromise) return _staffLoadingPromise;
 
-  try {
-    const resStaff = await apiPost('getAllStaff', {});
-    if (resStaff && resStaff.result === 'success' && resStaff.staffList) {
-      if (!_appInitData) _appInitData = { staffList: [], history: [], notices: [] };
-      _appInitData.staffList = resStaff.staffList;
-      try {
-        sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
-      } catch (e) {}
-      return _appInitData.staffList;
-    }
-  } catch (e) { }
+  _staffLoadingPromise = (async () => {
+    // 1. Try getAllStaff first for instant staff list availability
+    try {
+      const resStaff = await apiPost('getAllStaff', {});
+      if (resStaff && resStaff.result === 'success' && resStaff.staffList && resStaff.staffList.length > 0) {
+        if (!_appInitData) _appInitData = { staffList: [], history: [], notices: [] };
+        _appInitData.staffList = resStaff.staffList;
+        try {
+          sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+          localStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+        } catch (e) {}
+      }
+    } catch (e) {}
 
-  return (_appInitData && _appInitData.staffList) ? _appInitData.staffList : [];
+    // 2. Fetch full getAppInitData for complete history & notices
+    try {
+      const res = await apiPost('getAppInitData', {});
+      if (res && res.result === 'success') {
+        _appInitData = {
+          staffList: res.staffList || res.staff || (_appInitData ? _appInitData.staffList : []),
+          history: res.history || [],
+          notices: res.notices || []
+        };
+        if (res.holidays && Array.isArray(res.holidays) && res.holidays.length > 0) {
+          saveHolidaysCache(res.holidays);
+        }
+        try {
+          sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+          localStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+        } catch (e) {}
+      }
+    } catch (e) {}
+
+    return (_appInitData && _appInitData.staffList) ? _appInitData.staffList : [];
+  })().finally(() => {
+    _staffLoadingPromise = null;
+  });
+
+  return _staffLoadingPromise;
 }
 
 function saveUserDeviceMemory(staff) {
