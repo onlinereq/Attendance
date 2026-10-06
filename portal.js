@@ -507,7 +507,7 @@ async function apiPost(action, payload = {}, retryCount = 1) {
     'submitRequest', 'sendNotice', 'submitNotice', 'manualEntry', 'manualNotice',
     'convertLateToLeave', 'updateStatus', 'updateRequestStatus', 'batchAction',
     'deleteRequest', 'deleteNotice', 'addHoliday', 'deleteHoliday', 'sendLeavePdfToChat',
-    'getAllData', 'getDashboardData', 'hrLogin'
+    'hrLogin'
   ];
   if (NON_RETRYABLE.includes(action)) {
     retryCount = 0;
@@ -518,13 +518,21 @@ async function apiPost(action, payload = {}, retryCount = 1) {
     const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
     const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
     const body = JSON.stringify({ action, ...payload, ...signed, fp, initData: rawInitData, tgData: rawInitData });
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'cors',
-      credentials: 'omit',
-      headers: { 'Content-Type': 'text/plain' },
-      body
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 35000);
+    let res;
+    try {
+      res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'text/plain' },
+        body,
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     const text = await res.text();
     let data;
     try {
@@ -667,51 +675,52 @@ try {
   }
 } catch (e) {}
 
-let _staffLoadingPromise = null;
+let _appInitLoadingPromise = null;
 
-async function loadStaffCache() {
-  if (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0) return _appInitData.staffList;
-  if (_staffLoadingPromise) return _staffLoadingPromise;
-
-  _staffLoadingPromise = (async () => {
-    // 1. Try getAllStaff first for instant staff list availability
+async function fetchAppInitData() {
+  if (_appInitLoadingPromise) return _appInitLoadingPromise;
+  _appInitLoadingPromise = (async () => {
     try {
-      const resStaff = await apiPost('getAllStaff', {});
-      if (resStaff && resStaff.result === 'success' && resStaff.staffList && resStaff.staffList.length > 0) {
-        if (!_appInitData) _appInitData = { staffList: [], history: [], notices: [] };
-        _appInitData.staffList = resStaff.staffList;
-        try {
-          sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
-          localStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
-        } catch (e) {}
-      }
-    } catch (e) {}
-
-    // 2. Fetch full getAppInitData for complete history & notices
-    try {
-      const res = await apiPost('getAppInitData', {});
+      const res = await apiPost('getAppInitData', {}, 2);
       if (res && res.result === 'success') {
         _appInitData = {
           staffList: res.staffList || res.staff || (_appInitData ? _appInitData.staffList : []),
-          history: res.history || [],
-          notices: res.notices || []
+          history: res.history || res.requests || [],
+          notices: res.notices || [],
+          _cachedAt: Date.now()
         };
         if (res.holidays && Array.isArray(res.holidays) && res.holidays.length > 0) {
           saveHolidaysCache(res.holidays);
         }
         try {
-          sessionStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
-          localStorage.setItem('app_init_cache', JSON.stringify(_appInitData));
+          const s = JSON.stringify(_appInitData);
+          sessionStorage.setItem('app_init_cache', s);
+          localStorage.setItem('app_init_cache', s);
         } catch (e) {}
+        if (typeof renderHomeLeaveBoardUI === 'function') {
+          renderHomeLeaveBoardUI();
+        }
       }
-    } catch (e) {}
-
+    } catch (e) {
+      console.warn('fetchAppInitData error:', e);
+    }
     return (_appInitData && _appInitData.staffList) ? _appInitData.staffList : [];
   })().finally(() => {
-    _staffLoadingPromise = null;
+    _appInitLoadingPromise = null;
   });
+  return _appInitLoadingPromise;
+}
 
-  return _staffLoadingPromise;
+async function loadStaffCache() {
+  if (_appInitData && _appInitData.staffList && _appInitData.staffList.length > 0) {
+    const cachedAt = _appInitData._cachedAt || 0;
+    if (!_appInitData.history || !_appInitData.history.length || (Date.now() - cachedAt > 180000)) {
+      fetchAppInitData();
+    }
+    return _appInitData.staffList;
+  }
+  await fetchAppInitData();
+  return (_appInitData && _appInitData.staffList) ? _appInitData.staffList : [];
 }
 
 function saveUserDeviceMemory(staff) {
@@ -2680,9 +2689,26 @@ function hrLogout() {
 }
 // ── DATA CACHE ────────────────────────────────────────────────────
 const CACHE_TTL = 3600000; // 1 hour
-function cacheSet(key, val) { try { sessionStorage.setItem(key, JSON.stringify({ v: val, t: Date.now() })); } catch (e) { } }
-function cacheGet(key) { try { const r = JSON.parse(sessionStorage.getItem(key) || 'null'); if (r && Date.now() - r.t < CACHE_TTL) return r.v; } catch (e) { } return null; }
-function cacheClear() { ['hr_reqs', 'hr_staff', 'hr_notices', 'hr_noticestats'].forEach(k => sessionStorage.removeItem(k)); }
+function cacheSet(key, val) {
+  try {
+    const s = JSON.stringify({ v: val, t: Date.now() });
+    sessionStorage.setItem(key, s);
+    localStorage.setItem(key, s);
+  } catch (e) { }
+}
+function cacheGet(key) {
+  try {
+    const r = JSON.parse(sessionStorage.getItem(key) || localStorage.getItem(key) || 'null');
+    if (r && Date.now() - r.t < CACHE_TTL) return r.v;
+  } catch (e) { }
+  return null;
+}
+function cacheClear() {
+  ['hr_reqs', 'hr_staff', 'hr_notices', 'hr_noticestats'].forEach(k => {
+    sessionStorage.removeItem(k);
+    localStorage.removeItem(k);
+  });
+}
 
 async function hrLoadData(silent) {
   const ld = document.getElementById('hr-loading');
@@ -4168,6 +4194,13 @@ function parseToISO(val) {
   }
   const s = String(val).trim();
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const dmyNum = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if (dmyNum) {
+    const day = dmyNum[1].padStart(2, '0');
+    const month = dmyNum[2].padStart(2, '0');
+    const year = dmyNum[3];
+    return `${year}-${month}-${day}`;
+  }
   const dmy = s.match(/^(\d{1,2})[-\s/]([A-Za-z]{3,9})[-\s/](\d{4})/);
   if (dmy) {
     const day = dmy[1].padStart(2, '0');
@@ -4183,15 +4216,9 @@ function parseToISO(val) {
 }
 
 // ── HOME LEAVE BOARD ─────────────────────────────────────────────────
-async function loadHomeLeaveBoard() {
+function renderHomeLeaveBoardUI() {
   const el = document.getElementById('home-leave-list');
   if (!el) return;
-
-  if (!_appInitData) {
-    try {
-      await loadStaffCache();
-    } catch (e) { }
-  }
 
   try {
     const allLeaves = (_appInitData && _appInitData.history) ? _appInitData.history : [];
@@ -4228,7 +4255,8 @@ async function loadHomeLeaveBoard() {
     });
 
     if (!upcoming.length) {
-      el.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:24px 20px">No one is on leave today or in the future.</div>';
+      el.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:24px 20px">' +
+        (LANG === 'kh' ? 'គ្មានបុគ្គលិកកំពុងឈប់សម្រាកនៅថ្ងៃនេះ ឬពេលខាងមុខទេ។' : 'No one is on leave today or in the future.') + '</div>';
       return;
     }
 
@@ -4237,16 +4265,16 @@ async function loadHomeLeaveBoard() {
       const isPending = (st === 'pending');
       const dot = isPending ? 'var(--warn)' : 'var(--ok)';
       const statusBadge = isPending
-        ? '<span style="font-size:10px;font-weight:600;color:var(--warn);background:rgba(0,174,239,0.12);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,174,239,0.25)">Pending Approval</span>'
-        : '<span style="font-size:10px;font-weight:600;color:var(--ok);background:rgba(34,197,94,0.12);padding:2px 7px;border-radius:4px;border:1px solid rgba(34,197,94,0.25)">Approved</span>';
+        ? '<span style="font-size:10px;font-weight:600;color:var(--warn);background:rgba(0,174,239,0.12);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,174,239,0.25)">' + (LANG === 'kh' ? 'រង់ចាំអនុម័ត' : 'Pending Approval') + '</span>'
+        : '<span style="font-size:10px;font-weight:600;color:var(--ok);background:rgba(34,197,94,0.12);padding:2px 7px;border-radius:4px;border:1px solid rgba(34,197,94,0.25)">' + (LANG === 'kh' ? 'បានអនុម័ត' : 'Approved') + '</span>';
 
       const timingTag = l.isToday
-        ? '<span style="font-size:10.5px;font-weight:700;color:#fff;background:var(--red);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em">On Leave Today</span>'
-        : '<span style="font-size:10.5px;font-weight:600;color:var(--txt2);background:var(--surface2);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Upcoming</span>';
+        ? '<span style="font-size:10.5px;font-weight:700;color:#fff;background:var(--red);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em">' + (LANG === 'kh' ? 'ឈប់ថ្ងៃនេះ' : 'On Leave Today') + '</span>'
+        : '<span style="font-size:10.5px;font-weight:600;color:var(--txt2);background:var(--surface2);border:1px solid var(--border);padding:2px 6px;border-radius:4px">' + (LANG === 'kh' ? 'ពេលខាងមុខ' : 'Upcoming') + '</span>';
 
       const datesStr = fmtDate(l.fromISO || l.from) + ((l.toISO && l.toISO !== l.fromISO) ? ' – ' + fmtDate(l.toISO) : '');
       const daysNum = parseFloat(l.days || l.workingDays) || 0;
-      const daysStr = daysNum > 0 ? ` (${daysNum} day${daysNum > 1 ? 's' : ''})` : '';
+      const daysStr = daysNum > 0 ? ` (${daysNum} ${LANG === 'kh' ? 'ថ្ងៃ' : (daysNum > 1 ? 'days' : 'day')})` : '';
       const lType = l.leaveType || l.type || 'Leave';
 
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;background:var(--surface);transition:background 0.15s">` +
@@ -4268,8 +4296,28 @@ async function loadHomeLeaveBoard() {
     }).join('');
   } catch (e) {
     console.error('Home leave board error:', e);
-    el.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:24px 20px">Could not load leave records.</div>';
+    el.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:24px 20px">' +
+      (LANG === 'kh' ? 'មិនអាចផ្ទុកទិន្នន័យច្បាប់បានទេ។' : 'Could not load leave records.') + '</div>';
   }
+}
+
+async function loadHomeLeaveBoard() {
+  const el = document.getElementById('home-leave-list');
+  if (!el) return;
+
+  if (_appInitData && _appInitData.history && _appInitData.history.length > 0) {
+    renderHomeLeaveBoardUI();
+    const cachedAt = _appInitData._cachedAt || 0;
+    if (Date.now() - cachedAt > 120000) {
+      fetchAppInitData();
+    }
+    return;
+  }
+
+  el.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px">' +
+    (LANG === 'kh' ? 'កំពុងផ្ទុកបញ្ជីច្បាប់...' : 'Loading leave board...') + '</div>';
+  await fetchAppInitData();
+  renderHomeLeaveBoardUI();
 }
 document.addEventListener('DOMContentLoaded', async function () {
   const splash = document.getElementById('app-splash');
