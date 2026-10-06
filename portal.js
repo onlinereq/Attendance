@@ -506,7 +506,8 @@ async function apiPost(action, payload = {}, retryCount = 1) {
   const NON_RETRYABLE = [
     'submitRequest', 'sendNotice', 'submitNotice', 'manualEntry', 'manualNotice',
     'convertLateToLeave', 'updateStatus', 'updateRequestStatus', 'batchAction',
-    'deleteRequest', 'deleteNotice', 'addHoliday', 'deleteHoliday', 'sendLeavePdfToChat'
+    'deleteRequest', 'deleteNotice', 'addHoliday', 'deleteHoliday', 'sendLeavePdfToChat',
+    'getAllData', 'getDashboardData', 'hrLogin'
   ];
   if (NON_RETRYABLE.includes(action)) {
     retryCount = 0;
@@ -1570,6 +1571,9 @@ function doConfirm() {
               const pdfBase64 = await generateTelegramLeavePdf(printObj);
               const sendRes = await apiPost('sendLeavePdfToChat', {
                 requestId: res.requestId,
+                employeeId: _lastSubmit ? (_lastSubmit.employeeId || '') : '',
+                name: _lastSubmit ? (_lastSubmit.name || '') : '',
+                telegramId: (isTG && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) ? window.Telegram.WebApp.initDataUnsafe.user.id : '',
                 pdfBase64: pdfBase64
               });
               _lastTgSubmitResult = sendRes;
@@ -2079,7 +2083,7 @@ async function generateTelegramLeavePdf(printData) {
   let canvas;
   try {
     canvas = await window.html2canvas(pageEl, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -2091,7 +2095,7 @@ async function generateTelegramLeavePdf(printData) {
     const logo = pageEl.querySelector('.pf-logo');
     if (logo) logo.style.visibility = 'hidden';
     canvas = await window.html2canvas(pageEl, {
-      scale: 2,
+      scale: 1.5,
       useCORS: false,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -2117,7 +2121,7 @@ async function generateTelegramLeavePdf(printData) {
   const pageCanvasHeight = Math.round(canvas.width * a4Ratio);
 
   if (canvas.height <= pageCanvasHeight * 1.15) {
-    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
   } else {
     let remainingHeight = canvas.height;
@@ -2144,7 +2148,7 @@ async function generateTelegramLeavePdf(printData) {
         0, 0, canvas.width, currentSliceHeight
       );
 
-      const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.98);
+      const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.92);
       pdf.addImage(sliceImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm);
 
       sourceY += currentSliceHeight;
@@ -2619,7 +2623,6 @@ async function hrLogin() {
       sessionStorage.setItem('hr_sess', JSON.stringify({ user: hrUser, token: hrToken, hmacKey: res.hmacKey || '' }));
 
       if (_gmo.updateText) _gmo.updateText('Loading Dashboard Data');
-      await hrLoadData(true);
 
       document.getElementById('hr-greet').textContent = tx('hrGreet') + hrUser;
       document.getElementById('hr-gsub').textContent = tx('hrGsub') + ' — ' + todayFmt();
@@ -2628,6 +2631,8 @@ async function hrLogin() {
       const bBtn = document.getElementById('hr-back-btn'); if (bBtn) bBtn.style.display = 'none';
       const lBtn = document.getElementById('hr-logout-btn'); if (lBtn) lBtn.style.display = 'inline-flex';
       _gmo.cancel(true);
+
+      hrLoadData(false);
     }
     else { _gmo.cancel(false); document.getElementById('hr-lerr').textContent = res.message || (res.result === 'locked' ? (res.error || tx('hrLerr')) : tx('hrLerr')); setTimeout(() => gateSetError('hr-login'), 210); }
   } catch (e) { _gmo.cancel(false); document.getElementById('hr-lerr').textContent = 'Connection error. Please try again.'; console.error('hrLogin error:', e); } finally { gateSetLoading('hr-login', 'hr-lbtn', false); sp.style.display = 'none'; }
