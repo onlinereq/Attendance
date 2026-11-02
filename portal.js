@@ -398,6 +398,22 @@ function hdGetFirst() {
   return s ? s.value : 'full';
 }
 function hdGetLast() { const s = document.querySelector('input[name=halfday-last]:checked'); return s ? s.value : 'full'; }
+// Half-day slots: 1 = morning, 2 = afternoon, 3 = full day. Missing/unknown values (old rows) count as full.
+function hdMask(v) { v = String(v || '').toLowerCase(); return v === 'morning' ? 1 : v === 'afternoon' ? 2 : 3; }
+function leaveSlotsOn(iso, from, to, hf, hl) {
+  if (iso < from || iso > to) return 0;
+  if (from === to) return hdMask(hf);
+  return iso === from ? hdMask(hf) : iso === to ? hdMask(hl) : 3;
+}
+// True when two leave ranges share at least one date AND one half of that date.
+function leaveSlotsClash(aFrom, aTo, aHf, aHl, bFrom, bTo, bHf, bHl) {
+  const start = aFrom > bFrom ? aFrom : bFrom, end = aTo < bTo ? aTo : bTo;
+  for (let d = new Date(start + 'T00:00:00Z'), last = new Date(end + 'T00:00:00Z'); d <= last; d.setUTCDate(d.getUTCDate() + 1)) {
+    const iso = d.toISOString().slice(0, 10);
+    if (leaveSlotsOn(iso, aFrom, aTo, aHf, aHl) & leaveSlotsOn(iso, bFrom, bTo, bHf, bHl)) return true;
+  }
+  return false;
+}
 function hdLabel(v) { return v === 'morning' ? 'Morning' : v === 'afternoon' ? 'Evening' : ''; }
 
 function getActualDays(from, to) {
@@ -970,7 +986,7 @@ async function rVerify() {
       const hId = String(r.empId || '').toUpperCase();
       return hId && (hId === sId || hId.replace(/^0+/, '') === sIdTrim);
     });
-    histData.forEach(r => { if (r.status !== 'Rejected' && r.from && r.to) rStaff._usedDates.push({ from: r.from, to: r.to, status: r.status }); });
+    histData.forEach(r => { if (r.status !== 'Rejected' && r.from && r.to) rStaff._usedDates.push({ from: r.from, to: r.to, status: r.status, hf: r.halfFirstDay, hl: r.halfLastDay }); });
   }
 
   document.getElementById('r-gate').style.display = 'none';
@@ -1452,7 +1468,8 @@ function rShowPreview() {
   }
 
   if (rStaff._usedDates && rStaff._usedDates.length) {
-    const conflict = rStaff._usedDates.find(r => from <= r.to && to >= r.from);
+    const newHf = hdGetFirst(), newHl = from === to ? newHf : hdGetLast();
+    const conflict = rStaff._usedDates.find(r => from <= r.to && to >= r.from && leaveSlotsClash(from, to, newHf, newHl, r.from, r.to, r.hf, r.hl));
     if (conflict) {
       const fField = document.getElementById('f-rf-from');
       const tField = document.getElementById('f-rf-to');
