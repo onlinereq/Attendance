@@ -7336,11 +7336,14 @@ body {
     font-weight: 600 !important;
     line-height: 1.45;
     color: var(--txt);
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   #stage .hcard .hcard-arrow {
     display: block !important;
     flex: none;
+    align-self: center !important;
     width: 8px;
     height: 8px;
     margin: 0 4px 0 0 !important;
@@ -7397,6 +7400,12 @@ body {
   }
 
   #stage #toast.show { transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 340px) {
+  /* very narrow phones: a little more room for the card titles */
+  #stage .hcard { padding: 12px 12px !important; gap: 10px; }
+  #stage .hcard .hcard-icon { width: 40px !important; height: 40px !important; }
 }
 
 @media (max-width: 360px) {

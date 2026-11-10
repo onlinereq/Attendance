@@ -6196,3 +6196,29 @@ function khUIRefresh() {
   if (LANG !== 'en') applyLang();
   khUIRefresh();
 })();
+
+// Phone: each home card title shrinks (down to 11px) so it always fits on one line.
+(function fitHomeTitles() {
+  const titles = () => [...document.querySelectorAll('#v-home .hcard-title')];
+  const mq = window.matchMedia('(max-width: 768px)');
+  function fit(t) {
+    t.style.removeProperty('font-size');
+    t.style.removeProperty('white-space');
+    if (!mq.matches || !t.clientWidth) return;
+    let size = parseFloat(getComputedStyle(t).fontSize);
+    while (t.scrollWidth > t.clientWidth && size > 12) {
+      size -= 0.5;
+      t.style.setProperty('font-size', size + 'px', 'important');
+    }
+    // still too long at the smallest readable size: wrap to two lines instead of cutting the text
+    t.style.removeProperty('white-space');
+    if (t.scrollWidth > t.clientWidth) { t.style.setProperty('white-space', 'normal', 'important'); t.style.setProperty('font-size', '13px', 'important'); }
+  }
+  const fitAll = () => titles().forEach(fit);
+  if (window.ResizeObserver) { const ro = new ResizeObserver((es) => es.forEach((e) => fit(e.target))); titles().forEach((t) => ro.observe(t)); }
+  const box = document.querySelector('#v-home .home-cards');
+  if (box) new MutationObserver(fitAll).observe(box, { childList: true, characterData: true, subtree: true });
+  window.addEventListener('resize', fitAll);
+  if (document.fonts) { document.fonts.ready.then(fitAll); document.fonts.addEventListener('loadingdone', fitAll); }
+  fitAll();
+})();
