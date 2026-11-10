@@ -7276,6 +7276,43 @@ body {
 @media (max-width: 768px) {
   /* request login: no profile icon */
   #stage #r-gate .gate-icon { display: none; }
+
+  /* validation never pushes the layout: no summary box, messages overlay their label row */
+  #stage #req-err-summary { display: none !important; }
+
+  #stage .field,
+  #stage #rsc-type { position: relative; }
+
+  #stage #rf-from-err,
+  #stage #rf-to-err,
+  #stage #rf-type-err {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    max-width: 72%;
+    margin: 0;
+    justify-content: flex-end;
+    text-align: right;
+    font-size: 11px;
+    line-height: 1.25;
+    pointer-events: none;
+  }
+
+  #stage #rf-other-err,
+  #stage #rf-rsn-err { display: none !important; }
+
+  /* toast at the top so it never covers the pinned Back / Continue buttons */
+  #stage #toast {
+    top: calc(env(safe-area-inset-top) + 12px);
+    bottom: auto;
+    transform: translateX(-50%) translateY(-16px);
+    white-space: normal;
+    text-align: center;
+    width: max-content;
+    max-width: calc(100% - 32px) !important;
+  }
+
+  #stage #toast.show { transform: translateX(-50%) translateY(0); }
 }
 
 @media (max-width: 360px) {
