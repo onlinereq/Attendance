@@ -5,6 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <script>
+    // Stage: track the area the user can really see (browser bars, keyboard, notch) -> --vvt / --kb
+    (() => {
+      const r = document.documentElement, v = window.visualViewport;
+      const fit = () => {
+        const h = innerHeight, top = v ? v.offsetTop : 0, vh = v ? v.height : h;
+        r.style.setProperty('--vvt', top + 'px');
+        r.style.setProperty('--kb', Math.max(0, h - vh - top) + 'px');
+      };
+      ['resize', 'orientationchange', 'fullscreenchange'].forEach(e => addEventListener(e, fit));
+      if (v) { v.addEventListener('resize', fit); v.addEventListener('scroll', fit); }
+      fit();
+    })();
+  </script>
   <title>Attendance &amp; Leave Portal</title>
 
   <link rel="manifest" href="manifest.json">
@@ -25,9 +39,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Moul&family=Siemreap&family=Battambang:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Ubuntu:wght@400;500;700&family=Hanuman:wght@400;700&display=swap"
     rel="stylesheet">
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Moul&display=swap" as="style"
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="portal.css?v=2.4.1" as="style">
   <link rel="preload" href="portal.js?v=2.4.1" as="script">
@@ -36,40 +50,6 @@
   <link rel="stylesheet" href="portal.css?v=2.4.1">
   <style>
     /* ── iOS Drum Picker ─────────────────────────────────────── */
-    .drum-col {
-      width: 72px;
-      height: 210px;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      position: relative
-    }
-
-    .drum-col::-webkit-scrollbar {
-      display: none
-    }
-
-    .drum-item {
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 19px;
-      font-weight: 400;
-      color: var(--txt3);
-      scroll-snap-align: center;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: color .12s, font-size .12s, font-weight .12s
-    }
-
-    .drum-item.drum-sel {
-      color: var(--txt);
-      font-size: 23px;
-      font-weight: 700
-    }
 
     /* ── Notice Type Cards (Pure Icon Minimalist) ──────────────────────────────────── */
     .nt-type-card {
@@ -120,12 +100,6 @@
       letter-spacing: -0.01em;
     }
 
-    .nt-card-sub {
-      font-size: 12px;
-      color: var(--txt3);
-      line-height: 1.4
-    }
-
     /* ── Active type card highlight ─────────────────────────── */
     .nt-card-active {
       border-color: #00AEEF !important;
@@ -133,27 +107,6 @@
     }
 
     /* ── Staff Info Chip ────────────────────────────────────── */
-    .nt-info-chip {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 9px 16px;
-      font-size: 13px;
-      color: var(--txt2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 14px
-    }
-
-    .nt-ic-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #00AEEF;
-      flex-shrink: 0
-    }
 
     /* ── Time segment buttons (HH / MM) ─────────────────────── */
     .nt-time-seg {
@@ -202,29 +155,6 @@
     }
 
     /* ── Numpad buttons ─────────────────────────────────────── */
-    .nt-np-btn {
-      font-size: 26px;
-      font-weight: 500;
-      padding: 16px 0;
-      border: none;
-      border-radius: 14px;
-      background: var(--surface2);
-      color: var(--txt);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform .1s, background .1s;
-      width: 100%
-    }
-
-    .nt-np-btn:active {
-      transform: scale(.92);
-      background: var(--border)
-    }
-
-    .nt-np-fn {
-      font-size: 18px;
-      color: var(--txt2)
-    }
 
     /* ── Home cards — mobile single column ──────────────────── */
     @media(max-width:500px) {
@@ -502,7 +432,7 @@
   <div id="app-splash"
     style="position:fixed;inset:0;z-index:999999;background:var(--bg, #f5f0eb);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s ease;padding:0 24px">
     <div
-      style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--txt, #1a1a1a);letter-spacing:.01em;margin-bottom:4px">
+      style="font-family:'Playfair Display','Hanuman',serif;font-size:22px;font-weight:600;color:var(--txt, #1a1a1a);letter-spacing:.01em;margin-bottom:4px">
       Leave Request</div>
     <div
       style="font-size:11px;color:var(--txt3, #888);letter-spacing:.08em;text-transform:uppercase;margin-bottom:36px">
@@ -563,6 +493,8 @@
       style="margin-top:28px;font-size:13px;color:var(--txt3, #888);letter-spacing:.02em;min-height:20px;transition:opacity .3s ease;text-align:center">
       Connecting to server...</div>
   </div>
+
+  <div id="stage">
 
   <style>
     @keyframes splash-spin {
@@ -979,11 +911,11 @@
           <div class="hcard-num">01</div>
           <div class="hcard-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <polyline points="9 16 11 18 15 14" />
             </svg></div>
           <div class="hcard-title" id="h-c1t">Request Leave</div>
           <div class="hcard-desc" id="h-c1d">Submit a new annual or special leave request</div>
@@ -995,8 +927,7 @@
               height="20" viewBox="0 0 24 24" fill="none" stroke="#00AEEF" stroke-width="1.8" stroke-linecap="round"
               stroke-linejoin="round">
               <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
+              <polyline points="12 6 12 12 16 14" />
             </svg></div>
           <div class="hcard-title" id="h-nt-t">Late / Early Notice</div>
           <div class="hcard-desc" id="h-nt-d">Notify HR of late arrival or early departure</div>
@@ -1006,9 +937,9 @@
           <div class="hcard-num">03</div>
           <div class="hcard-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
+              <path d="M3 3v5h5" />
+              <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+              <polyline points="12 7 12 12 16 14" />
             </svg></div>
           <div class="hcard-title" id="h-c2t">My Leave Status</div>
           <div class="hcard-desc" id="h-c2d">Check remaining days, history and print past requests</div>
@@ -1063,11 +994,11 @@
           <div class="gate-sub">Enter your Full Name</div>
           <div id="nt-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') ntVerify()"
+              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') ntVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') ntVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') ntVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;background:#00AEEF;box-shadow:none;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="ntVerify()" id="nt-gate-btn">
               <div class="spinner" id="nt-gate-sp"></div><span id="nt-gate-txt">Continue</span>
@@ -1225,11 +1156,11 @@
           <div class="gate-sub" id="rg-sub">Enter your Full Name</div>
           <div id="r-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') rVerify()"
+              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') rVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') rVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') rVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="rVerify()" id="r-gate-btn">
               <div class="spinner" id="r-gate-sp"></div><span id="r-gate-txt">Continue</span>
@@ -1325,6 +1256,7 @@
               <div id="r-dinfo" class="rdpill-title">Working days requested</div>
               <div id="r-dsub" class="rdpill-sub">Excluding weekends</div>
             </div>
+            <div id="r-dsum" class="rdsum"></div>
           </div>
 
         </div>
@@ -1470,8 +1402,9 @@
                 
                 // Move modal to body to ensure it breaks out of any parent transforms
                 const modalEl = document.getElementById('special-leave-modal');
-                if (modalEl.parentNode !== document.body) {
-                  document.body.appendChild(modalEl);
+                const modalHost = document.getElementById('stage') || document.body;
+                if (modalEl.parentNode !== modalHost) {
+                  modalHost.appendChild(modalEl);
                 }
                 
                 // Show modal
@@ -1604,7 +1537,7 @@
           <div class="req-action-row" style="margin-top:14px;padding:4px 6px 12px 6px;display:flex;gap:12px;align-items:center;position:relative;z-index:5">
             <button type="button" class="btn btn-g mw-back mobile-only-btn" onclick="prevMobileStep()" style="flex:1;padding:14px;font-size:15px;font-weight:600;border-radius:12px; display:none">Back</button>
             <button type="button" class="btn btn-p" id="r-prev-btn" onclick="rShowPreview()" style="flex:1.5;padding:14px 20px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:12px;box-shadow:0 4px 16px rgba(192,39,45,.25);min-height:50px">
-              <span id="r-prev-txt">Preview &amp; Continue →</span>
+              <span id="r-prev-txt">Continue →</span>
             </button>
           </div>
 
@@ -1629,9 +1562,20 @@
           </div>
           <div style="padding:14px 20px;flex:1;overflow-y:auto">
             <table class="preview-tbl" id="rpr-table" style="background:transparent;width:100%"></table>
+            <div class="rv-note" id="rv-note"></div>
           </div>
-          <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-            <button class="btn btn-g" style="flex:1" onclick="closeReviewModal()">← Edit</button>
+          <div class="rv-foot" style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+            <div class="slide-cf" id="r-slide" role="button" tabindex="0" aria-label="Slide to confirm">
+              <div class="slide-cf-fill"></div>
+              <div class="slide-cf-lbl" id="r-slide-lbl">Slide to confirm</div>
+              <div class="slide-cf-knob">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 6 15 12 9 18" />
+                </svg>
+              </div>
+            </div>
+            <button class="btn btn-g rv-edit" style="flex:1" onclick="closeReviewModal()">← Edit</button>
             <button class="btn btn-p" style="flex:2" onclick="rConfirm()" id="r-confirm-btn">
               <div class="spinner" id="r-con-sp"></div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -1734,11 +1678,11 @@
           <div class="gate-sub" id="stg-sub">Enter your Full Name</div>
           <div id="st-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') stVerify()"
+              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') stVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') stVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') stVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="stVerify()" id="st-gate-btn">
               <div class="spinner" id="st-gate-sp"></div><span id="st-gate-txt">View My Leave</span>
@@ -2816,38 +2760,11 @@
     </div>
   </div>
 
-  <div id="nt-numpad-overlay" style="display:none;position:fixed;inset:0;z-index:9999" onclick="ntNumpadClose()">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
-    <div
-      style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:24px 24px 0 0;padding:22px 24px max(32px,env(safe-area-inset-bottom));max-width:480px;margin:0 auto;box-sizing:border-box"
-      onclick="event.stopPropagation()">
-      <div style="width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 18px"></div>
-      <div
-        style="text-align:center;font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px"
-        id="nt-numpad-label">Hour</div>
-      <div
-        style="text-align:center;font-size:56px;font-weight:800;color:var(--txt);margin-bottom:20px;letter-spacing:8px;font-variant-numeric:tabular-nums;min-height:66px;line-height:1"
-        id="nt-numpad-display">--</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
-        <button class="nt-np-btn" onclick="ntNumpadKey('1')">1</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('2')">2</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('3')">3</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('4')">4</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('5')">5</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('6')">6</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('7')">7</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('8')">8</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('9')">9</button>
-        <button class="nt-np-btn nt-np-fn" onclick="ntNumpadClear()">C</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('0')">0</button>
-        <button class="nt-np-btn nt-np-fn" onclick="ntNumpadBackspace()">⌫</button>
-      </div>
-      <button onclick="ntNumpadConfirm()"
-        style="width:100%;padding:15px;font-size:16px;font-weight:700;background:#00AEEF;color:#fff;border:none;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Done</button>
-    </div>
-  </div>
+
 
   <div id="toast"></div>
+
+  </div><!-- /#stage -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

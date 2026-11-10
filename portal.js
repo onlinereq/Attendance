@@ -79,7 +79,6 @@ function applyTheme() {
     if (typeof window.Telegram.WebApp.setBackgroundColor === 'function') window.Telegram.WebApp.setBackgroundColor('#f7f6f2');
   }
 }
-function toggleTheme() { }
 applyTheme();
 
 // ── DEEP LINK ─────────────────────────────────────────────────────
@@ -120,6 +119,7 @@ function goTo(v) {
   const targetView = document.getElementById('v-' + v);
   if (targetView) targetView.classList.add('active');
   window.scrollTo(0, 0);
+  if (targetView) targetView.scrollTop = 0; // phone Stage: the view scrolls, not the page
   try {
     if (v === 'request') rReset();
     if (v === 'status') stReset();
@@ -153,10 +153,11 @@ function goTo(v) {
 }
 
 // ── LANG ────────────────────────────────────────
-let LANG = localStorage.getItem('lang') || 'en';
+// Khmer is the default on phones (<=768px) until the user picks a language; wider screens default to English.
+let LANG = localStorage.getItem('lang') || ((window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 'kh' : 'en');
 const T = {
-  en: { "hEy": "Late / Leave Early / Annual Leave Request", "hSub": "Insurance Brokers (Cambodia) Co., Ltd.", "reqLeaveTitle": "Request Leave", "hC1d": "Submit a new annual or special leave request", "leaveStatusTitle": "My Leave Status", "hC2d": "Check remaining days, history and print past requests", "hrDashboardTitle": "HR Dashboard", "hC3d": "Approve, manage requests and staff records", "back": "Back", "enterEmpIdTitle": "Enter Your Employee ID", "rgSub": "Your identity will be verified before proceeding", "rgBtn": "Verify & Continue", "stgSub": "View your leave balance and history", "stgBtn": "View My Leave", "rsl1": "Verify ID", "rsl2": "Fill Form", "rsl3": "Review", "rsl4": "Confirm", "rsh1": "Staff Information", "rsh2": "Leave Details", "rsh3": "Submission Info", "lblEmpId": "Employee ID", "lblFullName": "Full Name", "lblGender": "Gender", "lblPosition": "Position", "lblLeaveType": "Leave Type", "rlFrom": "From Date", "rlTo": "To Date", "lblReason": "Reason", "rlSdate": "Submission Date", "rlSloc": "Location", "lt1": "Annual Leave", "lt2": "Sick Leave", "lt3": "Emergency Leave", "lt4": "Special Leave", "lt5": "Unpaid Leave", "lt6": "Other", "lt7": "Training / Mission", "dinfo": "Working days requested", "dsub": "Excluding weekends", "balUsed": "Used this year", "rpBtn": "Preview & Continue →", "rprTitle": "Review Your Request", "pnHd": "", "pnBd": "Your request has been sent to the HR team.<br><br><strong>Please print the form, sign it yourself, and bring it to management for approval.</strong><br><br>HR will notify you when your request is approved.", "editBtn": "Edit", "conTxt": "Confirm & Print", "stTotLbl": "Total Days", "lblUsed": "Used", "lblRemaining": "Remaining", "stBalTitle": "Annual Leave Balance", "stHistTitle": "Leave History", "thId": "ID", "thType": "Type", "thFrom": "From", "thTo": "To", "thDays": "Days", "thStatus": "Status", "stTh7": "Print", "stNoData": "No leave history found.", "hrLt": "HR Access", "hrLs": "Authorised personnel only", "hrLu": "Username", "hrLp": "Password", "hrLbtn": "Login", "hrLerr": "Invalid credentials.", "hrGreet": "Welcome back, ", "hrGsub": "Lockton IBS HR Portal", "hrLo": "Logout", "hrNt1": "Requests", "hrNt2": "Staff Records", "lblTotal": "Total", "lblPending": "Pending", "lblApproved": "Approved", "lblRejected": "Rejected", "hftAll": "All", "hrTh1": "Req ID", "hrTh2": "Staff", "hrTh7": "Action", "hrApprove": "Approve", "hrReject": "Reject", "hrSh": "Staff Registry", "hrSth2": "Name", "approveQ": "Approve this request?", "rejectQ": "Reject this request?", "notFound": "Employee ID not found.", "daysRem": "days remaining", "errFields": "Please fill in all required fields.", "errDate": "End date must be after start date.", "errType": "Please select a leave type.", "sending": "Submitting...", "success": "Submitted! Preparing print...", "errSubmit": "Submission failed. Try again.", "male": "Male", "female": "Female", "ptDays": "Working Days", "ptSub": "Submitted", "tourGuide": "Guide" },
-  kh: { "hEy": "មកយឺត / ចេញមុនម៉ោង / សុំច្បាប់ឈប់សម្រាក", "hSub": "ការសុំច្បាប់ឈប់សម្រាក", "reqLeaveTitle": "សុំច្បាប់ឈប់សម្រាក", "hC1d": "ដាក់ពាក្យសុំច្បាប់ឈប់សម្រាក ឬច្បាប់ពិសេស", "leaveStatusTitle": "មើលប្រវត្តិសុំច្បាប់", "hC2d": "មើលថ្ងៃច្បាប់នៅសល់ ប្រវត្តិសុំច្បាប់ និងព្រីនទម្រង់ចាស់ៗ", "hrDashboardTitle": "ផ្ទាំងគ្រប់គ្រង HR", "hC3d": "អនុម័ត គ្រប់គ្រងការសុំច្បាប់ និងព័ត៌មានបុគ្គលិក", "back": "ត្រឡប់ក្រោយ", "enterEmpIdTitle": "បញ្ចូលលេខកូដបុគ្គលិក", "rgSub": "យើងនឹងផ្ទៀងផ្ទាត់អត្តសញ្ញាណរបស់អ្នក", "rgBtn": "បន្តទៅមុខ", "stgSub": "មើលថ្ងៃឈប់សម្រាកនៅសល់ និងប្រវត្តិសុំច្បាប់", "stgBtn": "មើលច្បាប់របស់ខ្ញុំ", "rsl1": "ផ្ទៀងលេខកូដ", "rsl2": "បំពេញព័ត៌មាន", "rsl3": "ពិនិត្យឡើងវិញ", "rsl4": "បញ្ជាក់", "rsh1": "ព័ត៌មានបុគ្គលិក", "rsh2": "ព័ត៌មានសុំច្បាប់", "rsh3": "ព័ត៌មាននៃការដាក់ពាក្យ", "lblEmpId": "លេខកូដបុគ្គលិក", "lblFullName": "ឈ្មោះបុគ្គលិក", "lblGender": "ភេទ", "lblPosition": "តួនាទី", "lblLeaveType": "ប្រភេទច្បាប់", "rlFrom": "ចាប់ពីថ្ងៃ", "rlTo": "ដល់ថ្ងៃ", "lblReason": "មូលហេតុ", "rlSdate": "ថ្ងៃដាក់ពាក្យ", "rlSloc": "ទីតាំង", "lt1": "ច្បាប់ប្រចាំឆ្នាំ", "lt2": "ច្បាប់ឈឺ", "lt3": "ច្បាប់បន្ទាន់", "lt4": "ច្បាប់ពិសេស", "lt5": "ច្បាប់អត់ប្រាក់ខែ", "lt6": "ផ្សេងៗ", "lt7": "បេសកកម្ម / វគ្គបណ្តុះបណ្តាល", "dinfo": "ចំនួនថ្ងៃសុំច្បាប់", "dsub": "មិនរាប់ថ្ងៃចុងសប្តាហ៍", "balUsed": "បានឈប់ឆ្នាំនេះ", "rpBtn": "ពិនិត្យ និងបន្ត →", "rprTitle": "ពិនិត្យមើលពាក្យសុំរបស់អ្នក", "pnHd": "សំខាន់:", "pnBd": " ពាក្យសុំត្រូវបានបញ្ជូនទៅ HR។ សូមព្រីនទម្រង់នេះ ចុះហត្ថលេខា ហើយយកទៅឲ្យប្រធានអនុម័ត។", "editBtn": "កែតម្រូវ", "conTxt": "បញ្ជាក់ & ព្រីន", "stTotLbl": "ចំនួនថ្ងៃសរុប", "lblUsed": "បានឈប់", "lblRemaining": "នៅសល់", "stBalTitle": "ច្បាប់ប្រចាំឆ្នាំនៅសល់", "stHistTitle": "ប្រវត្តិសុំច្បាប់", "thId": "លេខកូដ", "thType": "ប្រភេទ", "thFrom": "ចាប់ពី", "thTo": "ដល់", "thDays": "ចំនួនថ្ងៃ", "thStatus": "ស្ថានភាព", "stTh7": "ព្រីន", "stNoData": "មិនមានប្រវត្តិសុំច្បាប់ទេ។", "hrLt": "ចូលប្រព័ន្ធ HR", "hrLs": "សម្រាប់បុគ្គលិក HR ប៉ុណ្ណោះ", "hrLu": "ឈ្មោះអ្នកប្រើប្រាស់", "hrLp": "ពាក្យសម្ងាត់", "hrLbtn": "ចូលប្រព័ន្ធ", "hrLerr": "ឈ្មោះ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។", "hrGreet": "សូមស្វាគមន៍, ", "hrGsub": "ផ្ទាំងគ្រប់គ្រង HR - Lockton IBS", "hrLo": "ចាកចេញ", "hrNt1": "ពាក្យសុំច្បាប់", "hrNt2": "បញ្ជីឈ្មោះបុគ្គលិក", "lblTotal": "សរុប", "lblPending": "រង់ចាំការអនុម័ត", "lblApproved": "អនុម័តរួច", "lblRejected": "បដិសេធ", "hftAll": "ទាំងអស់", "hrTh1": "លេខសំណុំ", "hrTh2": "បុគ្គលិក", "hrTh7": "សកម្មភាព", "hrApprove": "អនុម័ត", "hrReject": "បដិសេធ", "hrSh": "បញ្ជីឈ្មោះបុគ្គលិក", "hrSth2": "ឈ្មោះ", "approveQ": "តើអ្នកពិតជាចង់អនុម័តមែនទេ?", "rejectQ": "តើអ្នកពិតជាចង់បដិសេធមែនទេ?", "notFound": "រកលេខកូដបុគ្គលិកមិនឃើញទេ។", "daysRem": "ថ្ងៃនៅសល់", "errFields": "សូមបំពេញព័ត៌មានឲ្យបានគ្រប់គ្រាន់។", "errDate": "ថ្ងៃបញ្ចប់ត្រូវនៅក្រោយថ្ងៃចាប់ផ្តើម។", "errType": "សូមជ្រើសរើសប្រភេទច្បាប់។", "sending": "កំពុងបញ្ជូន...", "success": "បញ្ជូនជោគជ័យ! កំពុងរៀបចំឯកសារព្រីន...", "errSubmit": "បញ្ជូនបរាជ័យ។ សូមព្យាយាមម្តងទៀត។", "male": "ប្រុស", "female": "ស្រី", "ptDays": "ចំនួនថ្ងៃ", "ptSub": "ថ្ងៃដាក់ពាក្យ", "tourGuide": "របៀបប្រើ" }
+  en: { "hCard1": "Request Leave", "hCard2": "Late / Early Notice", "hCard3": "My Leave Status", "hEy": "Late / Leave Early / Annual Leave Request", "hSub": "Insurance Brokers (Cambodia) Co., Ltd.", "reqLeaveTitle": "Request Leave", "hC1d": "Submit a new annual or special leave request", "leaveStatusTitle": "My Leave Status", "hC2d": "Check remaining days, history and print past requests", "hrDashboardTitle": "HR Dashboard", "hC3d": "Approve, manage requests and staff records", "back": "Back", "enterEmpIdTitle": "Enter Your Employee ID", "rgSub": "Your identity will be verified before proceeding", "rgBtn": "Verify & Continue", "stgSub": "View your leave balance and history", "stgBtn": "View My Leave", "rsl1": "Verify ID", "rsl2": "Fill Form", "rsl3": "Review", "rsl4": "Confirm", "rsh1": "Staff Information", "rsh2": "Leave Details", "rsh3": "Submission Info", "lblEmpId": "Employee ID", "lblFullName": "Full Name", "lblGender": "Gender", "lblPosition": "Position", "lblLeaveType": "Leave Type", "rlFrom": "From Date", "rlTo": "To Date", "lblReason": "Reason", "rlSdate": "Submission Date", "rlSloc": "Location", "lt1": "Annual Leave", "lt2": "Sick Leave", "lt3": "Emergency Leave", "lt4": "Special Leave", "lt5": "Unpaid Leave", "lt6": "Other", "lt7": "Training / Mission", "dinfo": "Working days requested", "dsub": "Excluding weekends", "balUsed": "Used this year", "rpBtn": "Continue →", "rprTitle": "Review Your Request", "pnHd": "", "pnBd": "Your request has been sent to the HR team.<br><br><strong>Please print the form, sign it yourself, and bring it to management for approval.</strong><br><br>HR will notify you when your request is approved.", "editBtn": "Edit", "conTxt": "Confirm & Print", "stTotLbl": "Total Days", "lblUsed": "Used", "lblRemaining": "Remaining", "stBalTitle": "Annual Leave Balance", "stHistTitle": "Leave History", "thId": "ID", "thType": "Type", "thFrom": "From", "thTo": "To", "thDays": "Days", "thStatus": "Status", "stTh7": "Print", "stNoData": "No leave history found.", "hrLt": "HR Access", "hrLs": "Authorised personnel only", "hrLu": "Username", "hrLp": "Password", "hrLbtn": "Login", "hrLerr": "Invalid credentials.", "hrGreet": "Welcome back, ", "hrGsub": "Lockton IBS HR Portal", "hrLo": "Logout", "hrNt1": "Requests", "hrNt2": "Staff Records", "lblTotal": "Total", "lblPending": "Pending", "lblApproved": "Approved", "lblRejected": "Rejected", "hftAll": "All", "hrTh1": "Req ID", "hrTh2": "Staff", "hrTh7": "Action", "hrApprove": "Approve", "hrReject": "Reject", "hrSh": "Staff Registry", "hrSth2": "Name", "approveQ": "Approve this request?", "rejectQ": "Reject this request?", "notFound": "Employee ID not found.", "daysRem": "days remaining", "errFields": "Please fill in all required fields.", "errDate": "End date must be after start date.", "errType": "Please select a leave type.", "sending": "Submitting...", "success": "Submitted! Preparing print...", "errSubmit": "Submission failed. Try again.", "male": "Male", "female": "Female", "ptDays": "Working Days", "ptSub": "Submitted", "tourGuide": "Guide" },
+  kh: { "hCard1": "ស្នើសុំការឈប់សម្រាកប្រចាំឆ្នាំ", "hCard2": "ជូនដំណឹងអំពីការមកយឺត ឬសុំចេញមុនម៉ោង", "hCard3": "មើលប្រវត្តិសំណើសុំរបស់អ្នក", "hEy": "មកយឺត / ចេញមុនម៉ោង / សុំច្បាប់ឈប់សម្រាក", "hSub": "ការសុំច្បាប់ឈប់សម្រាក", "reqLeaveTitle": "សុំច្បាប់ឈប់សម្រាក", "hC1d": "ដាក់ពាក្យសុំច្បាប់ឈប់សម្រាក ឬច្បាប់ពិសេស", "leaveStatusTitle": "មើលប្រវត្តិសុំច្បាប់", "hC2d": "មើលថ្ងៃច្បាប់នៅសល់ ប្រវត្តិសុំច្បាប់ និងព្រីនទម្រង់ចាស់ៗ", "hrDashboardTitle": "ផ្ទាំងគ្រប់គ្រង HR", "hC3d": "អនុម័ត គ្រប់គ្រងការសុំច្បាប់ និងព័ត៌មានបុគ្គលិក", "back": "ត្រឡប់ក្រោយ", "enterEmpIdTitle": "បំពេញឈ្មោះ និងលេខសម្គាល់បុគ្គលិក", "rgSub": "នៅលើប័ណ្ណសម្គាល់បុគ្គលិករបស់អ្នក", "rgBtn": "បន្តទៅមុខ", "stgSub": "នៅលើប័ណ្ណសម្គាល់បុគ្គលិករបស់អ្នក", "stgBtn": "មើលច្បាប់របស់ខ្ញុំ", "rsl1": "ផ្ទៀងលេខកូដ", "rsl2": "បំពេញព័ត៌មាន", "rsl3": "ពិនិត្យឡើងវិញ", "rsl4": "បញ្ជាក់", "rsh1": "ព័ត៌មានបុគ្គលិក", "rsh2": "ព័ត៌មានសុំច្បាប់", "rsh3": "ព័ត៌មាននៃការដាក់ពាក្យ", "lblEmpId": "លេខកូដបុគ្គលិក", "lblFullName": "ឈ្មោះបុគ្គលិក", "lblGender": "ភេទ", "lblPosition": "តួនាទី", "lblLeaveType": "ប្រភេទច្បាប់", "rlFrom": "ចាប់ពីថ្ងៃ", "rlTo": "ដល់ថ្ងៃ", "lblReason": "មូលហេតុ", "rlSdate": "ថ្ងៃដាក់ពាក្យ", "rlSloc": "ទីតាំង", "lt1": "ច្បាប់ប្រចាំឆ្នាំ", "lt2": "ច្បាប់ឈឺ", "lt3": "ច្បាប់បន្ទាន់", "lt4": "ច្បាប់ពិសេស", "lt5": "ច្បាប់អត់ប្រាក់ខែ", "lt6": "ផ្សេងៗ", "lt7": "បេសកកម្ម / វគ្គបណ្តុះបណ្តាល", "dinfo": "ចំនួនថ្ងៃសុំច្បាប់", "dsub": "មិនរាប់ថ្ងៃចុងសប្តាហ៍", "balUsed": "បានឈប់ឆ្នាំនេះ", "rpBtn": "បន្ត →", "rprTitle": "ពិនិត្យមើលពាក្យសុំរបស់អ្នក", "pnHd": "សំខាន់:", "pnBd": " ពាក្យសុំត្រូវបានបញ្ជូនទៅ HR។ សូមព្រីនទម្រង់នេះ ចុះហត្ថលេខា ហើយយកទៅឲ្យប្រធានអនុម័ត។", "editBtn": "កែតម្រូវ", "conTxt": "បញ្ជាក់ & ព្រីន", "stTotLbl": "ចំនួនថ្ងៃសរុប", "lblUsed": "បានឈប់", "lblRemaining": "នៅសល់", "stBalTitle": "ច្បាប់ប្រចាំឆ្នាំនៅសល់", "stHistTitle": "ប្រវត្តិសុំច្បាប់", "thId": "លេខកូដ", "thType": "ប្រភេទ", "thFrom": "ចាប់ពី", "thTo": "ដល់", "thDays": "ចំនួនថ្ងៃ", "thStatus": "ស្ថានភាព", "stTh7": "ព្រីន", "stNoData": "មិនមានប្រវត្តិសុំច្បាប់ទេ។", "hrLt": "ចូលប្រព័ន្ធ HR", "hrLs": "សម្រាប់បុគ្គលិក HR ប៉ុណ្ណោះ", "hrLu": "ឈ្មោះអ្នកប្រើប្រាស់", "hrLp": "ពាក្យសម្ងាត់", "hrLbtn": "ចូលប្រព័ន្ធ", "hrLerr": "ឈ្មោះ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។", "hrGreet": "សូមស្វាគមន៍, ", "hrGsub": "ផ្ទាំងគ្រប់គ្រង HR - Lockton IBS", "hrLo": "ចាកចេញ", "hrNt1": "ពាក្យសុំច្បាប់", "hrNt2": "បញ្ជីឈ្មោះបុគ្គលិក", "lblTotal": "សរុប", "lblPending": "រង់ចាំការអនុម័ត", "lblApproved": "អនុម័តរួច", "lblRejected": "បដិសេធ", "hftAll": "ទាំងអស់", "hrTh1": "លេខសំណុំ", "hrTh2": "បុគ្គលិក", "hrTh7": "សកម្មភាព", "hrApprove": "អនុម័ត", "hrReject": "បដិសេធ", "hrSh": "បញ្ជីឈ្មោះបុគ្គលិក", "hrSth2": "ឈ្មោះ", "approveQ": "តើអ្នកពិតជាចង់អនុម័តមែនទេ?", "rejectQ": "តើអ្នកពិតជាចង់បដិសេធមែនទេ?", "notFound": "រកលេខកូដបុគ្គលិកមិនឃើញទេ។", "daysRem": "ថ្ងៃនៅសល់", "errFields": "សូមបំពេញព័ត៌មានឲ្យបានគ្រប់គ្រាន់។", "errDate": "ថ្ងៃបញ្ចប់ត្រូវនៅក្រោយថ្ងៃចាប់ផ្តើម។", "errType": "សូមជ្រើសរើសប្រភេទច្បាប់។", "sending": "កំពុងបញ្ជូន...", "success": "បញ្ជូនជោគជ័យ! កំពុងរៀបចំឯកសារព្រីន...", "errSubmit": "បញ្ជូនបរាជ័យ។ សូមព្យាយាមម្តងទៀត។", "male": "ប្រុស", "female": "ស្រី", "ptDays": "ចំនួនថ្ងៃ", "ptSub": "ថ្ងៃដាក់ពាក្យ", "tourGuide": "របៀបប្រើ" }
 };
 T.en.hNtT = "Late / Early Notice";
 T.en.hNtD = "Notify HR of late arrival or early departure";
@@ -176,11 +177,14 @@ function tx(k) {
   }
   return (T[LANG] || T.en)[k] || T.en[k] || k;
 }
-function setLang(l) { LANG = l; localStorage.setItem('lang', l); document.querySelectorAll('.lb').forEach(b => b.classList.remove('on')); document.querySelectorAll('.lb[data-lang="' + l + '"]').forEach(b => b.classList.add('on')); applyLang(); }
+// Language used for printed forms and PDFs sent to Telegram: only an explicit EN / ខ្មែរ choice counts, so the Khmer
+// phone default never changes what gets printed or sent (same as before).
+function printLang() { try { return localStorage.getItem('lang') || 'en'; } catch (e) { return 'en'; } }
+function setLang(l) { LANG = l; localStorage.setItem('lang', l); document.querySelectorAll('.lb').forEach(b => b.classList.remove('on')); document.querySelectorAll('.lb[data-lang="' + l + '"]').forEach(b => b.classList.add('on')); applyLang(); khUIRefresh(); }
 function applyLang() {
   const s = (id, k) => { const e = document.getElementById(id); if (e) e.textContent = tx(k); };
-  s('h-ey', 'hEy'); s('h-sub', 'hSub'); s('h-c1t', 'reqLeaveTitle'); s('h-c1d', 'hC1d'); s('h-c2t', 'leaveStatusTitle'); s('h-c2d', 'hC2d'); s('h-c3t', 'hrDashboardTitle'); s('h-c3d', 'hC3d');
-  s('h-nt-t', 'hNtT'); s('h-nt-d', 'hNtD'); s('nt-top-t', 'hNtT'); s('nt-st-t', 'ntStT'); s('hr-nt-st-t', 'ntStT');
+  s('h-ey', 'hEy'); s('h-sub', 'hSub'); s('h-c1t', 'hCard1'); s('h-c1d', 'hC1d'); s('h-c2t', 'hCard3'); s('h-c2d', 'hC2d'); s('h-c3t', 'hrDashboardTitle'); s('h-c3d', 'hC3d');
+  s('h-nt-t', 'hCard2'); s('h-nt-d', 'hNtD'); s('nt-top-t', 'hNtT'); s('nt-st-t', 'ntStT'); s('hr-nt-st-t', 'ntStT');
   s('nt-gate-change-txt', 'btnChange'); s('r-gate-change-txt', 'btnChange'); s('st-gate-change-txt', 'btnChange');
   s('r-back', 'back'); s('r-title', 'reqLeaveTitle'); s('rg-title', 'enterEmpIdTitle'); s('rg-sub', 'rgSub'); s('r-gate-txt', 'rgBtn');
   s('rsl1', 'rsl1'); s('rsl2', 'rsl2'); s('rsl3', 'rsl3'); s('rsl4', 'rsl4');
@@ -224,26 +228,9 @@ document.querySelectorAll('.lb[data-lang="' + LANG + '"]').forEach(b => b.classL
 function highlightType(input) {
   document.querySelectorAll('.topt').forEach(l => l.classList.remove('sel'));
   if (input.checked) input.closest('.topt').classList.add('sel');
-  if (typeof tourNotifyAction === 'function') tourNotifyAction('type');
 }
 
 // ── SYNC ────────────────────────────────────────
-async function syncAll() {
-  const btn = document.getElementById('sync-btn');
-  if (!btn) return;
-  btn.classList.add('spinning');
-  btn.disabled = true;
-  try {
-    await apiGet('ping');
-    if (hrUser) await hrLoadData();
-    if (stStaff) {
-      const res = await apiPost('getHistory', { empId: stStaff.empId, fullName: stStaff.name });
-      if (res.result === 'success') { stHistory = res.history || []; renderStDash(); }
-    }
-    toast('Synced', 'ok2');
-  } catch (e) { toast('Sync failed', 'bad'); }
-  finally { btn.classList.remove('spinning'); btn.disabled = false; }
-}
 
 // ── TOAST ────────────────────────────────────────
 let _tt;
@@ -253,7 +240,6 @@ function toast(msg, type = '') {
     else window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
   const el = document.getElementById('toast'); requestAnimationFrame(() => { el.textContent = msg; el.className = 'show ' + type; }); clearTimeout(_tt); _tt = setTimeout(() => requestAnimationFrame(() => { el.className = ''; }), 3400); }
-function clearFieldErr() { document.querySelectorAll('.field-err').forEach(el => el.classList.remove('field-err')); const g = document.getElementById('ltype-grid'); if (g) g.classList.remove('tgrid-err'); }
 
 // ── HOLIDAYS & UTILS ─────────────────────────────────────
 const DEFAULT_HOLIDAYS = [
@@ -342,53 +328,6 @@ function holidayDays(f, t) {
     c.setDate(c.getDate() + 1);
   }
   return n;
-}
-
-function getIsoDateVal(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return '';
-  const val = el.dataset.iso || el.value || '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  const parsed = new Date(val);
-  if (!isNaN(parsed.getTime())) {
-    const yyyy = parsed.getFullYear();
-    const mm = String(parsed.getMonth() + 1).padStart(2, '0');
-    const dd = String(parsed.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  return '';
-}
-
-function autoSetTo() {
-  const f = getIsoDateVal('rf-from');
-  if (!f) return;
-  const toEl = document.getElementById('rf-to');
-  const t = getIsoDateVal('rf-to');
-  if (!t || t < f) {
-    toEl.value = f;
-    toEl.dataset.iso = f;
-  }
-  if (isHoliday(f)) {
-    const hol = getHolidayObj(f);
-    const name = hol ? (LANG === 'kh' && hol.nameKh ? hol.nameKh : hol.name) : 'Official Holiday';
-    toast(LANG === 'kh' ? `កាលបរិច្ឆេទនេះចំថ្ងៃឈប់សម្រាកបុណ្យ (${name})។ ថ្ងៃបុណ្យនឹងត្រូវរំលងដោយស្វ័យប្រវត្តិ។` : `Selected date is an official holiday (${name}). Holidays are automatically skipped.`, '');
-  } else if (isWeekend(f)) {
-    toast(LANG === 'kh' ? 'កាលបរិច្ឆេទដែលបានជ្រើសរើសចំថ្ងៃចុងសប្តាហ៍ (សៅរ៍/អាទិត្យ)។ ចុងសប្តាហ៍នឹងត្រូវរំលងដោយស្វ័យប្រវត្តិ។' : 'Selected date is on a weekend (Saturday/Sunday). Weekends are automatically skipped.', '');
-  }
-  calcDays();
-  if (typeof renderBuiltInCalendar === 'function') renderBuiltInCalendar();
-}
-
-function validateToDate() {
-  const f = getIsoDateVal('rf-from');
-  const toEl = document.getElementById('rf-to');
-  const t = getIsoDateVal('rf-to');
-  if (f && t && t < f) {
-    toEl.value = f;
-    toEl.dataset.iso = f;
-  }
-  calcDays();
-  if (typeof renderBuiltInCalendar === 'function') renderBuiltInCalendar();
 }
 
 function hdGetFirst() {
@@ -499,23 +438,6 @@ async function signRequest(action) {
 }
 
 // ── SECURE API ──────────────────────────────────────────────
-async function apiGet(action, params = {}) {
-  if (isMock()) return { result: 'mock' };
-  const signed = await signRequest(action);
-  const fp = getFingerprint();
-  const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
-  const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
-  const qsParams = { action, ...params, ...signed, fp };
-  if (rawInitData) {
-    qsParams.initData = rawInitData;
-    qsParams.tgData = rawInitData;
-  }
-  const qs = new URLSearchParams(qsParams).toString();
-  const res = await fetch(SCRIPT_URL + '?' + qs, { mode: 'cors', credentials: 'omit' });
-  const data = await res.json();
-  if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
-  return data;
-}
 async function apiPost(action, payload = {}, retryCount = 1) {
   if (isMock()) return { result: 'success' };
   // Non-idempotent mutations must never auto-retry to prevent double-saving or duplicate notifications
@@ -577,8 +499,6 @@ async function apiHR(action, data = {}) {
 }
 
 // ── MOCK (sample data removed — uses real sheet) ─────────────────────────
-function mockStaff(id) { return { result: 'notfound' }; }
-function mockHist(id) { return { result: 'notfound' }; }
 
 // ── ROBUST CREDENTIAL & IDENTITY MATCHERS ─────────────────────────
 function matchEmpId(idA, idB) {
@@ -768,102 +688,11 @@ function getSavedUserDeviceMemory() {
   return null;
 }
 
-async function showStaffDropdown(inputId, listId) {
-  return;
-}
-
-async function onStaffInput(inputId, fbId, listId) {
-  return;
-
-  const filtered = staffList.filter(s => {
-    if (!query) return true;
-    const n = (s.name || '').toLowerCase();
-    const nk = (s.nameKh || '').toLowerCase();
-    const id = (s.empId || '').toLowerCase();
-    return n.includes(query) || nk.includes(query) || id.includes(query);
-  });
-
-  if (!filtered.length) {
-    listEl.style.display = 'none';
-    return;
-  }
-
-  listEl.innerHTML = filtered.map(s => {
-    const displayName = (LANG === 'kh' ? (s.nameKh || s.name) : s.name);
-    return `<div class="staff-dd-item" onclick="selectStaffItem('${inputId}', '${listId}', '${encodeURIComponent(JSON.stringify(s))}')">
-      <span>${displayName}</span>
-      <span class="sd-id">(${s.empId})</span>
-    </div>`;
-  }).join('');
-  listEl.style.display = 'block';
-}
-
 function updateStaffGateActions(inputId) {
   const inputEl = document.getElementById(inputId);
   if (inputEl) {
     inputEl.readOnly = false;
   }
-}
-
-function rClearSelectedStaff() {
-  const inputEl = document.getElementById('r-name-input');
-  const idEl = document.getElementById('r-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('r-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('r-name-input');
-}
-
-function ntClearSelectedStaff() {
-  const inputEl = document.getElementById('nt-name-input');
-  const idEl = document.getElementById('nt-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('nt-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('nt-name-input');
-}
-
-function stClearSelectedStaff() {
-  const inputEl = document.getElementById('st-name-input');
-  const idEl = document.getElementById('st-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('st-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('st-name-input');
-}
-
-function selectStaffItem(inputId, listId, encodedStaff) {
-  try {
-    const staff = JSON.parse(decodeURIComponent(encodedStaff));
-    const inputEl = document.getElementById(inputId);
-    if (inputEl) {
-      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name);
-      inputEl.dataset.selectedStaff = JSON.stringify(staff);
-    }
-    const idInputEl = document.getElementById(inputId.replace('name', 'id'));
-    if (idInputEl) idInputEl.value = staff.empId || '';
-  } catch (e) { }
-  const listEl = document.getElementById(listId);
-  if (listEl) listEl.style.display = 'none';
-  updateStaffGateActions(inputId);
 }
 
 document.addEventListener('click', (e) => {
@@ -917,8 +746,7 @@ function rReset() {
   document.getElementById('r-idfb').textContent = '';
   setRStep(1); setReqBar(0); closeReviewModal(); _isSubmitting = false; _pendingPayload = null; clearFieldErr();
 }
-function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
-function setRStep(n) { for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
+function setRStep(n) { if (window.fitFormSchedule) setTimeout(window.fitFormSchedule, 0); const _vr = document.getElementById('v-request'); if (_vr) { const _rf = document.getElementById('req-form'); _vr.classList.toggle('rq-form', (n === 2 || n === 3) && !!_rf && _rf.style.display !== 'none'); } for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
   const idEl = document.getElementById('r-id-input');
@@ -936,15 +764,16 @@ async function rVerify() {
   const btn = document.getElementById('r-gate-btn');
   const sp = document.getElementById('r-gate-sp');
   const txt = document.getElementById('r-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('r-gate', 'r-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('r-gate', 'r-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -1008,7 +837,8 @@ function rLoadForm() {
   const eidEl = document.getElementById('rf-eid'); if (eidEl) eidEl.value = s.empId || '';
   const nameEl = document.getElementById('rf-name'); if (nameEl) nameEl.value = name;
   const genEl = document.getElementById('rf-gen'); if (genEl) genEl.value = formatGender(s.gender, 'en');
-  const posEl = document.getElementById('rf-pos'); if (posEl) posEl.value = (pos === '—' ? '' : pos);
+  // saved position is always the English one (what goes to the Sheet); only the on-screen text follows the language
+  const posEl = document.getElementById('rf-pos'); if (posEl) posEl.value = (s.position && s.position !== 'undefined' && s.position !== '—') ? s.position : '';
   const sdateEl = document.getElementById('rf-sdate'); if (sdateEl) sdateEl.value = today;
   const slocEl = document.getElementById('rf-sloc'); if (slocEl) slocEl.value = loc;
 
@@ -1161,6 +991,34 @@ function getHolidaysInRange(fromIso, toIso) {
 }
 
 let _cdT;
+// Phone summary strip under the name: type, dates and small chips (half-day parts, skipped days).
+// Display only; calcDays still sets the original text, which the phone layout hides.
+function renderDaySummary(o) {
+  const el = document.getElementById('r-dsum');
+  if (!el) return;
+  const kh = LANG === 'kh';
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  if (o.zero) {
+    el.innerHTML = '<div class="rdsum-t">' + esc(o.title) + '</div><div class="rdsum-d rdsum-muted"><span>' + esc(o.sub) + '</span></div>';
+    return;
+  }
+  const half = (v) => (v === 'morning' ? (kh ? 'ព្រឹក' : 'Morning') : v === 'afternoon' ? (kh ? 'ល្ងាច' : 'Evening') : '');
+  let typeName = o.type;
+  try { if (kh && KH_UI_MAP[o.type]) typeName = KH_UI_MAP[o.type]; } catch (e) { }
+  const cal = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const dates = o.single ? fmtDate(o.from) : fmtDate(o.from) + ' → ' + fmtDate(o.to);
+  const chips = [];
+  if (o.single && o.first !== 'full') chips.push(['half', (kh ? 'កន្លះថ្ងៃ' : 'Half day') + ' · ' + half(o.first)]);
+  if (!o.single) {
+    if (o.first !== 'full') chips.push(['half', (kh ? 'ថ្ងៃដំបូង: ' : 'First: ') + half(o.first)]);
+    if (o.last !== 'full') chips.push(['half', (kh ? 'ថ្ងៃចុងក្រោយ: ' : 'Last: ') + half(o.last)]);
+  }
+  if (o.skip > 0) chips.push(['skip', kh ? 'រំលង ' + o.skip + ' ថ្ងៃមិនធ្វើការ' : o.skip + ' non-working days skipped']);
+  el.innerHTML = '<div class="rdsum-t">' + esc(typeName) + '</div>' +
+    '<div class="rdsum-d">' + cal + '<span>' + esc(dates) + '</span></div>' +
+    '<div class="rdsum-chips">' + chips.map((c) => '<span class="rdsum-chip ' + c[0] + '">' + esc(c[1]) + '</span>').join('') + '</div>';
+}
+
 function calcDays(now) {
   if (!now) { clearTimeout(_cdT); _cdT = setTimeout(() => calcDays(1), 30); return; }
   const from = getIsoDateVal('rf-from');
@@ -1208,7 +1066,7 @@ function calcDays(now) {
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
         </svg>
-        <div><strong>Invalid Date Range:</strong> Return date (To Date) must be on or after start date (From Date).</div>
+        <div>${LANG === 'kh' ? '<strong>ចន្លោះកាលបរិច្ឆេទមិនត្រឹមត្រូវ៖</strong> ថ្ងៃត្រឡប់ (ដល់ថ្ងៃ) ត្រូវតែនៅថ្ងៃដូចគ្នា ឬក្រោយថ្ងៃចាប់ផ្តើម (ចាប់ពីថ្ងៃ)។' : '<strong>Invalid Date Range:</strong> Return date (To Date) must be on or after start date (From Date).'}</div>
       `;
       noticeEl.style.display = 'flex';
     }
@@ -1234,10 +1092,10 @@ function calcDays(now) {
   if (noticeEl) {
     if (wd === 0) {
       const skipReasons = [];
-      if (weCount > 0) skipReasons.push(`${weCount} weekend ${weCount === 1 ? 'day' : 'days'} (Sat/Sun)`);
+      if (weCount > 0) skipReasons.push(LANG === 'kh' ? `${weCount} ថ្ងៃចុងសប្តាហ៍ (សៅរ៍/អាទិត្យ)` : `${weCount} weekend ${weCount === 1 ? 'day' : 'days'} (Sat/Sun)`);
       if (holCount > 0) {
-        const holNames = holsInRange.map(h => h.name || 'Holiday').join(', ');
-        skipReasons.push(`${holCount} official holiday (${holNames})`);
+        const holNames = holsInRange.map(h => (LANG === 'kh' && h.nameKh) ? h.nameKh : (h.name || 'Holiday')).join(', ');
+        skipReasons.push(LANG === 'kh' ? `${holCount} ថ្ងៃបុណ្យផ្លូវការ (${holNames})` : `${holCount} official holiday (${holNames})`);
       }
       noticeEl.className = 'date-notice-card date-notice-warn';
       noticeEl.innerHTML = `
@@ -1247,17 +1105,17 @@ function calcDays(now) {
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
         <div>
-          <div style="font-weight:700;margin-bottom:2px">Non-Working Days Selected (0 Days Deducted)</div>
-          <div style="font-size:11.5px;opacity:0.95">All selected dates fall on ${skipReasons.join(' & ')}. You do not need to request annual leave for non-working days.</div>
+          <div style="font-weight:700;margin-bottom:2px">${LANG === 'kh' ? 'បានជ្រើសរើសថ្ងៃមិនធ្វើការ (កាត់ថ្ងៃច្បាប់ 0 ថ្ងៃ)' : 'Non-Working Days Selected (0 Days Deducted)'}</div>
+          <div style="font-size:11.5px;opacity:0.95">${LANG === 'kh' ? `កាលបរិច្ឆេទទាំងអស់ដែលបានជ្រើសរើសជា ${skipReasons.join(' និង ')}។ អ្នកមិនចាំបាច់សុំច្បាប់ប្រចាំឆ្នាំសម្រាប់ថ្ងៃមិនធ្វើការទេ។` : `All selected dates fall on ${skipReasons.join(' & ')}. You do not need to request annual leave for non-working days.`}</div>
         </div>
       `;
       noticeEl.style.display = 'flex';
     } else if (weCount > 0 || holCount > 0) {
       const skipDetails = [];
-      if (weCount > 0) skipDetails.push(`${weCount} weekend ${weCount === 1 ? 'day' : 'days'}`);
+      if (weCount > 0) skipDetails.push(LANG === 'kh' ? `${weCount} ថ្ងៃចុងសប្តាហ៍` : `${weCount} weekend ${weCount === 1 ? 'day' : 'days'}`);
       if (holCount > 0) {
-        const holNames = holsInRange.map(h => h.name || 'Holiday').join(', ');
-        skipDetails.push(`${holCount} holiday (${holNames})`);
+        const holNames = holsInRange.map(h => (LANG === 'kh' && h.nameKh) ? h.nameKh : (h.name || 'Holiday')).join(', ');
+        skipDetails.push(LANG === 'kh' ? `${holCount} ថ្ងៃបុណ្យ (${holNames})` : `${holCount} holiday (${holNames})`);
       }
       noticeEl.className = 'date-notice-card date-notice-info';
       noticeEl.innerHTML = `
@@ -1267,7 +1125,7 @@ function calcDays(now) {
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
         <div>
-          <span style="font-weight:700">Notice:</span> Total <strong>${calDays} calendar days</strong> = <strong>${wd} working days requested</strong> (${skipDetails.join(' & ')} automatically excluded from leave deduction).
+          ${LANG === 'kh' ? `<span style="font-weight:700">ចំណាំ៖</span> សរុប <strong>${calDays} ថ្ងៃតាមប្រតិទិន</strong> = <strong>${wd} ថ្ងៃធ្វើការដែលបានស្នើសុំ</strong> (${skipDetails.join(' និង ')} ត្រូវបានដកចេញដោយស្វ័យប្រវត្តិពីការកាត់ថ្ងៃច្បាប់)។` : `<span style="font-weight:700">Notice:</span> Total <strong>${calDays} calendar days</strong> = <strong>${wd} working days requested</strong> (${skipDetails.join(' & ')} automatically excluded from leave deduction).`}
         </div>
       `;
       noticeEl.style.display = 'flex';
@@ -1283,6 +1141,7 @@ function calcDays(now) {
     if (di) di.textContent = (LANG === 'kh' ? 'មិនមានថ្ងៃធ្វើការ (ថ្ងៃបុណ្យ ឬចុងសប្តាហ៍)' : '0 Working Days (Weekends/Holidays)');
     const ds = document.getElementById('r-dsub');
     if (ds) ds.textContent = (LANG === 'kh' ? 'ថ្ងៃចុងសប្តាហ៍ និងថ្ងៃបុណ្យត្រូវបានរំលង' : 'Non-working days are excluded from deduction');
+    renderDaySummary({ zero: true, title: di ? di.textContent : '', sub: ds ? ds.textContent : '' });
     if (pill) pill.style.display = 'flex';
     if (row) row.style.display = 'none';
     return;
@@ -1326,6 +1185,7 @@ function calcDays(now) {
 
   const di = document.getElementById('r-dinfo'); if (di) di.textContent = mainTxt;
   const ds = document.getElementById('r-dsub'); if (ds) ds.textContent = subTxt;
+  renderDaySummary({ type: typeTxt, from, to, single, first: hdGetFirst(), last: single ? hdGetFirst() : hdGetLast(), skip: skipCount });
   if (pill) pill.style.display = 'flex';
 
   const hdRow = document.getElementById('halfday-row');
@@ -1491,7 +1351,7 @@ function rShowPreview() {
     [tx('lblEmpId'), s.empId, false],
     [tx('lblFullName'), name, false],
     [tx('lblGender'), gen, false],
-    [tx('lblPosition'), document.getElementById('rf-pos').value || pos, false],
+    [tx('lblPosition'), pos, false],
     [tx('lblLeaveType'), typeDisplay, true],
     [tx('thFrom'), fmtDate(from), true],
     [tx('thTo'), fmtDate(to), true],
@@ -1501,15 +1361,72 @@ function rShowPreview() {
   ];
 
   document.getElementById('rpr-table').innerHTML = _rows.map(([k, v, h]) => `<tr class="${h ? 'rv-hl-row' : ''}"><td>${k}</td><td class="${h ? 'rv-hl' : ''}">${v}</td></tr>`).join('');
+  const _rvNote = document.getElementById('rv-note');
+  if (_rvNote) _rvNote.textContent = LANG === 'kh' ? 'សូមបោះពុម្ពទម្រង់ ចុះហត្ថលេខាដោយខ្លួនឯង រួចនាំយកទៅថ្នាក់គ្រប់គ្រងដើម្បីអនុម័ត។' : 'Please print the form, sign it yourself, and bring it to management for approval.';
+  const _slLbl = document.getElementById('r-slide-lbl');
+  if (_slLbl) _slLbl.textContent = LANG === 'kh' ? 'អូសដើម្បីបញ្ជាក់' : 'Slide to confirm';
   const rm = document.getElementById('review-modal');
   if (rm) rm.style.display = 'flex';
+  slideConfirmReset();
   setRStep(3);
 }
 
 function closeReviewModal() {
   const rm = document.getElementById('review-modal'); if (rm) rm.style.display = 'none'; setRStep(2);
+  slideConfirmReset();
 }
-function rBackForm() { closeReviewModal(); }
+
+// ── SLIDE TO CONFIRM (phone review sheet) ───────────────────────
+// Knob follows the finger; released before the end it rolls back, at the end it submits.
+function slideConfirmReset() {
+  const el = document.getElementById('r-slide'); if (!el) return;
+  el.classList.remove('busy', 'drag');
+  const knob = el.querySelector('.slide-cf-knob'), fill = el.querySelector('.slide-cf-fill');
+  knob.style.transform = ''; fill.style.width = ''; el.style.setProperty('--p', 0);
+}
+(function initSlideConfirm() {
+  const el = document.getElementById('r-slide'); if (!el) return;
+  const knob = el.querySelector('.slide-cf-knob'), fill = el.querySelector('.slide-cf-fill');
+  let startX = 0, pos = 0, max = 0, active = false;
+  const move = (x) => {
+    pos = Math.max(0, Math.min(max, x));
+    knob.style.transform = 'translateX(' + pos + 'px)';
+    fill.style.width = pos > 0 ? (pos + knob.offsetWidth + 4) + 'px' : '0px';
+    el.style.setProperty('--p', max ? (pos / max).toFixed(3) : 0);
+  };
+  const finish = () => {
+    el.classList.add('busy');
+    knob.style.transform = 'translateX(' + max + 'px)';
+    fill.style.width = '100%';
+    el.style.setProperty('--p', 1);
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) { } }
+    const lbl = document.getElementById('r-slide-lbl');
+    if (lbl) lbl.textContent = LANG === 'kh' ? 'កំពុងផ្ញើ...' : 'Sending...';
+    rConfirm();
+  };
+  knob.addEventListener('pointerdown', (e) => {
+    if (el.classList.contains('busy')) return;
+    active = true; startX = e.clientX; pos = 0;
+    max = el.clientWidth - knob.offsetWidth - 8;
+    el.classList.add('drag');
+    try { knob.setPointerCapture(e.pointerId); } catch (err) { }
+    e.preventDefault();
+  });
+  knob.addEventListener('pointermove', (e) => { if (active) move(e.clientX - startX); });
+  const end = () => {
+    if (!active) return;
+    active = false; el.classList.remove('drag');
+    if (max > 0 && pos >= max * 0.92) finish();
+    else { move(0); }
+  };
+  knob.addEventListener('pointerup', end);
+  knob.addEventListener('pointercancel', end);
+  el.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') && !el.classList.contains('busy')) {
+      e.preventDefault(); max = el.clientWidth - knob.offsetWidth - 8; finish();
+    }
+  });
+})();
 async function rConfirm() {
   if (_isSubmitting) return;
   _isSubmitting = true;
@@ -1528,7 +1445,7 @@ async function rConfirm() {
   }
   const halfNote = getHalfNote(from, to);
   const clientReqId = 'REQ-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-  const payload = { clientRequestId: clientReqId, employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: LANG.toUpperCase(), timestamp: new Date().toISOString() };
+  const payload = { clientRequestId: clientReqId, employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: printLang().toUpperCase(), timestamp: new Date().toISOString() };
   if (isTraining) {
     if (_appInitData) {
       if (!_appInitData.history) _appInitData.history = [];
@@ -1569,8 +1486,8 @@ async function rConfirm() {
   }
   _pendingPayload = { payload, from, to, days: String(days) };
   btn.disabled = false; sp.style.display = 'none'; txt.textContent = tx('conTxt');
-  const m = document.getElementById('confirm-modal');
-  m.classList.add('open'); m.style.display = 'flex';
+  // The "read before printing" page is gone: the reminder now sits on the review sheet.
+  doConfirm();
 }
 let _lastSubmit = null;
 let _isSubmitting = false;
@@ -1847,7 +1764,7 @@ function rPopulateSuccess() {
 const DEFAULT_PRINT_CSS = `
 *{margin:0;padding:0;box-sizing:border-box}
 #tg-pdf-container{
-  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Battambang',sans-serif;font-size:11pt;color:#000000;
+  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Hanuman',serif;font-size:11pt;color:#000000;
 }
 #tg-pdf-container, #tg-pdf-container *{
   color:#000000 !important;
@@ -1867,37 +1784,37 @@ const DEFAULT_PRINT_CSS = `
   flex-direction:column !important;
   justify-content:space-between !important;
   overflow:hidden !important;
-  font-family:'Battambang',sans-serif !important;
+  font-family:'Hanuman',serif !important;
   font-size:11pt !important;
   color:#000000 !important;
 }
 #tg-pdf-container .content{flex:1}
 #tg-pdf-container .pf-header-row{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-bottom:5mm}
 #tg-pdf-container .pf-logo{height:95px;object-fit:contain;display:block;margin:0 0 0 auto}
-#tg-pdf-container .pf-title{font-family:'Moul',serif;font-size:13.5pt;text-align:center;margin-bottom:3mm;line-height:1.8;color:#000000}
+#tg-pdf-container .pf-title{font-family:'Hanuman',serif;font-weight:700;font-size:13.5pt;text-align:center;margin-bottom:3mm;line-height:1.8;color:#000000}
 #tg-pdf-container .pf-body-section{margin-bottom:2.5mm}
-#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Battambang',sans-serif;font-size:11pt;line-height:1.9;margin:0;color:#000000}
+#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Hanuman',serif;font-size:11pt;line-height:1.9;margin:0;color:#000000}
 #tg-pdf-container .pf-para{text-align:justify}
 #tg-pdf-container .pf-to-section{text-align:center;margin:2.5mm 0}
-#tg-pdf-container .pf-to-section p{font-family:'Moul',serif;font-size:11pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-bold{font-family:'Moul',serif;color:#000000}
+#tg-pdf-container .pf-to-section p{font-family:'Hanuman',serif;font-weight:700;font-size:11pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-bold{font-family:'Hanuman',serif;font-weight:700;color:#000000}
 #tg-pdf-container .pf-via-section{margin:2.5mm 0}
 #tg-pdf-container .pf-via-row{display:flex;align-items:baseline;font-size:11pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-via-lbl{font-family:'Moul',serif;min-width:25mm;white-space:nowrap;font-size:10.5pt;color:#000000}
+#tg-pdf-container .pf-via-lbl{font-family:'Hanuman',serif;font-weight:700;min-width:25mm;white-space:nowrap;font-size:10.5pt;color:#000000}
 #tg-pdf-container .pf-colon{margin:0 3mm;color:#000000}
 #tg-pdf-container .pf-sp{display:inline-block;min-width:20mm;padding:0 3px;vertical-align:bottom;font-weight:bold;text-align:center;color:#000000}
 #tg-pdf-container .pf-date-row{text-align:right;font-size:11pt;line-height:1.9;margin:2.5mm 0 2mm;color:#000000}
 #tg-pdf-container .pf-sig-table{width:100%;border-collapse:collapse;margin-top:3mm}
 #tg-pdf-container .pf-sig-cell{width:50%;vertical-align:top;padding:0 6mm;color:#000000}
 #tg-pdf-container .pf-sig-right{text-align:right}
-#tg-pdf-container .pf-sig-label{font-family:'Moul',serif;font-size:10.5pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-sig-sublabel{font-family:'Battambang',sans-serif;font-size:11pt;color:#000000}
+#tg-pdf-container .pf-sig-label{font-family:'Hanuman',serif;font-weight:700;font-size:10.5pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-sig-sublabel{font-family:'Hanuman',serif;font-size:11pt;color:#000000}
 #tg-pdf-container .pf-sig-space{height:16mm}
 #tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
 #tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
 #tg-pdf-container .pf-footer-left{flex:1}
-#tg-pdf-container .pf-footer-co{font-family:'Moul',serif;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
-#tg-pdf-container .pf-footer-kh{font-family:'Battambang',sans-serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
+#tg-pdf-container .pf-footer-co{font-family:'Hanuman',serif;font-weight:700;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
+#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
 #tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;line-height:1.5;display:block}
 #tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
 #tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
@@ -1921,7 +1838,7 @@ const DEFAULT_PRINT_HTML = `
     </div>
     <div class="pf-via-section">
       <div class="pf-via-row"><span class="pf-via-lbl">តាមរយៈ</span><span class="pf-colon">៖</span><span>ប្រធានផ្នែករដ្ឋបាល និងធនធានមនុស្ស</span></div>
-      <div class="pf-via-row"><span class="pf-via-lbl">កម្មវត្ថុ</span><span class="pf-colon">៖</span><span>សំណើ សុំច្បាប់ ៖ <strong id="pf-leavetype" style="font-family:'Battambang',sans-serif;font-weight:700"></strong></span></div>
+      <div class="pf-via-row"><span class="pf-via-lbl">កម្មវត្ថុ</span><span class="pf-colon">៖</span><span>សំណើ សុំច្បាប់ ៖ <strong id="pf-leavetype" style="font-family:'Hanuman',serif;font-weight:700"></strong></span></div>
     </div>
     <div class="pf-body-section">
       <p class="pf-para" style="text-align:center">តបតាមសេចក្តីចែងក្នុងកម្មវត្ថុ ខាងលើ ខ្ញុំបាទ/នាងខ្ញុំ សូមជម្រាបជូនលោកប្រធានក្រុម ប្រឹក្សាភិបាល មេត្តាជ្រាបថា ៖</p>
@@ -2264,7 +2181,7 @@ async function generateTelegramLeavePdf(printData) {
 
 function buildPrintData(d, from, to, days) {
   const s = rStaff || stStaff || {};
-  const lang = d.lang || LANG || 'en';
+  const lang = d.lang || printLang();
   const name = lang === 'kh' ? (s.nameKh || s.name || d.name) : (s.name || d.name);
   const pos = lang === 'kh' ? (s.positionKh || s.position || d.position) : (s.position || d.position);
   const gen = formatGender(d.gender || s.gender, lang);
@@ -2285,7 +2202,7 @@ function buildPrintData(d, from, to, days) {
 
 function buildPrintDataFromRecord(r, staff) {
   const s = staff || stStaff || rStaff || {};
-  const lang = LANG || 'en';
+  const lang = printLang();
   const name = lang === 'kh' ? (s.nameKh || s.name || r.name) : (s.name || r.name);
   const pos = lang === 'kh' ? (s.positionKh || s.position || r.position) : (s.position || r.position);
   const gen = formatGender(s.gender || r.gender, lang);
@@ -2438,7 +2355,7 @@ function _gmoStart(gateId, msgs, durs) {
       <div class="gmo-prog-fill" id="gmo-b-${gateId}"></div>
     </div>
   </div>`;
-  document.body.appendChild(ov);
+  (document.getElementById('stage') || document.body).appendChild(ov);
   const tEl = document.getElementById('gmo-t-' + gateId);
   const dEl = document.getElementById('gmo-d-' + gateId);
   const bEl = document.getElementById('gmo-b-' + gateId);
@@ -2543,15 +2460,16 @@ async function stVerify() {
   const btn = document.getElementById('st-gate-btn');
   const sp = document.getElementById('st-gate-sp');
   const txt = document.getElementById('st-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('st-gate', 'st-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('st-gate', 'st-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -3414,17 +3332,6 @@ function expDownload() {
 }
 
 let _reauthResolve = null;
-function requireReauth(msg) {
-  return new Promise(resolve => {
-    _reauthResolve = resolve;
-    document.getElementById('reauth-msg').textContent = msg || 'Re-enter your password to continue.';
-    document.getElementById('reauth-pass').value = '';
-    document.getElementById('reauth-err').textContent = '';
-    const m = document.getElementById('reauth-modal');
-    m.style.display = 'flex';
-    setTimeout(() => document.getElementById('reauth-pass').focus(), 50);
-  });
-}
 function cancelReauth() {
   document.getElementById('reauth-modal').style.display = 'none';
   if (_reauthResolve) { _reauthResolve(null); _reauthResolve = null; }
@@ -3458,12 +3365,6 @@ async function syncNow() {
   } finally {
     if (btn) btn.classList.remove('spinning');
   }
-}
-async function stRefreshHistory() {
-  try {
-    const res = isMock() ? mockHist(stStaff.empId) : await apiPost('getHistory', { empId: stStaff.empId, fullName: stStaff.name });
-    if (res.result === 'success') { stHistory = res.history || []; renderStDash(); }
-  } catch (e) { }
 }
 
 document.querySelectorAll('input[name=noticetype]').forEach(r => {
@@ -3517,87 +3418,6 @@ async function submitNotice() {
 let ntStaff = null;
 let _ntCurrentType = null; // 'late' | 'early'
 
-// ── iOS Drum Picker ───────────────────────────────────────────
-const DRUM_IH = 42; // item height px
-const DRUM_PAD = DRUM_IH * 2; // 2-item padding spacer at top/bottom
-
-function _ntBuildDrumCol(col, items) {
-  const pad = `<div style="height:${DRUM_PAD}px"></div>`;
-  col.innerHTML = pad + items.map((it, i) => `<div class="drum-item" data-v="${it.v}" data-i="${i}">${it.label}</div>`).join('') + pad;
-  col.addEventListener('scroll', () => _ntDrumHighlight(col), { passive: true });
-  _ntDrumHighlight(col);
-}
-function _ntDrumHighlight(col) {
-  const idx = Math.round(col.scrollTop / DRUM_IH);
-  col.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('drum-sel', i === idx));
-  if (col.id === 'drum-hh' || col.id === 'drum-mm' || col.id === 'drum-ap') {
-    const v = _ntDrumGet(col);
-    if (col.id === 'drum-hh') { const e = document.getElementById('nt-m-hh'); if (e) e.value = v; }
-    if (col.id === 'drum-mm') { const e = document.getElementById('nt-m-mm'); if (e) e.value = v; }
-    if (col.id === 'drum-ap') {
-      document.getElementById('nt-m-am')?.classList.toggle('on', v === 'AM');
-      document.getElementById('nt-m-pm')?.classList.toggle('on', v === 'PM');
-    }
-  }
-}
-function _ntDrumGet(col) {
-  const idx = Math.round(col.scrollTop / DRUM_IH);
-  return col.querySelectorAll('.drum-item')[idx]?.dataset.v || '';
-}
-function _ntDrumSet(col, val) {
-  const items = col.querySelectorAll('.drum-item');
-  const idx = Array.from(items).findIndex(x => x.dataset.v === val);
-  if (idx >= 0) { col.scrollTop = idx * DRUM_IH; }
-}
-function ntInitDrum() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const apCol = document.getElementById('drum-ap');
-  _ntBuildDrumCol(hhCol, Array.from({ length: 12 }, (_, i) => { const v = String(i + 1).padStart(2, '0'); return { v, label: v }; }));
-  _ntBuildDrumCol(mmCol, Array.from({ length: 60 }, (_, i) => { const v = String(i).padStart(2, '0'); return { v, label: v }; }));
-  _ntBuildDrumCol(apCol, [{ v: 'AM', label: 'AM' }, { v: 'PM', label: 'PM' }]);
-  const now = new Date();
-  const h = now.getHours(), m = now.getMinutes();
-  const isAM = h < 12;
-  const dispH = h % 12 || 12;
-  setTimeout(() => {
-    _ntDrumSet(hhCol, String(dispH).padStart(2, '0'));
-    _ntDrumSet(mmCol, String(m).padStart(2, '0'));
-    _ntDrumSet(apCol, isAM ? 'AM' : 'PM');
-    _ntDrumHighlight(hhCol); _ntDrumHighlight(mmCol); _ntDrumHighlight(apCol);
-    const mhh = document.getElementById('nt-m-hh');
-    const mmm = document.getElementById('nt-m-mm');
-    if (mhh) mhh.value = String(dispH).padStart(2, '0');
-    if (mmm) mmm.value = String(m).padStart(2, '0');
-    document.getElementById('nt-m-am')?.classList.toggle('on', isAM);
-    document.getElementById('nt-m-pm')?.classList.toggle('on', !isAM);
-  }, 50);
-}
-function ntGetDrumTime() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const apCol = document.getElementById('drum-ap');
-  const hh = _ntDrumGet(hhCol) || document.getElementById('nt-m-hh')?.value.trim() || '';
-  const mm = _ntDrumGet(mmCol) || document.getElementById('nt-m-mm')?.value.trim() || '';
-  const ap = _ntDrumGet(apCol) || (document.getElementById('nt-m-am')?.classList.contains('on') ? 'AM' : 'PM');
-  if (!hh || !mm) return '';
-  return String(parseInt(hh, 10)).padStart(2, '0') + ':' + String(parseInt(mm, 10)).padStart(2, '0') + ' ' + ap;
-}
-function ntManualToScroll() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const hh = (document.getElementById('nt-m-hh')?.value || '').trim().padStart(2, '0');
-  const mm = (document.getElementById('nt-m-mm')?.value || '').trim().padStart(2, '0');
-  const hv = parseInt(hh, 10), mv = parseInt(mm, 10);
-  if (!isNaN(hv) && hv >= 1 && hv <= 12) _ntDrumSet(hhCol, String(hv).padStart(2, '0'));
-  if (!isNaN(mv) && mv >= 0 && mv <= 59) _ntDrumSet(mmCol, String(mv).padStart(2, '0'));
-}
-function ntManualAmPm(val) {
-  const apCol = document.getElementById('drum-ap');
-  _ntDrumSet(apCol, val);
-  document.getElementById('nt-m-am')?.classList.toggle('on', val === 'AM');
-  document.getElementById('nt-m-pm')?.classList.toggle('on', val === 'PM');
-}
 function ntOpenPicker(type) {
   _ntCurrentType = type;
   const lbl = document.getElementById('nt-fs-time-lbl');
@@ -3619,40 +3439,6 @@ function ntOpenPicker(type) {
   if (reason) reason.value = '';
   document.getElementById('nt-type-select').style.display = 'none';
   document.getElementById('nt-form-screen').style.display = 'block';
-}
-function ntClosePicker() {
-  document.getElementById('nt-form-screen').style.display = 'none';
-  document.getElementById('nt-type-select').style.display = 'none';
-  document.getElementById('nt-card-late')?.classList.remove('nt-card-active');
-  document.getElementById('nt-card-early')?.classList.remove('nt-card-active');
-}
-function ntTBInput(el, min, max, nextId) {
-  el.value = el.value.replace(/\D/g, '');
-  if (el.value.length === 2) {
-    let v = parseInt(el.value, 10);
-    if (v < min) el.value = String(min).padStart(2, '0');
-    else if (v > max) el.value = String(max).padStart(2, '0');
-    if (nextId) { const n = document.getElementById(nextId); if (n) { n.focus(); n.select(); } }
-  }
-}
-function ntTBKey(e, prevId, nextId) {
-  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-    e.preventDefault();
-    const el = e.target;
-    const isHH = el.id.endsWith('-hh');
-    const min = isHH ? 1 : 0, max = isHH ? 12 : 59;
-    let v = parseInt(el.value || '0', 10);
-    v = e.key === 'ArrowUp' ? Math.min(max, v + 1) : Math.max(min, v - 1);
-    el.value = String(v).padStart(2, '0');
-  }
-  if (e.key === 'Backspace' && e.target.value === '' && prevId) {
-    const p = document.getElementById(prevId); if (p) { p.focus(); p.select(); }
-  }
-}
-function ntSetAmPm(prefix, val) {
-  const am = document.getElementById(prefix + '-am');
-  const pm = document.getElementById(prefix + '-pm');
-  if (am && pm) { am.classList.toggle('on', val === 'AM'); pm.classList.toggle('on', val === 'PM'); }
 }
 function ntGetTime(prefix) {
   const hh = document.getElementById(prefix + '-hh');
@@ -3832,53 +3618,6 @@ function ntTimeKey(e, field, el) {
 }
 
 // ── Numpad ────────────────────────────────────────────────────
-let _ntNumpadField = null;
-let _ntNumpadValue = '';
-function ntNumpadOpen(field) {
-  _ntNumpadField = field;
-  _ntNumpadValue = '';
-  const lbl = document.getElementById('nt-numpad-label');
-  if (lbl) lbl.textContent = field === 'hh' ? 'Hour' : 'Minute';
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = '--';
-  const overlay = document.getElementById('nt-numpad-overlay');
-  if (overlay) { overlay.style.display = 'flex'; overlay.style.alignItems = 'flex-end'; overlay.style.justifyContent = 'center'; }
-}
-function ntNumpadKey(digit) {
-  if (_ntNumpadValue.length >= 2) return;
-  _ntNumpadValue += digit;
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = _ntNumpadValue.length === 1 ? '0' + _ntNumpadValue : _ntNumpadValue;
-}
-function ntNumpadBackspace() {
-  _ntNumpadValue = _ntNumpadValue.slice(0, -1);
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = _ntNumpadValue ? (_ntNumpadValue.length === 1 ? '0' + _ntNumpadValue : _ntNumpadValue) : '--';
-}
-function ntNumpadClear() {
-  _ntNumpadValue = '';
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = '--';
-}
-function ntNumpadConfirm() {
-  if (!_ntNumpadValue) { ntNumpadClose(); return; }
-  const v = parseInt(_ntNumpadValue, 10);
-  if (_ntNumpadField === 'hh') {
-    if (v < 1 || v > 12) { toast('Hour must be 1–12', 'bad'); return; }
-    const el = document.getElementById('nt-fs-hh');
-    if (el) { el.value = String(v).padStart(2, '0'); el.textContent = el.value; }
-  } else {
-    if (v < 0 || v > 59) { toast('Minute must be 0–59', 'bad'); return; }
-    const el = document.getElementById('nt-fs-mm');
-    if (el) { el.value = String(v).padStart(2, '0'); el.textContent = el.value; }
-  }
-  ntNumpadClose();
-}
-function ntNumpadClose() {
-  const overlay = document.getElementById('nt-numpad-overlay');
-  if (overlay) overlay.style.display = 'none';
-  _ntNumpadField = null; _ntNumpadValue = '';
-}
 async function ntVerify() {
   const inputEl = document.getElementById('nt-name-input');
   const idEl = document.getElementById('nt-id-input');
@@ -3896,15 +3635,16 @@ async function ntVerify() {
   const btn = document.getElementById('nt-gate-btn');
   const sp = document.getElementById('nt-gate-sp');
   const txt = document.getElementById('nt-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('nt-gate', 'nt-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('nt-gate', 'nt-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -3950,16 +3690,6 @@ async function ntSubmit() {
     document.getElementById('nt-form-screen').style.display = 'none';
     document.getElementById('nt-success').style.display = 'flex';
   } catch (e) { toast('Failed to send. Try again.', 'bad'); } finally { btn.disabled = false; sp.style.display = 'none'; }
-}
-
-function syncRefresh() {
-  const icon = document.getElementById('sync-icon');
-  if (icon) icon.style.animation = 'spin .7s linear infinite';
-  setTimeout(() => {
-    if (icon) icon.style.animation = '';
-    toast('Synced', 'ok2');
-  }, 1200);
-  if (hrUser && hrToken) { hrLoadData(); }
 }
 
 const WORK_START_MINS = 8 * 60 + 30;  // 08:30
@@ -4105,117 +3835,6 @@ function hrManualInit() {
   _manualStaff = null;
   ['me-result', 'me-type-sel', 'me-form-leave', 'me-form-notice'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   const eid = document.getElementById('me-empid'); if (eid) eid.value = '';
-}
-function meShowSection(section) {
-  document.getElementById('me-form-leave').style.display = section === 'leave' ? 'block' : 'none';
-  document.getElementById('me-form-notice').style.display = section === 'notice' ? 'block' : 'none';
-  const bl = document.getElementById('me-btn-leave'), bn = document.getElementById('me-btn-notice');
-  if (bl) { bl.style.background = section === 'leave' ? 'var(--red)' : 'var(--surface2)'; bl.style.color = section === 'leave' ? '#fff' : 'var(--txt2)'; bl.style.borderColor = section === 'leave' ? 'var(--red)' : 'var(--border)'; }
-  if (bn) { bn.style.background = section === 'notice' ? 'var(--red)' : 'var(--surface2)'; bn.style.color = section === 'notice' ? '#fff' : 'var(--txt2)'; bn.style.borderColor = section === 'notice' ? 'var(--red)' : 'var(--border)'; }
-}
-function meToggleReturn() {
-  const type = document.getElementById('me-ntype').value;
-  const lbl = document.getElementById('me-ntime-lbl');
-  const retRow = document.getElementById('me-return-row');
-  if (lbl) lbl.textContent = type === 'late' ? 'Arrival Time' : 'Departure Time';
-  if (retRow) retRow.style.display = type === 'late' ? 'block' : 'none';
-}
-async function hrManualLookup() {
-  const eid = document.getElementById('me-empid').value.trim();
-  if (!eid) { toast('Enter Employee ID', 'bad'); return; }
-  const res = await apiHR('getStaffList', {});
-  if (!res || !res.staff) { toast('Failed to load staff', 'bad'); return; }
-  const s = res.staff.find(x => String(x.empId).trim() === eid);
-  if (!s) { toast('Employee not found', 'bad'); return; }
-  _manualStaff = s;
-  document.getElementById('me-name').textContent = s.name;
-  document.getElementById('me-pos').textContent = s.position;
-  document.getElementById('me-result').style.display = 'block';
-  document.getElementById('me-type-sel').style.display = 'block';
-  document.getElementById('me-form-leave').style.display = 'none';
-  document.getElementById('me-form-notice').style.display = 'none';
-  ['me-from', 'me-to', 'me-reason'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('me-days').value = '1';
-  document.getElementById('me-ntime').value = '';
-  const _mnret = document.getElementById('me-nreturn'); if (_mnret) _mnret.value = '';
-  document.getElementById('me-nreason').value = '';
-  const _mndt = document.getElementById('me-ndate'); if (_mndt) _mndt.value = '';
-}
-function meCalcDays() {
-  const f = document.getElementById('me-from').value, t = document.getElementById('me-to').value;
-  if (!f || !t) return;
-  const d1 = new Date(f), d2 = new Date(t); if (isNaN(d1) || isNaN(d2) || d2 < d1) return;
-  let days = 0, cur = new Date(d1);
-  while (cur <= d2) { const dow = cur.getDay(); if (dow !== 0 && dow !== 6) days++; cur.setDate(cur.getDate() + 1); }
-  const el = document.getElementById('me-days'); if (el) el.value = days;
-}
-async function hrManualSubmit() {
-  if (!_manualStaff) { toast('No staff selected', 'bad'); return; }
-  const ltype = document.getElementById('me-ltype').value;
-  if (!ltype) { toast('Select a leave type', 'bad'); return; }
-  const dateFrom = document.getElementById('me-from').value;
-  if (!dateFrom) { toast('Select a start date', 'bad'); return; }
-  const dateTo = document.getElementById('me-to').value || dateFrom;
-  const days = parseFloat(document.getElementById('me-days').value) || 1;
-  const reason = document.getElementById('me-reason').value.trim();
-  const btn = document.getElementById('me-submit-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-  try {
-    const res = await apiHR('manualEntry', {
-      employeeId: _manualStaff.empId, name: _manualStaff.name, gender: _manualStaff.gender || '',
-      position: _manualStaff.position, leaveType: ltype, dateFrom, dateTo,
-      workingDays: days, reason: reason || 'Manual entry by HR', location: _manualStaff.location || 'Phnom Penh'
-    });
-    if (res && res.result === 'success') {
-      toast('Leave saved (silent)', 'ok2');
-      document.getElementById('me-ltype').value = '';
-      ['me-from', 'me-to', 'me-reason'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-      document.getElementById('me-days').value = '1';
-      hrLoadData();
-    } else { toast(res && res.error ? res.error : 'Save failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Save Leave (Silent)'; } }
-}
-async function hrManualNoticeSubmit() {
-  if (!_manualStaff) { toast('No staff selected', 'bad'); return; }
-  const noticeType = document.getElementById('me-ntype').value;
-  const date = document.getElementById('me-ndate').value;
-  if (!date) { toast('Select a date', 'bad'); return; }
-  const time = document.getElementById('me-ntime').value;
-  if (!time) { toast('Enter a time', 'bad'); return; }
-  const returnTime = document.getElementById('me-nreturn') ? document.getElementById('me-nreturn').value : '';
-  const reason = document.getElementById('me-nreason').value.trim();
-  const btn = document.getElementById('me-notice-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-  try {
-    const res = await apiHR('manualNotice', {
-      empId: _manualStaff.empId, name: _manualStaff.name,
-      noticeType, noticeDate: date, time, returnTime, reason: reason || 'Manual entry by HR'
-    });
-    if (res && res.result === 'success') {
-      toast('Notice saved (silent)', 'ok2');
-      document.getElementById('me-ntime').value = '';
-      if (document.getElementById('me-nreturn')) document.getElementById('me-nreturn').value = '';
-      document.getElementById('me-nreason').value = '';
-      hrLoadData();
-    } else { toast(res && res.error ? res.error : 'Save failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Save Notice (Silent)'; } }
-}
-
-async function wipeTestUser() {
-  if (!confirm('Wipe ALL data for test user johnwich / KMEOW007?\r\n\r\nThis deletes all their requests, notices, and attendance records, and resets their leave balance to 0.\r\n\r\nThis cannot be undone.')) return;
-  const btn = document.getElementById('wipe-test-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Wiping...'; }
-  try {
-    const res = await apiHR('wipeTestUser');
-    if (res && res.result === 'success') {
-      const d = res.deleted || {};
-      toast(`Wiped: ${d.requests || 0} requests · ${d.notices || 0} notices · ${d.attendance || 0} attendance`, 'ok2');
-      hrLoadData();
-    } else { toast('Wipe failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Wipe All Test Data'; } }
 }
 
 function getTodayLocalISO() {
@@ -4432,7 +4051,6 @@ function confirmCalModal() {
   if (typeof autoSetTo === 'function') autoSetTo();
   if (typeof calcDays === 'function') calcDays();
   if (typeof clearFieldErr === 'function') clearFieldErr();
-  if (typeof tourNotifyAction === 'function') tourNotifyAction('date');
 }
 
 function setCalTarget(target) {
@@ -5419,46 +5037,6 @@ function getIsoDateVal(id) {
   return val;
 }
 
-function handleDateKeyInput(target, el) {
-  let val = el.value.trim();
-  const digits = val.replace(/\D/g, '');
-  if (digits.length === 8 && !val.includes('-') && !val.includes('/')) {
-    val = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-    el.value = val;
-  }
-
-  const iso = getIsoDateVal(el);
-  if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    el.dataset.iso = iso;
-    if (target === 'from') {
-      const toEl = document.getElementById('rf-to');
-      if (toEl && (!toEl.value || toEl.value < iso)) {
-        toEl.value = iso;
-        toEl.dataset.iso = iso;
-      }
-    }
-    if (typeof calcDays === 'function') calcDays();
-    if (typeof clearFieldErr === 'function') clearFieldErr();
-  }
-}
-
-function formatDateOnBlur(target, el) {
-  const iso = getIsoDateVal(el);
-  if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    el.value = iso;
-    el.dataset.iso = iso;
-    if (target === 'from') {
-      const toEl = document.getElementById('rf-to');
-      if (toEl && (!toEl.value || toEl.value < iso)) {
-        toEl.value = iso;
-        toEl.dataset.iso = iso;
-      }
-    }
-    if (typeof autoSetTo === 'function') autoSetTo();
-    if (typeof calcDays === 'function') calcDays();
-  }
-}
-
 function autoSetTo() {
   const fromVal = getIsoDateVal('rf-from');
   const toEl = document.getElementById('rf-to');
@@ -5571,14 +5149,6 @@ document.addEventListener('keydown', (e) => {
     confirmCalModal();
   }
 });
-
-const TOUR_STEPS = [
-  { targetId: 'rsc-dates' },
-  { targetId: 'rsc-type' },
-  { targetId: 'rsc-reason' }
-];
-
-let _currentTourStep = 0;
 
 // --- Custom Select UI Initialization ---
 function initCustomSelects() {
@@ -5827,3 +5397,404 @@ async function importLegacyData() {
   }
 }
 
+// Phone: the "Other" text box lives inside the Other row, so choosing Other does not move the layout.
+// Wider screens keep the original position (below the list).
+(function placeOtherInput() {
+  const inp = document.getElementById('rf-other-type');
+  const grid = document.getElementById('ltype-grid');
+  if (!inp || !grid) return;
+  const row = [...grid.querySelectorAll('.ltype-card')].find(l => l.querySelector('input[value="Other"]'));
+  if (!row) return;
+  const home = inp.previousElementSibling;
+  const mq = window.matchMedia('(max-width: 768px)');
+  const place = () => {
+    if (mq.matches) {
+      if (inp.parentElement !== row) row.insertBefore(inp, row.querySelector('input[type="radio"]'));
+    } else if (inp.parentElement === row && home) {
+      home.after(inp);
+    }
+  };
+  place();
+  if (mq.addEventListener) mq.addEventListener('change', place); else mq.addListener(place);
+})();
+
+// Phone: From / To dates show as DD-Mon-YYYY. Tapping the day, month or year opens the number pad.
+// The real fields (#rf-from, #rf-to) keep their YYYY-MM-DD value, so everything else works as before.
+(function dateSegments() {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pad = (n) => String(n).padStart(2, '0');
+  const digits = (s, max) => String(s).replace(/\D/g, '').slice(0, max);
+  const valueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+
+  function commit(target, el, seg) {
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    const cur = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : '';
+    const curM = cur ? +cur.slice(5, 7) : 0;
+    let d = +digits(dI.value, 2);
+    let m = mI.dataset.editing === '1' ? +digits(mI.value, 2) : (+mI.dataset.num || curM);
+    let y = +digits(yI.value, 4);
+    mI.dataset.editing = '';
+    if (!d || !m || !y || m > 12 || y < 2000 || y > 2100) { render(el, seg); return; }
+    d = Math.min(d, new Date(y, m, 0).getDate());
+    const iso = y + '-' + pad(m) + '-' + pad(d);
+    if (iso === cur) { render(el, seg); return; }
+
+    const dow = new Date(iso + 'T00:00:00').getDay();
+    if (dow === 0 || dow === 6) {
+      toast(LANG === 'kh' ? 'ថ្ងៃសៅរ៍ និងថ្ងៃអាទិត្យ ជាថ្ងៃចុងសប្តាហ៍ដែលត្រូវបានរំលងដោយស្វ័យប្រវត្តិ។' : 'Saturday & Sunday are non-working weekend days (blacked out).', '');
+      render(el, seg); return;
+    }
+    const hol = getHolidayObj(iso);
+    if (hol) {
+      const name = LANG === 'kh' && hol.nameKh ? hol.nameKh : hol.name;
+      toast(LANG === 'kh' ? `ថ្ងៃនេះជាថ្ងៃឈប់សម្រាកបុណ្យ (${name}) ដែលត្រូវបានរំលង។` : `This date is an official public holiday (${name}) and is blacked out.`, '');
+      render(el, seg); return;
+    }
+
+    const fromEl = document.getElementById('rf-from'), toEl = document.getElementById('rf-to');
+    const set = (e, v) => { e.value = v; e.dataset.iso = v; };
+    if (target === 'from') {
+      set(fromEl, iso);
+      if (!toEl.value || toEl.value < iso) set(toEl, iso);
+    } else if (fromEl.value && iso < fromEl.value) {
+      set(fromEl, iso); set(toEl, iso);
+    } else {
+      set(toEl, iso);
+    }
+    if (typeof autoSetTo === 'function') autoSetTo();
+    if (typeof calcDays === 'function') calcDays();
+    if (typeof clearFieldErr === 'function') clearFieldErr();
+  }
+
+  function render(el, seg) {
+    const v = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : '';
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    dI.value = v ? v.slice(8, 10) : '';
+    yI.value = v ? v.slice(0, 4) : '';
+    mI.dataset.num = v ? String(+v.slice(5, 7)) : '';
+    mI.dataset.editing = '';
+    mI.value = v ? MON[+v.slice(5, 7) - 1] : '';
+  }
+
+  ['rf-from', 'rf-to'].forEach((id) => {
+    const el = document.getElementById(id);
+    const wrap = el && el.closest('.date-wrap');
+    if (!el || !wrap) return;
+    const target = id === 'rf-from' ? 'from' : 'to';
+
+    const seg = document.createElement('div');
+    seg.className = 'dseg';
+    seg.innerHTML =
+      '<input class="dseg-d" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="DD" autocomplete="off" aria-label="Day">' +
+      '<span>-</span>' +
+      '<input class="dseg-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="Mon" autocomplete="off" aria-label="Month">' +
+      '<span>-</span>' +
+      '<input class="dseg-y" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="YYYY" autocomplete="off" aria-label="Year">';
+    el.insertAdjacentElement('afterend', seg);
+
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    const selectAll = (i) => setTimeout(() => { try { i.select(); } catch (e) { } }, 0);
+
+    dI.addEventListener('focus', () => selectAll(dI));
+    yI.addEventListener('focus', () => selectAll(yI));
+    mI.addEventListener('focus', () => {
+      mI.dataset.editing = '1';
+      mI.value = mI.dataset.num || '';
+      selectAll(mI);
+    });
+
+    dI.addEventListener('input', () => {
+      dI.value = digits(dI.value, 2);
+      if (dI.value.length === 2 || (dI.value.length === 1 && +dI.value > 3)) mI.focus();
+    });
+    mI.addEventListener('input', () => {
+      mI.value = digits(mI.value, 2);
+      if (mI.value.length === 2 || (mI.value.length === 1 && +mI.value > 1)) yI.focus();
+    });
+    yI.addEventListener('input', () => {
+      yI.value = digits(yI.value, 4);
+      if (yI.value.length === 4) yI.blur();
+    });
+
+    seg.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); document.activeElement.blur(); } });
+    seg.addEventListener('focusout', (e) => {
+      if (e.relatedTarget && seg.contains(e.relatedTarget)) return;
+      commit(target, el, seg);
+    });
+
+    // keep the display in sync when other code (calendar, reset, auto-fill) sets the value
+    Object.defineProperty(el, 'value', {
+      configurable: true,
+      get() { return valueDesc.get.call(this); },
+      set(v) { valueDesc.set.call(this, v); render(el, seg); }
+    });
+    render(el, seg);
+  });
+})();
+
+// Phone: while the Late / Early form is open, the Notice page drops its top bar (Back is at the bottom).
+(function noticeFormClass() {
+  const view = document.getElementById('v-notice');
+  const form = document.getElementById('nt-form-screen');
+  if (!view || !form) return;
+  const sync = () => { view.classList.toggle('nt-form', form.style.display !== 'none'); if (window.fitFormSchedule) window.fitFormSchedule(); };
+  new MutationObserver(sync).observe(form, { attributes: true, attributeFilter: ['style'] });
+  sync();
+})();
+
+// ── KHMER DISPLAY LAYER ─────────────────────────────────────────
+// Display only. When the UI language is Khmer, visible English labels are swapped for Khmer text.
+// Nothing that is saved, sent to the backend, printed or put in a PDF is touched: values, radio values,
+// payload fields and stored data stay in English. Switching to EN restores the original text.
+const KH_UI_MAP = {
+  // general
+  'Back': 'ត្រឡប់ក្រោយ', '← Back': '← ត្រឡប់ក្រោយ', 'Next': 'បន្ទាប់', 'Next →': 'បន្ទាប់ →',
+  'Continue': 'បន្ត', 'Continue →': 'បន្ត →', 'Cancel': 'បោះបង់', 'Edit': 'កែតម្រូវ', '← Edit': '← កែតម្រូវ',
+  'Days': 'ថ្ងៃ', 'DAYS': 'ថ្ងៃ', 'Leave': 'ច្បាប់', 'Reason': 'មូលហេតុ', 'Type': 'ប្រភេទ', 'From': 'ចាប់ពី', 'To': 'ដល់',
+  'Male': 'ប្រុស', 'Female': 'ស្រី', 'Total': 'សរុប', 'Used': 'បានប្រើ', 'Remaining': 'នៅសល់',
+  'Approved': 'បានអនុម័ត', 'Pending': 'កំពុងរង់ចាំ', 'Rejected': 'បានបដិសេធ', 'Late': 'មកយឺត', 'Early': 'ចេញមុន',
+  // login pages
+  'Staff Select': 'បំពេញឈ្មោះ និងលេខសម្គាល់បុគ្គលិក', 'Enter your Full Name': 'នៅលើប័ណ្ណសម្គាល់បុគ្គលិករបស់អ្នក',
+  'View My Leave': 'មើលច្បាប់របស់ខ្ញុំ', 'View My Leave Status': 'មើលស្ថានភាពច្បាប់របស់ខ្ញុំ',
+  // home
+  'Request Leave': 'សុំច្បាប់ឈប់សម្រាក', 'My Leave Status': 'ស្ថានភាពច្បាប់របស់ខ្ញុំ',
+  'Submit a new annual or special leave request': 'ដាក់ពាក្យសុំច្បាប់ប្រចាំឆ្នាំ ឬច្បាប់ពិសេសថ្មី',
+  'Check remaining days, history and print past requests': 'ពិនិត្យថ្ងៃនៅសល់ ប្រវត្តិ និងបោះពុម្ពពាក្យសុំចាស់',
+  'Notify HR of late arrival or early departure': 'ជូនដំណឹងដល់ HR ពីការមកយឺត ឬចេញមុន',
+  // request form
+  'Leave Dates & Duration': 'កាលបរិច្ឆេទ និងរយៈពេលច្បាប់',
+  'Select your start and return dates': 'ជ្រើសរើសថ្ងៃចាប់ផ្តើម និងថ្ងៃត្រឡប់មកវិញ',
+  'From Date': 'ចាប់ពីថ្ងៃ', 'To Date': 'ដល់ថ្ងៃ',
+  'Half Day Adjustment': 'កែសម្រួលកន្លះថ្ងៃ', 'Full Day': 'មួយថ្ងៃពេញ', 'Morning Only': 'តែពេលព្រឹក', 'Evening Only': 'តែពេលល្ងាច',
+  'Morning': 'តែពេលព្រឹក', 'Evening': 'តែពេលល្ងាច', 'First Day:': 'ថ្ងៃដំបូង:', 'Last Day:': 'ថ្ងៃចុងក្រោយ:',
+  'Choose Leave Type': 'ជ្រើសរើសប្រភេទច្បាប់', 'Select the category for your request': 'ជ្រើសរើសប្រភេទសម្រាប់ពាក្យសុំរបស់អ្នក',
+  'Reason / Description': 'មូលហេតុ / ការពិពណ៌នា', 'Brief note for HR and management review': 'កំណត់ចំណាំខ្លីសម្រាប់ HR និងថ្នាក់គ្រប់គ្រងពិនិត្យ',
+  'Annual Leave': 'ច្បាប់ប្រចាំឆ្នាំ', 'Sick Leave': 'ច្បាប់ឈឺ', 'Emergency Leave': 'ច្បាប់បន្ទាន់', 'Special Leave': 'ច្បាប់ពិសេស',
+  'Training / Mission': 'បេសកកម្ម / វគ្គបណ្តុះបណ្តាល', 'Other': 'ផ្សេងៗ',
+  'Please select a leave category.': 'សូមជ្រើសរើសប្រភេទច្បាប់។', 'Please choose start date.': 'សូមជ្រើសរើសថ្ងៃចាប់ផ្តើម។',
+  'Please choose end date.': 'សូមជ្រើសរើសថ្ងៃបញ្ចប់។', 'End date cannot be earlier than start date.': 'ថ្ងៃបញ្ចប់មិនអាចមុនថ្ងៃចាប់ផ្តើមទេ។',
+  // calendar
+  'Select Date': 'ជ្រើសរើសកាលបរិច្ឆេទ', 'Start Date (From)': 'ថ្ងៃចាប់ផ្តើម (ចាប់ពី)', 'End Date (To)': 'ថ្ងៃបញ្ចប់ (ដល់)',
+  'ចាប់ផ្តើម (From)': 'ចាប់ផ្តើម (ចាប់ពី)', 'បញ្ចប់ (To)': 'បញ្ចប់ (ដល់)',
+  'Prev': 'មុន', 'Today': 'ថ្ងៃនេះ', 'Clear': 'សម្អាត', 'Apply Date': 'អនុវត្តកាលបរិច្ឆេទ',
+  'Workday': 'ថ្ងៃធ្វើការ', 'Weekend': 'ចុងសប្តាហ៍', 'Holiday': 'ថ្ងៃបុណ្យ', 'Selected': 'បានជ្រើស', 'OFF': 'ឈប់', 'HOL': 'បុណ្យ',
+  'Mon': 'ច', 'Tue': 'អ', 'Wed': 'ព', 'Thu': 'ព្រ', 'Fri': 'សុ', 'Sat': 'ស', 'Sun': 'អា',
+  // review + success
+  'Review Your Request': 'ពិនិត្យមើលពាក្យសុំរបស់អ្នក', 'Check everything before confirming': 'ពិនិត្យអ្វីៗទាំងអស់មុនបញ្ជាក់',
+  'Employee ID': 'លេខកូដបុគ្គលិក', 'Full Name': 'ឈ្មោះពេញ', 'Gender': 'ភេទ', 'Position': 'តួនាទី', 'Leave Type': 'ប្រភេទច្បាប់',
+  'Working Days': 'ថ្ងៃធ្វើការ', 'Submitted': 'ថ្ងៃដាក់ពាក្យ', 'Slide to confirm': 'អូសដើម្បីបញ្ជាក់',
+  'Request Submitted!': 'បានដាក់ពាក្យសុំរួចរាល់!',
+  'Your request has been recorded. Print and sign to finalise.': 'ពាក្យសុំរបស់អ្នកត្រូវបានកត់ត្រា។ សូមបោះពុម្ព និងចុះហត្ថលេខាដើម្បីបញ្ចប់។',
+  'Submitted Request': 'ពាក្យសុំដែលបានដាក់', 'Reprint': 'បោះពុម្ពម្តងទៀត', '← New Request': '← ពាក្យសុំថ្មី',
+  // late / early notice
+  'Late / Early Notice': 'សុំមកយឺត សុំចេញមុនម៉ោង', "Who's On Leave": 'បុគ្គលិកឈប់សម្រាក', 'Are you?': 'សូមជ្រើសរើស', 'Coming Late': 'មកយឺត', 'Requesting Leave Early': 'សុំចេញមុនម៉ោង',
+  '← Change my information': '← ប្តូរព័ត៌មានរបស់ខ្ញុំ', 'Arrives at': 'មកដល់ម៉ោង', 'Leaving at': 'ចេញម៉ោង',
+  'You are arriving': 'អ្នកមកដល់', 'You are leaving': 'អ្នកចេញ',
+  'Send Notice to HR': 'ផ្ញើដំណឹងទៅ HR', 'Notice Sent!': 'បានផ្ញើដំណឹងរួចរាល់!',
+  'Your notice has been sent to the HR Telegram group.': 'ដំណឹងរបស់អ្នកត្រូវបានផ្ញើទៅក្រុម Telegram របស់ HR។',
+  '← Back to Home': '← ត្រឡប់ទៅទំព័រដើម',
+  'Please select a time': 'សូមជ្រើសរើសម៉ោង', 'Please enter a reason': 'សូមបញ្ចូលមូលហេតុ', 'Failed to send. Try again.': 'ផ្ញើមិនបាន សូមព្យាយាមម្តងទៀត',
+  // status
+  'Leave History': 'ប្រវត្តិច្បាប់', 'Late / Early Notices': 'ការសុំមកយឺត / ចេញមុន', 'Previous Requests': 'ពាក្យសុំមុនៗ',
+  'No previous requests found.': 'មិនមានពាក្យសុំមុនទេ។', 'Your Leave Balance': 'សមតុល្យច្បាប់របស់អ្នក',
+  'Annual Total': 'សរុបប្រចាំឆ្នាំ', 'Annual Used': 'បានប្រើប្រចាំឆ្នាំ', 'Annual Left': 'នៅសល់ប្រចាំឆ្នាំ', 'Special Used': 'ច្បាប់ពិសេសបានប្រើ',
+  'Annual Leave Balance': 'សមតុល្យច្បាប់ប្រចាំឆ្នាំ'
+};
+const KH_UI_PLACEHOLDERS = {
+  'Enter Full Name...': 'ឈ្មោះពេញ', 'Enter Employee ID...': 'លេខ ID ពេញលេញ',
+  'Brief explanation...': 'ពន្យល់ដោយសង្ខេប...', 'Please specify leave type...': 'សូមបញ្ជាក់ប្រភេទច្បាប់...',
+  'DD': 'ថ្ងៃ', 'Mon': 'ខែ', 'YYYY': 'ឆ្នាំ'
+};
+const KH_UI_MONTHS = { January: 'មករា', February: 'កុម្ភៈ', March: 'មីនា', April: 'មេសា', May: 'ឧសភា', June: 'មិថុនា', July: 'កក្កដា', August: 'សីហា', September: 'កញ្ញា', October: 'តុលា', November: 'វិច្ឆិកា', December: 'ធ្នូ' };
+const KH_UI_TOKENS = [['First:', 'ថ្ងៃដំបូង:'], ['Last:', 'ថ្ងៃចុងក្រោយ:'], ['working days', 'ថ្ងៃធ្វើការ'], ['working day', 'ថ្ងៃធ្វើការ'], ['Morning', 'ព្រឹក'], ['Evening', 'ល្ងាច'], ['Only', 'ប៉ុណ្ណោះ']];
+
+function khUIRule(t) {
+  let m;
+  if ((m = t.match(/^([\d.]+) Working Days?$/))) return m[1] + ' ថ្ងៃធ្វើការ';
+  if ((m = t.match(/^([\d.]+) days?$/))) return m[1] + ' ថ្ងៃ';
+  if ((m = t.match(/^(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/))) return KH_UI_MONTHS[m[1]] + ' ' + m[2];
+  if ((m = t.match(/^Half day (Morning|Evening) · (.+)$/))) return 'កន្លះថ្ងៃ' + (m[1] === 'Morning' ? 'ព្រឹក' : 'ល្ងាច') + ' · ' + m[2];
+  if ((m = t.match(/^(?:([\d]+) hrs?)? ?(?:([\d]+) mins?)? (late|early)$/)) && (m[1] || m[2])) {
+    return (m[3] === 'late' ? 'យឺត' : 'មុន') + (m[1] ? ' ' + m[1] + ' ម៉ោង' : '') + (m[2] ? ' ' + m[2] + ' នាទី' : '');
+  }
+  if ((m = t.match(/^(.+?) \((.+)\)$/)) && (KH_UI_MAP[m[1]] !== undefined)) {
+    let inner = m[2];
+    KH_UI_TOKENS.forEach(([en, kh]) => { inner = inner.split(en).join(kh); });
+    return KH_UI_MAP[m[1]] + ' (' + inner + ')';
+  }
+  return null;
+}
+
+const _khNodeOrig = new WeakMap();
+let _khObserver = null;
+
+function khUIString(s) {
+  const t = s.trim();
+  if (!t) return null;
+  const key = t.replace(/\s+/g, ' ');
+  const out = KH_UI_MAP[key] !== undefined ? KH_UI_MAP[key] : khUIRule(key);
+  if (out === null || out === undefined) return null;
+  return s.slice(0, s.indexOf(t)) + out + s.slice(s.indexOf(t) + t.length);
+}
+
+function khUINode(n) {
+  const p = n.parentNode;
+  if (!p || /^(SCRIPT|STYLE|TEXTAREA|OPTION)$/.test(p.nodeName)) return;
+  const prev = _khNodeOrig.get(n);
+  if (prev && n.nodeValue === prev.kh) return;
+  const out = khUIString(n.nodeValue);
+  if (out !== null && out !== n.nodeValue) { _khNodeOrig.set(n, { en: n.nodeValue, kh: out }); n.nodeValue = out; }
+}
+
+function khUIPlaceholder(el) {
+  const cur = el.getAttribute('placeholder');
+  if (cur && KH_UI_PLACEHOLDERS[cur] !== undefined) {
+    el.dataset.phEn = cur;
+    el.setAttribute('placeholder', KH_UI_PLACEHOLDERS[cur]);
+  }
+}
+
+function khUIWalk(root) {
+  if (root.nodeType === 3) { khUINode(root); return; }
+  if (root.nodeType !== 1) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = []; let n;
+  while ((n = w.nextNode())) nodes.push(n);
+  nodes.forEach(khUINode);
+  if (root.hasAttribute && root.hasAttribute('placeholder')) khUIPlaceholder(root);
+  root.querySelectorAll('[placeholder]').forEach(khUIPlaceholder);
+}
+
+function khUIRestore() {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = []; let n;
+  while ((n = w.nextNode())) nodes.push(n);
+  nodes.forEach((node) => {
+    const prev = _khNodeOrig.get(node);
+    if (prev && node.nodeValue === prev.kh) node.nodeValue = prev.en;
+    _khNodeOrig.delete(node);
+  });
+  document.querySelectorAll('[data-ph-en]').forEach((el) => { el.setAttribute('placeholder', el.dataset.phEn); delete el.dataset.phEn; });
+}
+
+function khUIRefresh() {
+  document.documentElement.classList.toggle('lang-kh', LANG === 'kh');
+  if (_khObserver) { _khObserver.disconnect(); _khObserver = null; }
+  khUIRestore();
+  if (LANG !== 'kh') return;
+  khUIWalk(document.body);
+  _khObserver = new MutationObserver((muts) => {
+    muts.forEach((m) => {
+      if (m.type === 'characterData') khUINode(m.target);
+      else if (m.type === 'attributes') { if (m.target.getAttribute('placeholder') !== null && !m.target.dataset.phEn) khUIPlaceholder(m.target); }
+      else m.addedNodes.forEach(khUIWalk);
+    });
+  });
+  _khObserver.observe(document.body, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['placeholder'] });
+}
+
+// Apply the starting language (saved choice, or Khmer by default on phones) to the static labels and the EN / ខ្មែរ switch.
+(function applyStartLang() {
+  document.querySelectorAll('.lb').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
+  if (LANG !== 'en') applyLang();
+  khUIRefresh();
+})();
+
+// Phone: each home card title shrinks (down to 11px) so it always fits on one line.
+(function fitHomeTitles() {
+  const titles = () => [...document.querySelectorAll('#v-home .hcard-title')];
+  const mq = window.matchMedia('(max-width: 768px)');
+  function fit(t) {
+    t.style.removeProperty('font-size');
+    t.style.removeProperty('white-space');
+    if (!mq.matches || !t.clientWidth) return;
+    let size = parseFloat(getComputedStyle(t).fontSize);
+    while (t.scrollWidth > t.clientWidth && size > 12) {
+      size -= 0.5;
+      t.style.setProperty('font-size', size + 'px', 'important');
+    }
+    // still too long at the smallest readable size: wrap to two lines instead of cutting the text
+    t.style.removeProperty('white-space');
+    if (t.scrollWidth > t.clientWidth) { t.style.setProperty('white-space', 'normal', 'important'); t.style.setProperty('font-size', '13px', 'important'); }
+  }
+  const fitAll = () => titles().forEach(fit);
+  if (window.ResizeObserver) { const ro = new ResizeObserver((es) => es.forEach((e) => fit(e.target))); titles().forEach((t) => ro.observe(t)); }
+  const box = document.querySelector('#v-home .home-cards');
+  if (box) new MutationObserver(fitAll).observe(box, { childList: true, characterData: true, subtree: true });
+  window.addEventListener('resize', fitAll);
+  if (document.fonts) { document.fonts.ready.then(fitAll); document.fonts.addEventListener('loadingdone', fitAll); }
+  fitAll();
+})();
+
+// ── PHONE FIT ENGINE ─────────────────────────────────────────────
+// The request form and the late / early form have a pinned bottom bar. Whatever is on screen (a notice box,
+// long Khmer text, a half day on both ends, a short phone), this measures whether the last field ends above
+// the bar and, if not, compacts the form one level at a time (class fit-1..5) until it does.
+(function formFit() {
+  const mq = window.matchMedia('(max-width: 768px)');
+  const MAXL = 5;
+  let busy = false, queued = false, raf = 0;
+  const kbOpen = () => document.body.classList.contains('keyboard-open');
+  const setLevel = (el, prefix, n) => { for (let i = 1; i <= MAXL; i++) el.classList.remove(prefix + i); if (n) el.classList.add(prefix + n); };
+  const gap = (barEl, lastEl, scroller) => {
+    if (!barEl || !lastEl || !scroller) return null;
+    const b = barEl.getBoundingClientRect(), l = lastEl.getBoundingClientRect();
+    if (!b.height || !l.height) return null;
+    return l.bottom + scroller.scrollTop - b.top;
+  };
+  function reqOverflow() {
+    const form = document.getElementById('req-form');
+    if (!form || form.style.display === 'none') return null;
+    const step = form.getAttribute('data-mobile-step') || '1';
+    return gap(document.querySelector(step === '1' ? '.mobile-wizard-actions' : '.req-action-row'),
+      document.getElementById(step === '1' ? 'rsc-dates' : 'rsc-reason'), document.getElementById('req-view-body'));
+  }
+  function ntOverflow() {
+    const form = document.getElementById('nt-form-screen');
+    if (!form || form.style.display === 'none') return null;
+    return gap(document.getElementById('nt-submit-btn'), document.getElementById('nt-fs-reason'), document.querySelector('#v-notice .view-body'));
+  }
+  function fit(view, prefix, overflowFn) {
+    setLevel(view, prefix, 0);
+    if (!mq.matches || kbOpen()) return;
+    let n = 0, o = overflowFn();
+    while (o !== null && o > 0 && n < MAXL) { n++; setLevel(view, prefix, n); o = overflowFn(); }
+  }
+  function run() {
+    if (busy) { queued = true; return; }
+    busy = true;
+    try {
+      const rv = document.getElementById('v-request'); if (rv) fit(rv, 'fit-', reqOverflow);
+      const nv = document.getElementById('v-notice'); if (nv) fit(nv, 'ntfit-', ntOverflow);
+    } finally { busy = false; }
+    if (queued) { queued = false; schedule(); }
+  }
+  // next frame, or 60 ms later if the page is not drawing (hidden tab): whichever comes first
+  function schedule() {
+    if (raf) return;
+    raf = 1;
+    const go = () => { if (!raf) return; raf = 0; run(); };
+    requestAnimationFrame(go);
+    setTimeout(go, 60);
+  }
+  window.fitFormSchedule = schedule;
+
+  // sizes of the scroll areas (screen size, keyboard) and of the content blocks (they grow when a notice appears)
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(schedule);
+    ['req-view-body', 'rsc-dates', 'rsc-type', 'rsc-reason', 'r-dpill', 'nt-form-screen'].forEach((id) => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    document.querySelectorAll('#req-form > *, #v-notice .view-body').forEach((el) => ro.observe(el));
+  }
+  // anything that changes inside the forms: text, show / hide, step
+  const watch = new MutationObserver(schedule);
+  ['req-form', 'nt-form-screen'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) watch.observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-mobile-step', 'class'] });
+  });
+  new MutationObserver(schedule).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('orientationchange', schedule);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', schedule);
+  if (document.fonts) document.fonts.addEventListener('loadingdone', schedule);
+  schedule();
+})();
