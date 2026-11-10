@@ -5887,3 +5887,24 @@ async function importLegacyData() {
   }
 }
 
+
+// Phone: the "Other" text box lives inside the Other row, so choosing Other does not move the layout.
+// Wider screens keep the original position (below the list).
+(function placeOtherInput() {
+  const inp = document.getElementById('rf-other-type');
+  const grid = document.getElementById('ltype-grid');
+  if (!inp || !grid) return;
+  const row = [...grid.querySelectorAll('.ltype-card')].find(l => l.querySelector('input[value="Other"]'));
+  if (!row) return;
+  const home = inp.previousElementSibling;
+  const mq = window.matchMedia('(max-width: 768px)');
+  const place = () => {
+    if (mq.matches) {
+      if (inp.parentElement !== row) row.insertBefore(inp, row.querySelector('input[type="radio"]'));
+    } else if (inp.parentElement === row && home) {
+      home.after(inp);
+    }
+  };
+  place();
+  if (mq.addEventListener) mq.addEventListener('change', place); else mq.addListener(place);
+})();

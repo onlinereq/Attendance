@@ -7142,15 +7142,21 @@ body {
 
   #stage .ltype-card:has(input:checked) .ltc-txt { color: var(--red); }
 
-  #stage #rf-other-type {
-    width: 100%;
+  /* "Other": the text box takes the place of the label inside its own row, so nothing moves */
+  #stage .ltype-card #rf-other-type {
+    order: 1;
+    flex: 1;
+    min-width: 0;
     box-sizing: border-box;
-    height: 48px;
-    margin: 10px 0 4px;
-    padding: 0 14px;
+    height: 30px;
+    margin: 0 !important;
+    padding: 0 10px;
     font-size: 16px;
-    border-radius: 10px;
+    line-height: 1;
+    border-radius: 8px;
   }
+
+  #stage .ltype-card:has(input[value="Other"]:checked) .ltc-txt { display: none; }
 
   /* calendar: always one page, rows shrink to the screen height */
   #stage #cal-modal .cal-modal-box {
