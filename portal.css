@@ -7066,5 +7066,22 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
 
   html body .rv-hl { color: var(--txt) !important; }
 
+  /* ── Login / gate cards: equal padding, centred, one icon size ── */
+  .gate, .loginbox { width: 100%; max-width: 420px; margin: 48px auto !important; padding: 32px !important; box-sizing: border-box; }
+  .gate-icon, .login-icon { width: 56px; height: 56px; margin: 0 auto 16px !important; border-radius: var(--radius); }
+  .gate-icon svg, .login-icon svg { width: 24px; height: 24px; }
+  .gate-title, .ltitle { font-size: 22px; margin-bottom: 6px; }
+  .gate-sub, .lsub { margin-bottom: 24px; }
+  .gate [id$="-gate-actions"], .gate .gate-input { width: 100%; }
+  .gate [id$="-gate-actions"] { gap: 12px !important; }
+  .gate-input input, .gate input[style], .lform input { height: 40px !important; padding: 0 14px !important; border-radius: var(--radius-sm) !important; border: 1px solid var(--border) !important; font-size: 14px !important; font-weight: 500 !important; background: var(--surface2) !important; box-sizing: border-box; width: 100%; }
+  .gate-input input:focus, .lform input:focus { border-color: var(--txt2) !important; background: var(--surface) !important; }
+  .gate .btn, .gate [id$="-gate-btn"], #hr-lbtn { height: 40px !important; min-height: 40px; width: 100%; margin: 0 !important; font-size: 14px !important; }
+  .lform { gap: 16px; }
+  .lform .field { display: flex; flex-direction: column; gap: 6px; }
+  .lform .field label { margin: 0; }
+  .lerr { min-height: 18px; margin: -4px 0 0; }
+  .idfb { min-height: 18px; margin-top: 2px; }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 }
