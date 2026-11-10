@@ -919,7 +919,7 @@ function rReset() {
   setRStep(1); setReqBar(0); closeReviewModal(); _isSubmitting = false; _pendingPayload = null; clearFieldErr();
 }
 function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
-function setRStep(n) { for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
+function setRStep(n) { const _vr = document.getElementById('v-request'); if (_vr) { const _rf = document.getElementById('req-form'); _vr.classList.toggle('rq-form', (n === 2 || n === 3) && !!_rf && _rf.style.display !== 'none'); } for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
   const idEl = document.getElementById('r-id-input');
@@ -937,15 +937,16 @@ async function rVerify() {
   const btn = document.getElementById('r-gate-btn');
   const sp = document.getElementById('r-gate-sp');
   const txt = document.getElementById('r-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('r-gate', 'r-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('r-gate', 'r-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -1502,14 +1503,72 @@ function rShowPreview() {
   ];
 
   document.getElementById('rpr-table').innerHTML = _rows.map(([k, v, h]) => `<tr class="${h ? 'rv-hl-row' : ''}"><td>${k}</td><td class="${h ? 'rv-hl' : ''}">${v}</td></tr>`).join('');
+  const _rvNote = document.getElementById('rv-note');
+  if (_rvNote) _rvNote.textContent = LANG === 'kh' ? 'សូមបោះពុម្ពទម្រង់ ចុះហត្ថលេខាដោយខ្លួនឯង រួចនាំយកទៅថ្នាក់គ្រប់គ្រងដើម្បីអនុម័ត។' : 'Please print the form, sign it yourself, and bring it to management for approval.';
+  const _slLbl = document.getElementById('r-slide-lbl');
+  if (_slLbl) _slLbl.textContent = LANG === 'kh' ? 'អូសដើម្បីបញ្ជាក់' : 'Slide to confirm';
   const rm = document.getElementById('review-modal');
   if (rm) rm.style.display = 'flex';
+  slideConfirmReset();
   setRStep(3);
 }
 
 function closeReviewModal() {
   const rm = document.getElementById('review-modal'); if (rm) rm.style.display = 'none'; setRStep(2);
+  slideConfirmReset();
 }
+
+// ── SLIDE TO CONFIRM (phone review sheet) ───────────────────────
+// Knob follows the finger; released before the end it rolls back, at the end it submits.
+function slideConfirmReset() {
+  const el = document.getElementById('r-slide'); if (!el) return;
+  el.classList.remove('busy', 'drag');
+  const knob = el.querySelector('.slide-cf-knob'), fill = el.querySelector('.slide-cf-fill');
+  knob.style.transform = ''; fill.style.width = ''; el.style.setProperty('--p', 0);
+}
+(function initSlideConfirm() {
+  const el = document.getElementById('r-slide'); if (!el) return;
+  const knob = el.querySelector('.slide-cf-knob'), fill = el.querySelector('.slide-cf-fill');
+  let startX = 0, pos = 0, max = 0, active = false;
+  const move = (x) => {
+    pos = Math.max(0, Math.min(max, x));
+    knob.style.transform = 'translateX(' + pos + 'px)';
+    fill.style.width = pos > 0 ? (pos + knob.offsetWidth + 4) + 'px' : '0px';
+    el.style.setProperty('--p', max ? (pos / max).toFixed(3) : 0);
+  };
+  const finish = () => {
+    el.classList.add('busy');
+    knob.style.transform = 'translateX(' + max + 'px)';
+    fill.style.width = '100%';
+    el.style.setProperty('--p', 1);
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) { } }
+    const lbl = document.getElementById('r-slide-lbl');
+    if (lbl) lbl.textContent = LANG === 'kh' ? 'កំពុងផ្ញើ...' : 'Sending...';
+    rConfirm();
+  };
+  knob.addEventListener('pointerdown', (e) => {
+    if (el.classList.contains('busy')) return;
+    active = true; startX = e.clientX; pos = 0;
+    max = el.clientWidth - knob.offsetWidth - 8;
+    el.classList.add('drag');
+    try { knob.setPointerCapture(e.pointerId); } catch (err) { }
+    e.preventDefault();
+  });
+  knob.addEventListener('pointermove', (e) => { if (active) move(e.clientX - startX); });
+  const end = () => {
+    if (!active) return;
+    active = false; el.classList.remove('drag');
+    if (max > 0 && pos >= max * 0.92) finish();
+    else { move(0); }
+  };
+  knob.addEventListener('pointerup', end);
+  knob.addEventListener('pointercancel', end);
+  el.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') && !el.classList.contains('busy')) {
+      e.preventDefault(); max = el.clientWidth - knob.offsetWidth - 8; finish();
+    }
+  });
+})();
 function rBackForm() { closeReviewModal(); }
 async function rConfirm() {
   if (_isSubmitting) return;
@@ -1570,8 +1629,8 @@ async function rConfirm() {
   }
   _pendingPayload = { payload, from, to, days: String(days) };
   btn.disabled = false; sp.style.display = 'none'; txt.textContent = tx('conTxt');
-  const m = document.getElementById('confirm-modal');
-  m.classList.add('open'); m.style.display = 'flex';
+  // The "read before printing" page is gone: the reminder now sits on the review sheet.
+  doConfirm();
 }
 let _lastSubmit = null;
 let _isSubmitting = false;

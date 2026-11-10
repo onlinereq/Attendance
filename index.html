@@ -1241,11 +1241,11 @@
           <div class="gate-sub" id="rg-sub">Enter your Full Name</div>
           <div id="r-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') rVerify()"
+              <input type="text" id="r-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') rVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') rVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="r-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') rVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="rVerify()" id="r-gate-btn">
               <div class="spinner" id="r-gate-sp"></div><span id="r-gate-txt">Continue</span>
@@ -1646,9 +1646,20 @@
           </div>
           <div style="padding:14px 20px;flex:1;overflow-y:auto">
             <table class="preview-tbl" id="rpr-table" style="background:transparent;width:100%"></table>
+            <div class="rv-note" id="rv-note"></div>
           </div>
-          <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-            <button class="btn btn-g" style="flex:1" onclick="closeReviewModal()">← Edit</button>
+          <div class="rv-foot" style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+            <div class="slide-cf" id="r-slide" role="button" tabindex="0" aria-label="Slide to confirm">
+              <div class="slide-cf-fill"></div>
+              <div class="slide-cf-lbl" id="r-slide-lbl">Slide to confirm</div>
+              <div class="slide-cf-knob">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 6 15 12 9 18" />
+                </svg>
+              </div>
+            </div>
+            <button class="btn btn-g rv-edit" style="flex:1" onclick="closeReviewModal()">← Edit</button>
             <button class="btn btn-p" style="flex:2" onclick="rConfirm()" id="r-confirm-btn">
               <div class="spinner" id="r-con-sp"></div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
