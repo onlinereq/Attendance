@@ -7014,3 +7014,244 @@ body {
     accent-color: var(--red);
   }
 }
+
+/* ── PHONE UI round 2: equal buttons, one-page calendar, leave type list ── */
+@media (max-width: 768px) {
+
+  /* form grid sizes rows to their content (was stretching and overlapping sections) */
+  #stage #req-form {
+    align-content: start;
+    grid-template-rows: none !important;
+    grid-auto-rows: max-content;
+  }
+
+  /* Back and Next / Preview are the same size */
+  #stage .mobile-wizard-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0 0 !important;
+    padding: 4px 0 12px !important;
+  }
+
+  #stage .mobile-wizard-actions .btn {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0;
+    height: 52px;
+    margin: 0 !important;
+    padding: 0 8px;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: clamp(12.5px, 4vw, 15px);
+  }
+
+  /* step 2 buttons (Back / Preview & Continue) match too */
+  #stage #req-form[data-mobile-step="2"] .req-action-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 14px 0 0 !important;
+    padding: 4px 0 12px !important;
+  }
+
+  #stage #req-form[data-mobile-step="2"] .req-action-row .btn {
+    display: flex;
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0;
+    height: 52px;
+    margin: 0 !important;
+    padding: 0 8px;
+    justify-content: center;
+    white-space: nowrap;
+    letter-spacing: 0 !important;
+    font-size: clamp(12px, 3.9vw, 15px) !important;
+  }
+
+  /* half-day pills: readable text on the red selected pill */
+  #stage .hd-pill-opt:has(input:checked),
+  #stage .hd-pill-opt:has(input:checked) span,
+  #stage .hd-pill-opt.sel,
+  #stage .hd-pill-opt.sel span {
+    color: #fff !important;
+    font-weight: 700;
+  }
+
+  #stage .hd-header {
+    background: none !important;
+    padding: 0 !important;
+    color: var(--txt2) !important;
+  }
+
+  /* leave types: clean list, radio on the right */
+  #stage #ltype-grid {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0 !important;
+    border-top: 1px solid var(--border);
+  }
+
+  #stage .ltype-card {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    padding: 0 4px !important;
+    gap: 0;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+    border-radius: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    cursor: pointer;
+  }
+
+  #stage .ltype-card .ltc-txt {
+    order: 1;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--txt);
+    white-space: normal;
+  }
+
+  #stage .ltype-card input[type="radio"] {
+    order: 2;
+    -webkit-appearance: none;
+    appearance: none;
+    flex: none;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 2px 0 12px !important;
+    padding: 0 !important;
+    border: 2px solid var(--border2) !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  #stage .ltype-card input[type="radio"]:checked {
+    border-color: var(--red) !important;
+    background: radial-gradient(circle, var(--red) 0 44%, transparent 48%), #fff !important;
+  }
+
+  #stage .ltype-card.sel,
+  #stage .ltype-card:has(input:checked) { background: none !important; }
+
+  #stage .ltype-card:has(input:checked) .ltc-txt { color: var(--red); }
+
+  #stage #rf-other-type {
+    width: 100%;
+    box-sizing: border-box;
+    height: 48px;
+    margin: 10px 0 4px;
+    padding: 0 14px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* calendar: always one page, rows shrink to the screen height */
+  #stage #cal-modal .cal-modal-box {
+    height: min(100%, 660px);
+  }
+
+  #stage #cal-modal .cal-modal-box > div:first-child { padding: 6px 6px 2px 16px; }
+
+  #stage #cal-modal .modal-close { width: 40px; height: 40px; }
+
+  #stage #cal-modal #built-in-calendar {
+    display: flex !important;
+    flex-direction: column;
+    overflow: hidden !important;
+    padding: 0 14px 6px;
+  }
+
+  #stage #cal-modal #built-in-calendar > * { flex: none; }
+
+  #stage #cal-modal .cal-target-tabs { margin: 0 0 4px !important; padding: 6px !important; gap: 6px !important; }
+
+  #stage #cal-modal .cal-tab-btn { padding: 6px 10px !important; }
+
+  #stage #cal-modal .cal-header-bar { margin: 0 !important; padding: 0 !important; }
+
+  #stage #cal-modal .cal-title-wrap {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100%;
+    margin: 4px 0 !important;
+  }
+
+  #stage #cal-modal .cal-month-title { font-size: 16px; margin: 0; }
+
+  #stage #cal-modal .cal-title-wrap .cal-nav-btn {
+    width: 100% !important;
+    min-width: 0;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 4px;
+    font-size: 14px;
+    justify-content: center;
+  }
+
+  #stage #cal-modal .cal-legend { margin: 2px 0 4px !important; }
+
+  #stage #cal-modal .cal-hdr-day { padding: 2px 0 !important; font-size: 11px !important; }
+
+  #stage #cal-modal .cal-grid-days {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    max-height: 340px;
+    display: grid !important;
+    grid-template-rows: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  #stage #cal-modal .cal-cell {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+    overflow: hidden;
+  }
+
+  #stage #cal-modal .cal-wknd-badge { font-size: 8px !important; padding: 0 3px !important; line-height: 1.3; }
+
+  #stage #cal-modal .cal-summary-bar { margin-top: 6px !important; padding: 6px 10px !important; }
+
+  #stage #cal-modal .cal-modal-box .modal-actions {
+    grid-template-columns: 1fr 1fr !important;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  }
+
+  #stage #cal-modal .cal-modal-box .modal-actions button {
+    width: 100% !important;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 768px) and (max-height: 640px) {
+  #stage #cal-modal .cal-legend { display: none !important; }
+}
+
+@media (max-width: 768px) and (max-height: 560px) {
+  #stage #cal-modal .cal-summary-bar,
+  #stage #cal-modal .cal-wknd-badge { display: none !important; }
+
+  #stage #cal-modal .cal-title-wrap .cal-nav-btn { height: 40px; min-height: 40px; }
+  #stage #cal-modal .cal-tab-btn { padding: 4px 8px !important; }
+  #stage #cal-modal .cal-month-title { font-size: 15px; }
+  #stage #cal-modal .cal-modal-box .modal-actions { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  #stage #cal-modal .cal-modal-box .modal-actions button { min-height: 44px; }
+}
+
+@media (max-width: 360px) {
+  #stage #cal-modal .cal-tab-label { font-size: 9px !important; letter-spacing: .03em !important; white-space: nowrap; }
+}
