@@ -7445,8 +7445,9 @@ body {
   }
 
   #stage .date-wrap {
+    --dh: 52px;
     position: relative;
-    min-height: 52px;
+    min-height: var(--dh);
     background: var(--surface2);
     border: 1.5px solid var(--border);
     border-radius: 12px;
@@ -7462,9 +7463,9 @@ body {
     position: absolute;
     right: 4.5px;
     top: 50%;
-    width: 40px;
-    height: 40px;
-    margin: -20px 0 0 0;
+    width: calc(var(--dh) - 12px);
+    height: calc(var(--dh) - 12px);
+    margin: calc((var(--dh) - 12px) / -2) 0 0 0;
     transform: none !important;
     padding: 0;
     display: flex;
@@ -7486,7 +7487,7 @@ body {
 
   #stage .date-wrap .dseg input {
     flex: none;
-    height: 40px;
+    height: calc(var(--dh) - 12px);
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
@@ -7791,3 +7792,107 @@ body {
 /* Khmer half-day buttons: the word after "សម្រាក" is bold */
 html.lang-kh .hd-pill-opt span { font-weight: 700; }
 html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-weight: 400; }
+
+/* ── PHONE: the request form scales to the screen height (no cut-off on small phones) ── */
+@media (max-width: 768px) {
+
+  /* two different days: First day and Last day side by side, each with 3 stacked choices */
+  #stage #hd-multi[style*="display: block"] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+  }
+
+  #stage #hd-multi > .hd-row-head:nth-child(1) { grid-area: 1 / 1; }
+  #stage #hd-multi > .hd-pill-grid:nth-child(2) { grid-area: 2 / 1; }
+  #stage #hd-multi > .hd-row-head:nth-child(3) { grid-area: 1 / 2; }
+  #stage #hd-multi > .hd-pill-grid:nth-child(4) { grid-area: 2 / 2; }
+
+  #stage #hd-multi .hd-pill-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
+
+  #stage #hd-multi .hd-pill-grid .hd-pill-opt:first-child { grid-column: auto; }
+
+  #stage #hd-multi .hd-row-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 6px;
+    margin: 8px 0 6px !important;
+    font-size: 13px !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  #stage #hd-multi .hd-row-head > * { font-size: inherit !important; letter-spacing: 0 !important; }
+
+  #stage #hd-multi .hd-pill-opt { font-size: 13px; padding: 0 4px; }
+
+  /* the bar height follows the button height */
+  #stage #v-request.rq-form .view-body { padding-bottom: calc(var(--bar-btn, 52px) + 48px) !important; }
+}
+
+/* shorter screens: tighter spacing, smaller controls */
+@media (max-width: 768px) and (max-height: 700px) {
+  #stage { --bar-btn: 46px; }
+  #stage #v-request.rq-form .view-body { padding-top: 10px; }
+  #stage .req-sidebar .spc-name,
+  #stage .req-sidebar .spc-id-badge { font-size: 16px !important; }
+  #stage .rdpill-card { padding: 6px 0 !important; }
+  #stage .req-section-card { padding: 4px 0 !important; }
+  #stage .req-section-card .rsc-header { margin: 0 0 6px !important; }
+  #stage .date-wrap { --dh: 46px; }
+  #stage .hd-pill-grid .hd-pill-opt { min-height: 42px; }
+  #stage .mobile-wizard-actions .btn,
+  #stage #req-form[data-mobile-step="2"] .req-action-row .btn { height: var(--bar-btn) !important; }
+  #stage .mobile-wizard-actions,
+  #stage #req-form[data-mobile-step="2"] .req-action-row { padding-top: 12px !important; }
+  #stage #ltype-grid .ltype-card { min-height: 40px; }
+  #stage .req-textarea { min-height: 84px !important; }
+}
+
+@media (max-width: 768px) and (max-height: 620px) {
+  #stage { --bar-btn: 44px; }
+  #stage .req-section-card .rsc-sub { display: none; }
+  #stage .req-section-card .rsc-title { font-size: 14px !important; }
+  #stage .date-wrap { --dh: 42px; }
+  #stage .date-wrap .dseg input { font-size: 16px !important; }
+  #stage #f-rf-from > label,
+  #stage #f-rf-to > label,
+  #stage #hd-section-label,
+  #stage .hd-header { font-size: 13px !important; }
+  #stage .hd-pill-grid .hd-pill-opt { min-height: 38px; }
+  #stage .hd-pill-grid { gap: 6px !important; }
+  #stage #ltype-grid .ltype-card { min-height: 36px; }
+  #stage #ltype-grid .ltc-txt { font-size: 14px !important; line-height: 1.2; }
+  #stage #ltype-grid .ltype-card { height: 34px; min-height: 0 !important; }
+  #stage #req-form { row-gap: 4px; }
+  #stage .req-textarea { height: 64px !important; min-height: 0 !important; }
+}
+
+@media (max-width: 768px) and (max-height: 560px) {
+  #stage { --bar-btn: 42px; }
+  #stage .rdpill-card { padding: 4px 0 !important; }
+  #stage .rdpill-card .rdpill-sub { display: none; }
+  #stage .date-wrap { --dh: 38px; }
+  #stage .hd-pill-grid .hd-pill-opt { min-height: 34px; }
+  #stage #ltype-grid .ltype-card { min-height: 32px; }
+  #stage #f-rf-from > label,
+  #stage #f-rf-to > label { margin-bottom: 2px !important; }
+  #stage .req-section-card .rsc-header { display: none; }
+  #stage #ltype-grid .ltype-card { height: 30px; }
+  #stage .req-textarea { height: 52px !important; min-height: 0 !important; }
+}
+
+@media (max-width: 768px) and (max-height: 500px) {
+  #stage { --bar-btn: 40px; }
+  #stage .req-sidebar .spc-name,
+  #stage .req-sidebar .spc-id-badge { font-size: 15px !important; }
+  #stage .rdpill-card { padding: 2px 0 !important; }
+  #stage .date-wrap { --dh: 34px; }
+  #stage .hd-pill-grid .hd-pill-opt { min-height: 30px; }
+  #stage #hd-multi .hd-row-head { margin: 4px 0 3px !important; }
+  #stage #halfday-row .hd-header { display: none; }
+  #stage .halfday-panel { margin-top: 6px !important; }
+  #stage #ltype-grid .ltype-card { height: 28px; }
+}
