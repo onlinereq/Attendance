@@ -6063,8 +6063,8 @@ const KH_UI_MAP = {
   'Leave Dates & Duration': 'កាលបរិច្ឆេទ និងរយៈពេលច្បាប់',
   'Select your start and return dates': 'ជ្រើសរើសថ្ងៃចាប់ផ្តើម និងថ្ងៃត្រឡប់មកវិញ',
   'From Date': 'ចាប់ពីថ្ងៃ', 'To Date': 'ដល់ថ្ងៃ',
-  'Half Day Adjustment': 'កែសម្រួលកន្លះថ្ងៃ', 'Full Day': 'ពេញមួយថ្ងៃ', 'Morning Only': 'ព្រឹកតែប៉ុណ្ណោះ', 'Evening Only': 'ល្ងាចតែប៉ុណ្ណោះ',
-  'Morning': 'ព្រឹក', 'Evening': 'ល្ងាច', 'First Day:': 'ថ្ងៃដំបូង:', 'Last Day:': 'ថ្ងៃចុងក្រោយ:',
+  'Half Day Adjustment': 'កែសម្រួលកន្លះថ្ងៃ', 'Full Day': 'មួយថ្ងៃពេញ', 'Morning Only': 'តែពេលព្រឹក', 'Evening Only': 'តែពេលរសៀល',
+  'Morning': 'តែពេលព្រឹក', 'Evening': 'តែពេលរសៀល', 'First Day:': 'ថ្ងៃដំបូង:', 'Last Day:': 'ថ្ងៃចុងក្រោយ:',
   'Choose Leave Type': 'ជ្រើសរើសប្រភេទច្បាប់', 'Select the category for your request': 'ជ្រើសរើសប្រភេទសម្រាប់ពាក្យសុំរបស់អ្នក',
   'Reason / Description': 'មូលហេតុ / ការពិពណ៌នា', 'Brief note for HR and management review': 'កំណត់ចំណាំខ្លីសម្រាប់ HR និងថ្នាក់គ្រប់គ្រងពិនិត្យ',
   'Annual Leave': 'ច្បាប់ប្រចាំឆ្នាំ', 'Sick Leave': 'ច្បាប់ឈឺ', 'Emergency Leave': 'ច្បាប់បន្ទាន់', 'Special Leave': 'ច្បាប់ពិសេស',
@@ -6104,14 +6104,14 @@ const KH_UI_PLACEHOLDERS = {
   'DD': 'ថ្ងៃ', 'Mon': 'ខែ', 'YYYY': 'ឆ្នាំ'
 };
 const KH_UI_MONTHS = { January: 'មករា', February: 'កុម្ភៈ', March: 'មីនា', April: 'មេសា', May: 'ឧសភា', June: 'មិថុនា', July: 'កក្កដា', August: 'សីហា', September: 'កញ្ញា', October: 'តុលា', November: 'វិច្ឆិកា', December: 'ធ្នូ' };
-const KH_UI_TOKENS = [['First:', 'ថ្ងៃដំបូង:'], ['Last:', 'ថ្ងៃចុងក្រោយ:'], ['working days', 'ថ្ងៃធ្វើការ'], ['working day', 'ថ្ងៃធ្វើការ'], ['Morning', 'ព្រឹក'], ['Evening', 'ល្ងាច'], ['Only', 'ប៉ុណ្ណោះ']];
+const KH_UI_TOKENS = [['First:', 'ថ្ងៃដំបូង:'], ['Last:', 'ថ្ងៃចុងក្រោយ:'], ['working days', 'ថ្ងៃធ្វើការ'], ['working day', 'ថ្ងៃធ្វើការ'], ['Morning', 'ព្រឹក'], ['Evening', 'រសៀល'], ['Only', 'ប៉ុណ្ណោះ']];
 
 function khUIRule(t) {
   let m;
   if ((m = t.match(/^([\d.]+) Working Days?$/))) return m[1] + ' ថ្ងៃធ្វើការ';
   if ((m = t.match(/^([\d.]+) days?$/))) return m[1] + ' ថ្ងៃ';
   if ((m = t.match(/^(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/))) return KH_UI_MONTHS[m[1]] + ' ' + m[2];
-  if ((m = t.match(/^Half day (Morning|Evening) · (.+)$/))) return 'កន្លះថ្ងៃ' + (m[1] === 'Morning' ? 'ព្រឹក' : 'ល្ងាច') + ' · ' + m[2];
+  if ((m = t.match(/^Half day (Morning|Evening) · (.+)$/))) return 'កន្លះថ្ងៃ' + (m[1] === 'Morning' ? 'ព្រឹក' : 'រសៀល') + ' · ' + m[2];
   if ((m = t.match(/^(?:([\d]+) hrs?)? ?(?:([\d]+) mins?)? (late|early)$/)) && (m[1] || m[2])) {
     return (m[3] === 'late' ? 'យឺត' : 'មុន') + (m[1] ? ' ' + m[1] + ' ម៉ោង' : '') + (m[2] ? ' ' + m[2] + ' នាទី' : '');
   }
@@ -6176,6 +6176,7 @@ function khUIRestore() {
 }
 
 function khUIRefresh() {
+  document.documentElement.classList.toggle('lang-kh', LANG === 'kh');
   if (_khObserver) { _khObserver.disconnect(); _khObserver = null; }
   khUIRestore();
   if (LANG !== 'kh') return;

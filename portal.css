@@ -7109,10 +7109,15 @@ body {
     justify-content: center;
   }
 
-  #stage .hd-header {
+  #stage .hd-header,
+  #stage #hd-section-label {
     background: none !important;
     padding: 0 !important;
     color: var(--txt2) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
   }
 
   /* leave types: clean list, radio on the right */
@@ -7772,3 +7777,7 @@ body {
 
   #stage #st-dash .card .s-num { display: none; }
 }
+
+/* Khmer half-day buttons: the word after "សម្រាក" is bold */
+html.lang-kh .hd-pill-opt span { font-weight: 700; }
+html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-weight: 400; }
