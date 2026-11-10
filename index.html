@@ -50,40 +50,6 @@
   <link rel="stylesheet" href="portal.css?v=2.4.1">
   <style>
     /* ── iOS Drum Picker ─────────────────────────────────────── */
-    .drum-col {
-      width: 72px;
-      height: 210px;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      position: relative
-    }
-
-    .drum-col::-webkit-scrollbar {
-      display: none
-    }
-
-    .drum-item {
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 19px;
-      font-weight: 400;
-      color: var(--txt3);
-      scroll-snap-align: center;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: color .12s, font-size .12s, font-weight .12s
-    }
-
-    .drum-item.drum-sel {
-      color: var(--txt);
-      font-size: 23px;
-      font-weight: 700
-    }
 
     /* ── Notice Type Cards (Pure Icon Minimalist) ──────────────────────────────────── */
     .nt-type-card {
@@ -134,12 +100,6 @@
       letter-spacing: -0.01em;
     }
 
-    .nt-card-sub {
-      font-size: 12px;
-      color: var(--txt3);
-      line-height: 1.4
-    }
-
     /* ── Active type card highlight ─────────────────────────── */
     .nt-card-active {
       border-color: #00AEEF !important;
@@ -147,27 +107,6 @@
     }
 
     /* ── Staff Info Chip ────────────────────────────────────── */
-    .nt-info-chip {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 9px 16px;
-      font-size: 13px;
-      color: var(--txt2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 14px
-    }
-
-    .nt-ic-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #00AEEF;
-      flex-shrink: 0
-    }
 
     /* ── Time segment buttons (HH / MM) ─────────────────────── */
     .nt-time-seg {
@@ -216,29 +155,6 @@
     }
 
     /* ── Numpad buttons ─────────────────────────────────────── */
-    .nt-np-btn {
-      font-size: 26px;
-      font-weight: 500;
-      padding: 16px 0;
-      border: none;
-      border-radius: 14px;
-      background: var(--surface2);
-      color: var(--txt);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform .1s, background .1s;
-      width: 100%
-    }
-
-    .nt-np-btn:active {
-      transform: scale(.92);
-      background: var(--border)
-    }
-
-    .nt-np-fn {
-      font-size: 18px;
-      color: var(--txt2)
-    }
 
     /* ── Home cards — mobile single column ──────────────────── */
     @media(max-width:500px) {
@@ -2844,36 +2760,7 @@
     </div>
   </div>
 
-  <div id="nt-numpad-overlay" style="display:none;position:fixed;inset:0;z-index:9999" onclick="ntNumpadClose()">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
-    <div
-      style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:24px 24px 0 0;padding:22px 24px max(32px,env(safe-area-inset-bottom));max-width:480px;margin:0 auto;box-sizing:border-box"
-      onclick="event.stopPropagation()">
-      <div style="width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 18px"></div>
-      <div
-        style="text-align:center;font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px"
-        id="nt-numpad-label">Hour</div>
-      <div
-        style="text-align:center;font-size:56px;font-weight:800;color:var(--txt);margin-bottom:20px;letter-spacing:8px;font-variant-numeric:tabular-nums;min-height:66px;line-height:1"
-        id="nt-numpad-display">--</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
-        <button class="nt-np-btn" onclick="ntNumpadKey('1')">1</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('2')">2</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('3')">3</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('4')">4</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('5')">5</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('6')">6</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('7')">7</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('8')">8</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('9')">9</button>
-        <button class="nt-np-btn nt-np-fn" onclick="ntNumpadClear()">C</button>
-        <button class="nt-np-btn" onclick="ntNumpadKey('0')">0</button>
-        <button class="nt-np-btn nt-np-fn" onclick="ntNumpadBackspace()">⌫</button>
-      </div>
-      <button onclick="ntNumpadConfirm()"
-        style="width:100%;padding:15px;font-size:16px;font-weight:700;background:#00AEEF;color:#fff;border:none;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">Done</button>
-    </div>
-  </div>
+
 
   <div id="toast"></div>
 

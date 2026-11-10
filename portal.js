@@ -79,7 +79,6 @@ function applyTheme() {
     if (typeof window.Telegram.WebApp.setBackgroundColor === 'function') window.Telegram.WebApp.setBackgroundColor('#f7f6f2');
   }
 }
-function toggleTheme() { }
 applyTheme();
 
 // ── DEEP LINK ─────────────────────────────────────────────────────
@@ -229,26 +228,9 @@ document.querySelectorAll('.lb[data-lang="' + LANG + '"]').forEach(b => b.classL
 function highlightType(input) {
   document.querySelectorAll('.topt').forEach(l => l.classList.remove('sel'));
   if (input.checked) input.closest('.topt').classList.add('sel');
-  if (typeof tourNotifyAction === 'function') tourNotifyAction('type');
 }
 
 // ── SYNC ────────────────────────────────────────
-async function syncAll() {
-  const btn = document.getElementById('sync-btn');
-  if (!btn) return;
-  btn.classList.add('spinning');
-  btn.disabled = true;
-  try {
-    await apiGet('ping');
-    if (hrUser) await hrLoadData();
-    if (stStaff) {
-      const res = await apiPost('getHistory', { empId: stStaff.empId, fullName: stStaff.name });
-      if (res.result === 'success') { stHistory = res.history || []; renderStDash(); }
-    }
-    toast('Synced', 'ok2');
-  } catch (e) { toast('Sync failed', 'bad'); }
-  finally { btn.classList.remove('spinning'); btn.disabled = false; }
-}
 
 // ── TOAST ────────────────────────────────────────
 let _tt;
@@ -258,7 +240,6 @@ function toast(msg, type = '') {
     else window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
   const el = document.getElementById('toast'); requestAnimationFrame(() => { el.textContent = msg; el.className = 'show ' + type; }); clearTimeout(_tt); _tt = setTimeout(() => requestAnimationFrame(() => { el.className = ''; }), 3400); }
-function clearFieldErr() { document.querySelectorAll('.field-err').forEach(el => el.classList.remove('field-err')); const g = document.getElementById('ltype-grid'); if (g) g.classList.remove('tgrid-err'); }
 
 // ── HOLIDAYS & UTILS ─────────────────────────────────────
 const DEFAULT_HOLIDAYS = [
@@ -347,53 +328,6 @@ function holidayDays(f, t) {
     c.setDate(c.getDate() + 1);
   }
   return n;
-}
-
-function getIsoDateVal(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return '';
-  const val = el.dataset.iso || el.value || '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  const parsed = new Date(val);
-  if (!isNaN(parsed.getTime())) {
-    const yyyy = parsed.getFullYear();
-    const mm = String(parsed.getMonth() + 1).padStart(2, '0');
-    const dd = String(parsed.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  return '';
-}
-
-function autoSetTo() {
-  const f = getIsoDateVal('rf-from');
-  if (!f) return;
-  const toEl = document.getElementById('rf-to');
-  const t = getIsoDateVal('rf-to');
-  if (!t || t < f) {
-    toEl.value = f;
-    toEl.dataset.iso = f;
-  }
-  if (isHoliday(f)) {
-    const hol = getHolidayObj(f);
-    const name = hol ? (LANG === 'kh' && hol.nameKh ? hol.nameKh : hol.name) : 'Official Holiday';
-    toast(LANG === 'kh' ? `កាលបរិច្ឆេទនេះចំថ្ងៃឈប់សម្រាកបុណ្យ (${name})។ ថ្ងៃបុណ្យនឹងត្រូវរំលងដោយស្វ័យប្រវត្តិ។` : `Selected date is an official holiday (${name}). Holidays are automatically skipped.`, '');
-  } else if (isWeekend(f)) {
-    toast(LANG === 'kh' ? 'កាលបរិច្ឆេទដែលបានជ្រើសរើសចំថ្ងៃចុងសប្តាហ៍ (សៅរ៍/អាទិត្យ)។ ចុងសប្តាហ៍នឹងត្រូវរំលងដោយស្វ័យប្រវត្តិ។' : 'Selected date is on a weekend (Saturday/Sunday). Weekends are automatically skipped.', '');
-  }
-  calcDays();
-  if (typeof renderBuiltInCalendar === 'function') renderBuiltInCalendar();
-}
-
-function validateToDate() {
-  const f = getIsoDateVal('rf-from');
-  const toEl = document.getElementById('rf-to');
-  const t = getIsoDateVal('rf-to');
-  if (f && t && t < f) {
-    toEl.value = f;
-    toEl.dataset.iso = f;
-  }
-  calcDays();
-  if (typeof renderBuiltInCalendar === 'function') renderBuiltInCalendar();
 }
 
 function hdGetFirst() {
@@ -504,23 +438,6 @@ async function signRequest(action) {
 }
 
 // ── SECURE API ──────────────────────────────────────────────
-async function apiGet(action, params = {}) {
-  if (isMock()) return { result: 'mock' };
-  const signed = await signRequest(action);
-  const fp = getFingerprint();
-  const TG_ACTIONS = ['submitRequest', 'sendLeavePdfToChat', 'sendPdfToChat', 'resendLeavePdf', 'getStaff', 'getAppInitData'];
-  const rawInitData = (isTG && TG_ACTIONS.includes(action)) ? window.Telegram.WebApp.initData : '';
-  const qsParams = { action, ...params, ...signed, fp };
-  if (rawInitData) {
-    qsParams.initData = rawInitData;
-    qsParams.tgData = rawInitData;
-  }
-  const qs = new URLSearchParams(qsParams).toString();
-  const res = await fetch(SCRIPT_URL + '?' + qs, { mode: 'cors', credentials: 'omit' });
-  const data = await res.json();
-  if (data.newToken) { hrToken = data.newToken; try { const _s = JSON.parse(sessionStorage.getItem('hr_sess') || '{}'); _s.token = data.newToken; sessionStorage.setItem('hr_sess', JSON.stringify(_s)); } catch (e) { } }
-  return data;
-}
 async function apiPost(action, payload = {}, retryCount = 1) {
   if (isMock()) return { result: 'success' };
   // Non-idempotent mutations must never auto-retry to prevent double-saving or duplicate notifications
@@ -582,8 +499,6 @@ async function apiHR(action, data = {}) {
 }
 
 // ── MOCK (sample data removed — uses real sheet) ─────────────────────────
-function mockStaff(id) { return { result: 'notfound' }; }
-function mockHist(id) { return { result: 'notfound' }; }
 
 // ── ROBUST CREDENTIAL & IDENTITY MATCHERS ─────────────────────────
 function matchEmpId(idA, idB) {
@@ -773,102 +688,11 @@ function getSavedUserDeviceMemory() {
   return null;
 }
 
-async function showStaffDropdown(inputId, listId) {
-  return;
-}
-
-async function onStaffInput(inputId, fbId, listId) {
-  return;
-
-  const filtered = staffList.filter(s => {
-    if (!query) return true;
-    const n = (s.name || '').toLowerCase();
-    const nk = (s.nameKh || '').toLowerCase();
-    const id = (s.empId || '').toLowerCase();
-    return n.includes(query) || nk.includes(query) || id.includes(query);
-  });
-
-  if (!filtered.length) {
-    listEl.style.display = 'none';
-    return;
-  }
-
-  listEl.innerHTML = filtered.map(s => {
-    const displayName = (LANG === 'kh' ? (s.nameKh || s.name) : s.name);
-    return `<div class="staff-dd-item" onclick="selectStaffItem('${inputId}', '${listId}', '${encodeURIComponent(JSON.stringify(s))}')">
-      <span>${displayName}</span>
-      <span class="sd-id">(${s.empId})</span>
-    </div>`;
-  }).join('');
-  listEl.style.display = 'block';
-}
-
 function updateStaffGateActions(inputId) {
   const inputEl = document.getElementById(inputId);
   if (inputEl) {
     inputEl.readOnly = false;
   }
-}
-
-function rClearSelectedStaff() {
-  const inputEl = document.getElementById('r-name-input');
-  const idEl = document.getElementById('r-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('r-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('r-name-input');
-}
-
-function ntClearSelectedStaff() {
-  const inputEl = document.getElementById('nt-name-input');
-  const idEl = document.getElementById('nt-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('nt-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('nt-name-input');
-}
-
-function stClearSelectedStaff() {
-  const inputEl = document.getElementById('st-name-input');
-  const idEl = document.getElementById('st-id-input');
-  if (inputEl) {
-    inputEl.value = '';
-    delete inputEl.dataset.selectedStaff;
-    inputEl.readOnly = false;
-    inputEl.focus();
-  }
-  if (idEl) idEl.value = '';
-  const fb = document.getElementById('st-idfb');
-  if (fb) fb.textContent = '';
-  updateStaffGateActions('st-name-input');
-}
-
-function selectStaffItem(inputId, listId, encodedStaff) {
-  try {
-    const staff = JSON.parse(decodeURIComponent(encodedStaff));
-    const inputEl = document.getElementById(inputId);
-    if (inputEl) {
-      inputEl.value = (LANG === 'kh' ? (staff.nameKh || staff.name) : staff.name);
-      inputEl.dataset.selectedStaff = JSON.stringify(staff);
-    }
-    const idInputEl = document.getElementById(inputId.replace('name', 'id'));
-    if (idInputEl) idInputEl.value = staff.empId || '';
-  } catch (e) { }
-  const listEl = document.getElementById(listId);
-  if (listEl) listEl.style.display = 'none';
-  updateStaffGateActions(inputId);
 }
 
 document.addEventListener('click', (e) => {
@@ -922,7 +746,6 @@ function rReset() {
   document.getElementById('r-idfb').textContent = '';
   setRStep(1); setReqBar(0); closeReviewModal(); _isSubmitting = false; _pendingPayload = null; clearFieldErr();
 }
-function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
 function setRStep(n) { if (window.fitFormSchedule) setTimeout(window.fitFormSchedule, 0); const _vr = document.getElementById('v-request'); if (_vr) { const _rf = document.getElementById('req-form'); _vr.classList.toggle('rq-form', (n === 2 || n === 3) && !!_rf && _rf.style.display !== 'none'); } for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
@@ -1604,7 +1427,6 @@ function slideConfirmReset() {
     }
   });
 })();
-function rBackForm() { closeReviewModal(); }
 async function rConfirm() {
   if (_isSubmitting) return;
   _isSubmitting = true;
@@ -3510,17 +3332,6 @@ function expDownload() {
 }
 
 let _reauthResolve = null;
-function requireReauth(msg) {
-  return new Promise(resolve => {
-    _reauthResolve = resolve;
-    document.getElementById('reauth-msg').textContent = msg || 'Re-enter your password to continue.';
-    document.getElementById('reauth-pass').value = '';
-    document.getElementById('reauth-err').textContent = '';
-    const m = document.getElementById('reauth-modal');
-    m.style.display = 'flex';
-    setTimeout(() => document.getElementById('reauth-pass').focus(), 50);
-  });
-}
 function cancelReauth() {
   document.getElementById('reauth-modal').style.display = 'none';
   if (_reauthResolve) { _reauthResolve(null); _reauthResolve = null; }
@@ -3554,12 +3365,6 @@ async function syncNow() {
   } finally {
     if (btn) btn.classList.remove('spinning');
   }
-}
-async function stRefreshHistory() {
-  try {
-    const res = isMock() ? mockHist(stStaff.empId) : await apiPost('getHistory', { empId: stStaff.empId, fullName: stStaff.name });
-    if (res.result === 'success') { stHistory = res.history || []; renderStDash(); }
-  } catch (e) { }
 }
 
 document.querySelectorAll('input[name=noticetype]').forEach(r => {
@@ -3613,87 +3418,6 @@ async function submitNotice() {
 let ntStaff = null;
 let _ntCurrentType = null; // 'late' | 'early'
 
-// ── iOS Drum Picker ───────────────────────────────────────────
-const DRUM_IH = 42; // item height px
-const DRUM_PAD = DRUM_IH * 2; // 2-item padding spacer at top/bottom
-
-function _ntBuildDrumCol(col, items) {
-  const pad = `<div style="height:${DRUM_PAD}px"></div>`;
-  col.innerHTML = pad + items.map((it, i) => `<div class="drum-item" data-v="${it.v}" data-i="${i}">${it.label}</div>`).join('') + pad;
-  col.addEventListener('scroll', () => _ntDrumHighlight(col), { passive: true });
-  _ntDrumHighlight(col);
-}
-function _ntDrumHighlight(col) {
-  const idx = Math.round(col.scrollTop / DRUM_IH);
-  col.querySelectorAll('.drum-item').forEach((el, i) => el.classList.toggle('drum-sel', i === idx));
-  if (col.id === 'drum-hh' || col.id === 'drum-mm' || col.id === 'drum-ap') {
-    const v = _ntDrumGet(col);
-    if (col.id === 'drum-hh') { const e = document.getElementById('nt-m-hh'); if (e) e.value = v; }
-    if (col.id === 'drum-mm') { const e = document.getElementById('nt-m-mm'); if (e) e.value = v; }
-    if (col.id === 'drum-ap') {
-      document.getElementById('nt-m-am')?.classList.toggle('on', v === 'AM');
-      document.getElementById('nt-m-pm')?.classList.toggle('on', v === 'PM');
-    }
-  }
-}
-function _ntDrumGet(col) {
-  const idx = Math.round(col.scrollTop / DRUM_IH);
-  return col.querySelectorAll('.drum-item')[idx]?.dataset.v || '';
-}
-function _ntDrumSet(col, val) {
-  const items = col.querySelectorAll('.drum-item');
-  const idx = Array.from(items).findIndex(x => x.dataset.v === val);
-  if (idx >= 0) { col.scrollTop = idx * DRUM_IH; }
-}
-function ntInitDrum() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const apCol = document.getElementById('drum-ap');
-  _ntBuildDrumCol(hhCol, Array.from({ length: 12 }, (_, i) => { const v = String(i + 1).padStart(2, '0'); return { v, label: v }; }));
-  _ntBuildDrumCol(mmCol, Array.from({ length: 60 }, (_, i) => { const v = String(i).padStart(2, '0'); return { v, label: v }; }));
-  _ntBuildDrumCol(apCol, [{ v: 'AM', label: 'AM' }, { v: 'PM', label: 'PM' }]);
-  const now = new Date();
-  const h = now.getHours(), m = now.getMinutes();
-  const isAM = h < 12;
-  const dispH = h % 12 || 12;
-  setTimeout(() => {
-    _ntDrumSet(hhCol, String(dispH).padStart(2, '0'));
-    _ntDrumSet(mmCol, String(m).padStart(2, '0'));
-    _ntDrumSet(apCol, isAM ? 'AM' : 'PM');
-    _ntDrumHighlight(hhCol); _ntDrumHighlight(mmCol); _ntDrumHighlight(apCol);
-    const mhh = document.getElementById('nt-m-hh');
-    const mmm = document.getElementById('nt-m-mm');
-    if (mhh) mhh.value = String(dispH).padStart(2, '0');
-    if (mmm) mmm.value = String(m).padStart(2, '0');
-    document.getElementById('nt-m-am')?.classList.toggle('on', isAM);
-    document.getElementById('nt-m-pm')?.classList.toggle('on', !isAM);
-  }, 50);
-}
-function ntGetDrumTime() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const apCol = document.getElementById('drum-ap');
-  const hh = _ntDrumGet(hhCol) || document.getElementById('nt-m-hh')?.value.trim() || '';
-  const mm = _ntDrumGet(mmCol) || document.getElementById('nt-m-mm')?.value.trim() || '';
-  const ap = _ntDrumGet(apCol) || (document.getElementById('nt-m-am')?.classList.contains('on') ? 'AM' : 'PM');
-  if (!hh || !mm) return '';
-  return String(parseInt(hh, 10)).padStart(2, '0') + ':' + String(parseInt(mm, 10)).padStart(2, '0') + ' ' + ap;
-}
-function ntManualToScroll() {
-  const hhCol = document.getElementById('drum-hh');
-  const mmCol = document.getElementById('drum-mm');
-  const hh = (document.getElementById('nt-m-hh')?.value || '').trim().padStart(2, '0');
-  const mm = (document.getElementById('nt-m-mm')?.value || '').trim().padStart(2, '0');
-  const hv = parseInt(hh, 10), mv = parseInt(mm, 10);
-  if (!isNaN(hv) && hv >= 1 && hv <= 12) _ntDrumSet(hhCol, String(hv).padStart(2, '0'));
-  if (!isNaN(mv) && mv >= 0 && mv <= 59) _ntDrumSet(mmCol, String(mv).padStart(2, '0'));
-}
-function ntManualAmPm(val) {
-  const apCol = document.getElementById('drum-ap');
-  _ntDrumSet(apCol, val);
-  document.getElementById('nt-m-am')?.classList.toggle('on', val === 'AM');
-  document.getElementById('nt-m-pm')?.classList.toggle('on', val === 'PM');
-}
 function ntOpenPicker(type) {
   _ntCurrentType = type;
   const lbl = document.getElementById('nt-fs-time-lbl');
@@ -3715,40 +3439,6 @@ function ntOpenPicker(type) {
   if (reason) reason.value = '';
   document.getElementById('nt-type-select').style.display = 'none';
   document.getElementById('nt-form-screen').style.display = 'block';
-}
-function ntClosePicker() {
-  document.getElementById('nt-form-screen').style.display = 'none';
-  document.getElementById('nt-type-select').style.display = 'none';
-  document.getElementById('nt-card-late')?.classList.remove('nt-card-active');
-  document.getElementById('nt-card-early')?.classList.remove('nt-card-active');
-}
-function ntTBInput(el, min, max, nextId) {
-  el.value = el.value.replace(/\D/g, '');
-  if (el.value.length === 2) {
-    let v = parseInt(el.value, 10);
-    if (v < min) el.value = String(min).padStart(2, '0');
-    else if (v > max) el.value = String(max).padStart(2, '0');
-    if (nextId) { const n = document.getElementById(nextId); if (n) { n.focus(); n.select(); } }
-  }
-}
-function ntTBKey(e, prevId, nextId) {
-  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-    e.preventDefault();
-    const el = e.target;
-    const isHH = el.id.endsWith('-hh');
-    const min = isHH ? 1 : 0, max = isHH ? 12 : 59;
-    let v = parseInt(el.value || '0', 10);
-    v = e.key === 'ArrowUp' ? Math.min(max, v + 1) : Math.max(min, v - 1);
-    el.value = String(v).padStart(2, '0');
-  }
-  if (e.key === 'Backspace' && e.target.value === '' && prevId) {
-    const p = document.getElementById(prevId); if (p) { p.focus(); p.select(); }
-  }
-}
-function ntSetAmPm(prefix, val) {
-  const am = document.getElementById(prefix + '-am');
-  const pm = document.getElementById(prefix + '-pm');
-  if (am && pm) { am.classList.toggle('on', val === 'AM'); pm.classList.toggle('on', val === 'PM'); }
 }
 function ntGetTime(prefix) {
   const hh = document.getElementById(prefix + '-hh');
@@ -3928,53 +3618,6 @@ function ntTimeKey(e, field, el) {
 }
 
 // ── Numpad ────────────────────────────────────────────────────
-let _ntNumpadField = null;
-let _ntNumpadValue = '';
-function ntNumpadOpen(field) {
-  _ntNumpadField = field;
-  _ntNumpadValue = '';
-  const lbl = document.getElementById('nt-numpad-label');
-  if (lbl) lbl.textContent = field === 'hh' ? 'Hour' : 'Minute';
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = '--';
-  const overlay = document.getElementById('nt-numpad-overlay');
-  if (overlay) { overlay.style.display = 'flex'; overlay.style.alignItems = 'flex-end'; overlay.style.justifyContent = 'center'; }
-}
-function ntNumpadKey(digit) {
-  if (_ntNumpadValue.length >= 2) return;
-  _ntNumpadValue += digit;
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = _ntNumpadValue.length === 1 ? '0' + _ntNumpadValue : _ntNumpadValue;
-}
-function ntNumpadBackspace() {
-  _ntNumpadValue = _ntNumpadValue.slice(0, -1);
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = _ntNumpadValue ? (_ntNumpadValue.length === 1 ? '0' + _ntNumpadValue : _ntNumpadValue) : '--';
-}
-function ntNumpadClear() {
-  _ntNumpadValue = '';
-  const disp = document.getElementById('nt-numpad-display');
-  if (disp) disp.textContent = '--';
-}
-function ntNumpadConfirm() {
-  if (!_ntNumpadValue) { ntNumpadClose(); return; }
-  const v = parseInt(_ntNumpadValue, 10);
-  if (_ntNumpadField === 'hh') {
-    if (v < 1 || v > 12) { toast('Hour must be 1–12', 'bad'); return; }
-    const el = document.getElementById('nt-fs-hh');
-    if (el) { el.value = String(v).padStart(2, '0'); el.textContent = el.value; }
-  } else {
-    if (v < 0 || v > 59) { toast('Minute must be 0–59', 'bad'); return; }
-    const el = document.getElementById('nt-fs-mm');
-    if (el) { el.value = String(v).padStart(2, '0'); el.textContent = el.value; }
-  }
-  ntNumpadClose();
-}
-function ntNumpadClose() {
-  const overlay = document.getElementById('nt-numpad-overlay');
-  if (overlay) overlay.style.display = 'none';
-  _ntNumpadField = null; _ntNumpadValue = '';
-}
 async function ntVerify() {
   const inputEl = document.getElementById('nt-name-input');
   const idEl = document.getElementById('nt-id-input');
@@ -4047,16 +3690,6 @@ async function ntSubmit() {
     document.getElementById('nt-form-screen').style.display = 'none';
     document.getElementById('nt-success').style.display = 'flex';
   } catch (e) { toast('Failed to send. Try again.', 'bad'); } finally { btn.disabled = false; sp.style.display = 'none'; }
-}
-
-function syncRefresh() {
-  const icon = document.getElementById('sync-icon');
-  if (icon) icon.style.animation = 'spin .7s linear infinite';
-  setTimeout(() => {
-    if (icon) icon.style.animation = '';
-    toast('Synced', 'ok2');
-  }, 1200);
-  if (hrUser && hrToken) { hrLoadData(); }
 }
 
 const WORK_START_MINS = 8 * 60 + 30;  // 08:30
@@ -4202,117 +3835,6 @@ function hrManualInit() {
   _manualStaff = null;
   ['me-result', 'me-type-sel', 'me-form-leave', 'me-form-notice'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   const eid = document.getElementById('me-empid'); if (eid) eid.value = '';
-}
-function meShowSection(section) {
-  document.getElementById('me-form-leave').style.display = section === 'leave' ? 'block' : 'none';
-  document.getElementById('me-form-notice').style.display = section === 'notice' ? 'block' : 'none';
-  const bl = document.getElementById('me-btn-leave'), bn = document.getElementById('me-btn-notice');
-  if (bl) { bl.style.background = section === 'leave' ? 'var(--red)' : 'var(--surface2)'; bl.style.color = section === 'leave' ? '#fff' : 'var(--txt2)'; bl.style.borderColor = section === 'leave' ? 'var(--red)' : 'var(--border)'; }
-  if (bn) { bn.style.background = section === 'notice' ? 'var(--red)' : 'var(--surface2)'; bn.style.color = section === 'notice' ? '#fff' : 'var(--txt2)'; bn.style.borderColor = section === 'notice' ? 'var(--red)' : 'var(--border)'; }
-}
-function meToggleReturn() {
-  const type = document.getElementById('me-ntype').value;
-  const lbl = document.getElementById('me-ntime-lbl');
-  const retRow = document.getElementById('me-return-row');
-  if (lbl) lbl.textContent = type === 'late' ? 'Arrival Time' : 'Departure Time';
-  if (retRow) retRow.style.display = type === 'late' ? 'block' : 'none';
-}
-async function hrManualLookup() {
-  const eid = document.getElementById('me-empid').value.trim();
-  if (!eid) { toast('Enter Employee ID', 'bad'); return; }
-  const res = await apiHR('getStaffList', {});
-  if (!res || !res.staff) { toast('Failed to load staff', 'bad'); return; }
-  const s = res.staff.find(x => String(x.empId).trim() === eid);
-  if (!s) { toast('Employee not found', 'bad'); return; }
-  _manualStaff = s;
-  document.getElementById('me-name').textContent = s.name;
-  document.getElementById('me-pos').textContent = s.position;
-  document.getElementById('me-result').style.display = 'block';
-  document.getElementById('me-type-sel').style.display = 'block';
-  document.getElementById('me-form-leave').style.display = 'none';
-  document.getElementById('me-form-notice').style.display = 'none';
-  ['me-from', 'me-to', 'me-reason'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('me-days').value = '1';
-  document.getElementById('me-ntime').value = '';
-  const _mnret = document.getElementById('me-nreturn'); if (_mnret) _mnret.value = '';
-  document.getElementById('me-nreason').value = '';
-  const _mndt = document.getElementById('me-ndate'); if (_mndt) _mndt.value = '';
-}
-function meCalcDays() {
-  const f = document.getElementById('me-from').value, t = document.getElementById('me-to').value;
-  if (!f || !t) return;
-  const d1 = new Date(f), d2 = new Date(t); if (isNaN(d1) || isNaN(d2) || d2 < d1) return;
-  let days = 0, cur = new Date(d1);
-  while (cur <= d2) { const dow = cur.getDay(); if (dow !== 0 && dow !== 6) days++; cur.setDate(cur.getDate() + 1); }
-  const el = document.getElementById('me-days'); if (el) el.value = days;
-}
-async function hrManualSubmit() {
-  if (!_manualStaff) { toast('No staff selected', 'bad'); return; }
-  const ltype = document.getElementById('me-ltype').value;
-  if (!ltype) { toast('Select a leave type', 'bad'); return; }
-  const dateFrom = document.getElementById('me-from').value;
-  if (!dateFrom) { toast('Select a start date', 'bad'); return; }
-  const dateTo = document.getElementById('me-to').value || dateFrom;
-  const days = parseFloat(document.getElementById('me-days').value) || 1;
-  const reason = document.getElementById('me-reason').value.trim();
-  const btn = document.getElementById('me-submit-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-  try {
-    const res = await apiHR('manualEntry', {
-      employeeId: _manualStaff.empId, name: _manualStaff.name, gender: _manualStaff.gender || '',
-      position: _manualStaff.position, leaveType: ltype, dateFrom, dateTo,
-      workingDays: days, reason: reason || 'Manual entry by HR', location: _manualStaff.location || 'Phnom Penh'
-    });
-    if (res && res.result === 'success') {
-      toast('Leave saved (silent)', 'ok2');
-      document.getElementById('me-ltype').value = '';
-      ['me-from', 'me-to', 'me-reason'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-      document.getElementById('me-days').value = '1';
-      hrLoadData();
-    } else { toast(res && res.error ? res.error : 'Save failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Save Leave (Silent)'; } }
-}
-async function hrManualNoticeSubmit() {
-  if (!_manualStaff) { toast('No staff selected', 'bad'); return; }
-  const noticeType = document.getElementById('me-ntype').value;
-  const date = document.getElementById('me-ndate').value;
-  if (!date) { toast('Select a date', 'bad'); return; }
-  const time = document.getElementById('me-ntime').value;
-  if (!time) { toast('Enter a time', 'bad'); return; }
-  const returnTime = document.getElementById('me-nreturn') ? document.getElementById('me-nreturn').value : '';
-  const reason = document.getElementById('me-nreason').value.trim();
-  const btn = document.getElementById('me-notice-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-  try {
-    const res = await apiHR('manualNotice', {
-      empId: _manualStaff.empId, name: _manualStaff.name,
-      noticeType, noticeDate: date, time, returnTime, reason: reason || 'Manual entry by HR'
-    });
-    if (res && res.result === 'success') {
-      toast('Notice saved (silent)', 'ok2');
-      document.getElementById('me-ntime').value = '';
-      if (document.getElementById('me-nreturn')) document.getElementById('me-nreturn').value = '';
-      document.getElementById('me-nreason').value = '';
-      hrLoadData();
-    } else { toast(res && res.error ? res.error : 'Save failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Save Notice (Silent)'; } }
-}
-
-async function wipeTestUser() {
-  if (!confirm('Wipe ALL data for test user johnwich / KMEOW007?\r\n\r\nThis deletes all their requests, notices, and attendance records, and resets their leave balance to 0.\r\n\r\nThis cannot be undone.')) return;
-  const btn = document.getElementById('wipe-test-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Wiping...'; }
-  try {
-    const res = await apiHR('wipeTestUser');
-    if (res && res.result === 'success') {
-      const d = res.deleted || {};
-      toast(`Wiped: ${d.requests || 0} requests · ${d.notices || 0} notices · ${d.attendance || 0} attendance`, 'ok2');
-      hrLoadData();
-    } else { toast('Wipe failed', 'bad'); }
-  } catch (e) { toast('Error: ' + e, 'bad'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Wipe All Test Data'; } }
 }
 
 function getTodayLocalISO() {
@@ -4529,7 +4051,6 @@ function confirmCalModal() {
   if (typeof autoSetTo === 'function') autoSetTo();
   if (typeof calcDays === 'function') calcDays();
   if (typeof clearFieldErr === 'function') clearFieldErr();
-  if (typeof tourNotifyAction === 'function') tourNotifyAction('date');
 }
 
 function setCalTarget(target) {
@@ -5516,46 +5037,6 @@ function getIsoDateVal(id) {
   return val;
 }
 
-function handleDateKeyInput(target, el) {
-  let val = el.value.trim();
-  const digits = val.replace(/\D/g, '');
-  if (digits.length === 8 && !val.includes('-') && !val.includes('/')) {
-    val = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-    el.value = val;
-  }
-
-  const iso = getIsoDateVal(el);
-  if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    el.dataset.iso = iso;
-    if (target === 'from') {
-      const toEl = document.getElementById('rf-to');
-      if (toEl && (!toEl.value || toEl.value < iso)) {
-        toEl.value = iso;
-        toEl.dataset.iso = iso;
-      }
-    }
-    if (typeof calcDays === 'function') calcDays();
-    if (typeof clearFieldErr === 'function') clearFieldErr();
-  }
-}
-
-function formatDateOnBlur(target, el) {
-  const iso = getIsoDateVal(el);
-  if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    el.value = iso;
-    el.dataset.iso = iso;
-    if (target === 'from') {
-      const toEl = document.getElementById('rf-to');
-      if (toEl && (!toEl.value || toEl.value < iso)) {
-        toEl.value = iso;
-        toEl.dataset.iso = iso;
-      }
-    }
-    if (typeof autoSetTo === 'function') autoSetTo();
-    if (typeof calcDays === 'function') calcDays();
-  }
-}
-
 function autoSetTo() {
   const fromVal = getIsoDateVal('rf-from');
   const toEl = document.getElementById('rf-to');
@@ -5668,14 +5149,6 @@ document.addEventListener('keydown', (e) => {
     confirmCalModal();
   }
 });
-
-const TOUR_STEPS = [
-  { targetId: 'rsc-dates' },
-  { targetId: 'rsc-type' },
-  { targetId: 'rsc-reason' }
-];
-
-let _currentTourStep = 0;
 
 // --- Custom Select UI Initialization ---
 function initCustomSelects() {
@@ -5923,7 +5396,6 @@ async function importLegacyData() {
     }
   }
 }
-
 
 // Phone: the "Other" text box lives inside the Other row, so choosing Other does not move the layout.
 // Wider screens keep the original position (below the list).
