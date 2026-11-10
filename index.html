@@ -1079,11 +1079,11 @@
           <div class="gate-sub">Enter your Full Name</div>
           <div id="nt-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') ntVerify()"
+              <input type="text" id="nt-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') ntVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') ntVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="nt-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') ntVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;background:#00AEEF;box-shadow:none;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="ntVerify()" id="nt-gate-btn">
               <div class="spinner" id="nt-gate-sp"></div><span id="nt-gate-txt">Continue</span>
@@ -1762,11 +1762,11 @@
           <div class="gate-sub" id="stg-sub">Enter your Full Name</div>
           <div id="st-gate-actions" style="display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%">
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off" onkeydown="if(event.key==='Enter') stVerify()"
+              <input type="text" id="st-name-input" placeholder="Enter Full Name..." autocomplete="off" inputmode="text" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" onkeydown="if(event.key==='Enter') stVerify()"
                  style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <div class="gate-input" style="position:relative;width:100%">
-              <input type="password" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" onkeydown="if(event.key==='Enter') stVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
+              <input type="password" id="st-id-input" placeholder="Enter Employee ID..." autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" onkeydown="if(event.key==='Enter') stVerify()" style="width:100%;height:48px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:var(--surface);color:var(--txt);box-sizing:border-box;">
             </div>
             <button class="btn btn-p" style="margin:0;height:48px;border-radius:12px;width:100%;justify-content:center;white-space:nowrap;box-sizing:border-box;" onclick="stVerify()" id="st-gate-btn">
               <div class="spinner" id="st-gate-sp"></div><span id="st-gate-txt">View My Leave</span>

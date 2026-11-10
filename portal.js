@@ -2603,15 +2603,16 @@ async function stVerify() {
   const btn = document.getElementById('st-gate-btn');
   const sp = document.getElementById('st-gate-sp');
   const txt = document.getElementById('st-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('st-gate', 'st-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('st-gate', 'st-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -3956,15 +3957,16 @@ async function ntVerify() {
   const btn = document.getElementById('nt-gate-btn');
   const sp = document.getElementById('nt-gate-sp');
   const txt = document.getElementById('nt-gate-txt');
-  if (btn) btn.disabled = true;
+  const btnLabel = txt ? txt.textContent : '';
+  gateSetLoading('nt-gate', 'nt-gate-btn', true);
   if (sp) sp.style.display = 'block';
-  if (txt) txt.style.opacity = '0';
+  if (txt) txt.textContent = LANG === 'kh' ? 'កំពុងពិនិត្យ...' : 'Checking...';
 
   const { targetStaff, hasNetworkErr } = await verifyStaffCredentials(rawInputName, rawInputId);
 
-  if (btn) btn.disabled = false;
+  gateSetLoading('nt-gate', 'nt-gate-btn', false);
   if (sp) sp.style.display = 'none';
-  if (txt) txt.style.opacity = '1';
+  if (txt) txt.textContent = btnLabel;
 
   if (!targetStaff || (!targetStaff.name && !targetStaff.nameKh && !targetStaff.empId)) {
     if (hasNetworkErr && (!_appInitData || !_appInitData.staffList || _appInitData.staffList.length === 0)) {
@@ -6021,4 +6023,14 @@ async function importLegacyData() {
     });
     render(el, seg);
   });
+})();
+
+// Phone: while the Late / Early form is open, the Notice page drops its top bar (Back is at the bottom).
+(function noticeFormClass() {
+  const view = document.getElementById('v-notice');
+  const form = document.getElementById('nt-form-screen');
+  if (!view || !form) return;
+  const sync = () => view.classList.toggle('nt-form', form.style.display !== 'none');
+  new MutationObserver(sync).observe(form, { attributes: true, attributeFilter: ['style'] });
+  sync();
 })();
