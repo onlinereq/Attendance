@@ -7329,7 +7329,7 @@ body {
     flex: 1;
     min-width: 0;
     gap: 2px;
-    padding: 0 52px 0 40px;
+    padding: 0 52px 0 16px;
     box-sizing: border-box;
     font-size: 18px;
     font-weight: 700;
@@ -7346,6 +7346,26 @@ body {
   }
 
   #stage .date-wrap:focus-within { border-color: var(--red); }
+
+  /* one calendar button, on the right: as tall as the date text, corners concentric with the row */
+  #stage .date-wrap .date-ico { display: none; }
+
+  #stage .date-wrap .cal-ico-btn {
+    position: absolute;
+    right: 4.5px;
+    top: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 0;
+    transform: none !important;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  #stage .date-wrap .cal-ico-btn svg { width: 20px; height: 20px; }
 
   #stage .date-wrap #rf-from,
   #stage .date-wrap #rf-to {
