@@ -7293,6 +7293,17 @@ body {
   /* request login: no profile icon */
   #stage #r-gate .gate-icon { display: none; }
 
+  /* home cards: one icon style, the app red (the notice card was blue) */
+  #stage .hcard { border-color: var(--border) !important; }
+
+  #stage .hcard .hcard-icon {
+    background: var(--red-soft) !important;
+    border-color: rgba(192, 39, 45, .15) !important;
+    color: var(--red) !important;
+  }
+
+  #stage .hcard .hcard-icon svg { stroke: var(--red) !important; width: 22px; height: 22px; }
+
   /* validation never pushes the layout: no summary box, messages overlay their label row */
   #stage #req-err-summary { display: none !important; }
 
