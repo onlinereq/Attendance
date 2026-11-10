@@ -7318,3 +7318,58 @@ body {
 @media (max-width: 360px) {
   #stage #cal-modal .cal-tab-label { font-size: 9px !important; letter-spacing: .03em !important; white-space: nowrap; }
 }
+
+/* ── PHONE: dates shown as DD-Mon-YYYY with number pad per part ── */
+.dseg { display: none; }
+
+@media (max-width: 768px) {
+  #stage .date-wrap .dseg {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+    padding: 0 52px 0 40px;
+    box-sizing: border-box;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--txt);
+  }
+
+  #stage .date-wrap #rf-from,
+  #stage .date-wrap #rf-to {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #stage .date-wrap .dseg input {
+    flex: none;
+    height: 40px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 8px;
+    background: none !important;
+    box-shadow: none !important;
+    outline: none;
+    font-family: inherit !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+    color: inherit !important;
+    text-align: center !important;
+  }
+
+  #stage .date-wrap .dseg .dseg-d { width: 1.8em !important; }
+  #stage .date-wrap .dseg .dseg-m { width: 2.4em !important; }
+  #stage .date-wrap .dseg .dseg-y { width: 2.8em !important; }
+
+  #stage .date-wrap .dseg input:focus { background: var(--red-soft) !important; }
+
+  #stage .date-wrap .dseg input::placeholder { color: var(--txt3); font-weight: 500; }
+
+  #stage .dseg span { color: var(--txt3); }
+}

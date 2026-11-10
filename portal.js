@@ -5908,3 +5908,117 @@ async function importLegacyData() {
   place();
   if (mq.addEventListener) mq.addEventListener('change', place); else mq.addListener(place);
 })();
+
+// Phone: From / To dates show as DD-Mon-YYYY. Tapping the day, month or year opens the number pad.
+// The real fields (#rf-from, #rf-to) keep their YYYY-MM-DD value, so everything else works as before.
+(function dateSegments() {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pad = (n) => String(n).padStart(2, '0');
+  const digits = (s, max) => String(s).replace(/\D/g, '').slice(0, max);
+  const valueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+
+  function commit(target, el, seg) {
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    const cur = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : '';
+    const curM = cur ? +cur.slice(5, 7) : 0;
+    let d = +digits(dI.value, 2);
+    let m = mI.dataset.editing === '1' ? +digits(mI.value, 2) : (+mI.dataset.num || curM);
+    let y = +digits(yI.value, 4);
+    mI.dataset.editing = '';
+    if (!d || !m || !y || m > 12 || y < 2000 || y > 2100) { render(el, seg); return; }
+    d = Math.min(d, new Date(y, m, 0).getDate());
+    const iso = y + '-' + pad(m) + '-' + pad(d);
+    if (iso === cur) { render(el, seg); return; }
+
+    const dow = new Date(iso + 'T00:00:00').getDay();
+    if (dow === 0 || dow === 6) {
+      toast(LANG === 'kh' ? 'ថ្ងៃសៅរ៍ និងថ្ងៃអាទិត្យ ជាថ្ងៃចុងសប្តាហ៍ដែលត្រូវបានរំលងដោយស្វ័យប្រវត្តិ។' : 'Saturday & Sunday are non-working weekend days (blacked out).', '');
+      render(el, seg); return;
+    }
+    const hol = getHolidayObj(iso);
+    if (hol) {
+      const name = LANG === 'kh' && hol.nameKh ? hol.nameKh : hol.name;
+      toast(LANG === 'kh' ? `ថ្ងៃនេះជាថ្ងៃឈប់សម្រាកបុណ្យ (${name}) ដែលត្រូវបានរំលង។` : `This date is an official public holiday (${name}) and is blacked out.`, '');
+      render(el, seg); return;
+    }
+
+    const fromEl = document.getElementById('rf-from'), toEl = document.getElementById('rf-to');
+    const set = (e, v) => { e.value = v; e.dataset.iso = v; };
+    if (target === 'from') {
+      set(fromEl, iso);
+      if (!toEl.value || toEl.value < iso) set(toEl, iso);
+    } else if (fromEl.value && iso < fromEl.value) {
+      set(fromEl, iso); set(toEl, iso);
+    } else {
+      set(toEl, iso);
+    }
+    if (typeof autoSetTo === 'function') autoSetTo();
+    if (typeof calcDays === 'function') calcDays();
+    if (typeof clearFieldErr === 'function') clearFieldErr();
+  }
+
+  function render(el, seg) {
+    const v = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : '';
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    dI.value = v ? v.slice(8, 10) : '';
+    yI.value = v ? v.slice(0, 4) : '';
+    mI.dataset.num = v ? String(+v.slice(5, 7)) : '';
+    mI.dataset.editing = '';
+    mI.value = v ? MON[+v.slice(5, 7) - 1] : '';
+  }
+
+  ['rf-from', 'rf-to'].forEach((id) => {
+    const el = document.getElementById(id);
+    const wrap = el && el.closest('.date-wrap');
+    if (!el || !wrap) return;
+    const target = id === 'rf-from' ? 'from' : 'to';
+
+    const seg = document.createElement('div');
+    seg.className = 'dseg';
+    seg.innerHTML =
+      '<input class="dseg-d" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="DD" autocomplete="off" aria-label="Day">' +
+      '<span>-</span>' +
+      '<input class="dseg-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="Mon" autocomplete="off" aria-label="Month">' +
+      '<span>-</span>' +
+      '<input class="dseg-y" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="YYYY" autocomplete="off" aria-label="Year">';
+    el.insertAdjacentElement('afterend', seg);
+
+    const dI = seg.querySelector('.dseg-d'), mI = seg.querySelector('.dseg-m'), yI = seg.querySelector('.dseg-y');
+    const selectAll = (i) => setTimeout(() => { try { i.select(); } catch (e) { } }, 0);
+
+    dI.addEventListener('focus', () => selectAll(dI));
+    yI.addEventListener('focus', () => selectAll(yI));
+    mI.addEventListener('focus', () => {
+      mI.dataset.editing = '1';
+      mI.value = mI.dataset.num || '';
+      selectAll(mI);
+    });
+
+    dI.addEventListener('input', () => {
+      dI.value = digits(dI.value, 2);
+      if (dI.value.length === 2 || (dI.value.length === 1 && +dI.value > 3)) mI.focus();
+    });
+    mI.addEventListener('input', () => {
+      mI.value = digits(mI.value, 2);
+      if (mI.value.length === 2 || (mI.value.length === 1 && +mI.value > 1)) yI.focus();
+    });
+    yI.addEventListener('input', () => {
+      yI.value = digits(yI.value, 4);
+      if (yI.value.length === 4) yI.blur();
+    });
+
+    seg.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); document.activeElement.blur(); } });
+    seg.addEventListener('focusout', (e) => {
+      if (e.relatedTarget && seg.contains(e.relatedTarget)) return;
+      commit(target, el, seg);
+    });
+
+    // keep the display in sync when other code (calendar, reset, auto-fill) sets the value
+    Object.defineProperty(el, 'value', {
+      configurable: true,
+      get() { return valueDesc.get.call(this); },
+      set(v) { valueDesc.set.call(this, v); render(el, seg); }
+    });
+    render(el, seg);
+  });
+})();
