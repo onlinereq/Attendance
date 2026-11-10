@@ -7909,9 +7909,12 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
 
   #stage .rdpill-card .rdpill-num-wrap {
     flex: none;
-    align-self: stretch;
-    min-width: 56px;
-    padding: 0 14px 0 4px !important;
+    flex-direction: row !important;
+    align-items: baseline;
+    align-self: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 4px 14px 4px 4px !important;
     justify-content: center;
     border-right: 1px solid var(--border) !important;
   }
@@ -7924,12 +7927,13 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
   }
 
   #stage .rdpill-card .rdpill-days-lbl {
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     letter-spacing: 0 !important;
     text-transform: none;
-    margin-top: 4px;
+    margin-top: 0;
     opacity: 1;
+    white-space: nowrap;
   }
 
   #stage .rdsum-t { font-size: 16px; font-weight: 700; color: var(--txt); line-height: 1.3; }
