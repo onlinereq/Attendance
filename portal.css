@@ -7252,6 +7252,11 @@ body {
   #stage #cal-modal .cal-modal-box .modal-actions button { min-height: 44px; }
 }
 
+@media (max-width: 768px) {
+  /* request login: no profile icon */
+  #stage #r-gate .gate-icon { display: none; }
+}
+
 @media (max-width: 360px) {
   #stage #cal-modal .cal-tab-label { font-size: 9px !important; letter-spacing: .03em !important; white-space: nowrap; }
 }
