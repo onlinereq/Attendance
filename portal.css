@@ -7913,8 +7913,10 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
     align-items: baseline;
     align-self: center;
     gap: 5px;
+    width: 92px;
     min-width: 0;
-    padding: 4px 14px 4px 4px !important;
+    box-sizing: border-box;
+    padding: 4px 10px 4px 0 !important;
     justify-content: center;
     border-right: 1px solid var(--border) !important;
   }
@@ -7968,13 +7970,14 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
 @media (max-width: 768px) and (max-height: 700px) {
   #stage .rdsum-chips { display: none; }
   #stage .rdpill-card #r-dnum { font-size: 26px !important; }
+  #stage .rdpill-card .rdpill-num-wrap { width: 80px; }
   #stage .rdsum-t { font-size: 15px; }
   #stage .rdsum-d { font-size: 13px; margin-top: 1px; }
 }
 
 @media (max-width: 768px) and (max-height: 620px) {
   #stage .rdsum-d { display: none; }
-  #stage .rdpill-card .rdpill-num-wrap { flex-direction: row !important; align-items: baseline; gap: 4px; min-width: 0; padding: 0 10px 0 0 !important; }
+  #stage .rdpill-card .rdpill-num-wrap { flex-direction: row !important; align-items: baseline; gap: 4px; width: 68px; min-width: 0; padding: 0 8px 0 0 !important; }
   #stage .rdpill-card #r-dnum { font-size: 20px !important; }
   #stage .rdpill-card .rdpill-days-lbl { margin-top: 0; }
   #stage .rdsum-t { font-size: 14px; }
