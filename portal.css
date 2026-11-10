@@ -7982,3 +7982,101 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
   #stage .rdpill-card .rdpill-days-lbl { margin-top: 0; }
   #stage .rdsum-t { font-size: 14px; }
 }
+
+/* ── PHONE FIT LEVELS: the fit engine adds fit-1..5 (request) and ntfit-1..5 (late / early) when content would
+   end up behind the pinned bar. Each level compacts a bit more. ── */
+@media (max-width: 768px) {
+
+  /* keyboard open (iOS): the pinned buttons step aside so they never cover what you type */
+  body.keyboard-open #stage #req-form .mobile-wizard-actions,
+  body.keyboard-open #stage #req-form .req-action-row,
+  body.keyboard-open #stage #nt-form-screen::after,
+  body.keyboard-open #stage #nt-form-screen > div > button[onclick="ntBackToTypeSelect()"],
+  body.keyboard-open #stage #nt-submit-btn { display: none !important; }
+
+  /* request: level 1 */
+  #stage #v-request.fit-1 .rdsum-chips,
+  #stage #v-request.fit-2 .rdsum-chips,
+  #stage #v-request.fit-3 .rdsum-chips,
+  #stage #v-request.fit-4 .rdsum-chips,
+  #stage #v-request.fit-5 .rdsum-chips { display: none; }
+
+  #stage #v-request[class*="fit-"] .req-section-card .rsc-sub { display: none; }
+
+  #stage #v-request.fit-1 #req-date-notice {
+    padding: 6px 10px !important;
+    margin: 6px 0 0 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    gap: 6px !important;
+  }
+
+  /* level 2: notice box and small headings go */
+  #stage #v-request.fit-2 #req-date-notice,
+  #stage #v-request.fit-3 #req-date-notice,
+  #stage #v-request.fit-4 #req-date-notice,
+  #stage #v-request.fit-5 #req-date-notice { display: none !important; }
+
+  #stage #v-request.fit-2 #hd-section-label,
+  #stage #v-request.fit-3 #hd-section-label,
+  #stage #v-request.fit-4 #hd-section-label,
+  #stage #v-request.fit-5 #hd-section-label,
+  #stage #v-request.fit-2 .hd-header,
+  #stage #v-request.fit-3 .hd-header,
+  #stage #v-request.fit-4 .hd-header,
+  #stage #v-request.fit-5 .hd-header { display: none; }
+
+  #stage #v-request.fit-2 .rdsum-d,
+  #stage #v-request.fit-3 .rdsum-d,
+  #stage #v-request.fit-4 .rdsum-d,
+  #stage #v-request.fit-5 .rdsum-d { display: none; }
+
+  /* level 3 */
+  #stage #v-request.fit-3 { --bar-btn: 44px; }
+  #stage #v-request.fit-3 .date-wrap { --dh: 40px; }
+  #stage #v-request.fit-3 .hd-pill-grid .hd-pill-opt { min-height: 36px; }
+  #stage #v-request.fit-3 .req-section-card .rsc-header { display: none; }
+  #stage #v-request.fit-3 #ltype-grid .ltype-card { height: 32px; }
+  #stage #v-request.fit-3 .req-textarea { height: 56px !important; }
+
+  /* level 4 */
+  #stage #v-request.fit-4 { --bar-btn: 42px; }
+  #stage #v-request.fit-4 .date-wrap { --dh: 36px; }
+  #stage #v-request.fit-4 .hd-pill-grid .hd-pill-opt { min-height: 32px; }
+  #stage #v-request.fit-4 .req-section-card .rsc-header { display: none; }
+  #stage #v-request.fit-4 #ltype-grid .ltype-card { height: 30px; }
+  #stage #v-request.fit-4 .req-textarea { height: 48px !important; }
+  #stage #v-request.fit-4 .req-sidebar .spc-name,
+  #stage #v-request.fit-4 .req-sidebar .spc-id-badge { font-size: 15px !important; }
+
+  /* level 5 */
+  #stage #v-request.fit-5 { --bar-btn: 40px; }
+  #stage #v-request.fit-5 .date-wrap { --dh: 34px; }
+  #stage #v-request.fit-5 .hd-pill-grid .hd-pill-opt { min-height: 28px; font-size: 12px; }
+  #stage #v-request.fit-5 .req-section-card .rsc-header { display: none; }
+  #stage #v-request.fit-5 #ltype-grid .ltype-card { height: 26px; }
+  #stage #v-request.fit-5 #ltype-grid .ltc-txt { font-size: 13px !important; }
+  #stage #v-request.fit-5 .req-textarea { height: 40px !important; }
+  #stage #v-request.fit-5 .req-sidebar .spc-name,
+  #stage #v-request.fit-5 .req-sidebar .spc-id-badge { font-size: 14px !important; }
+
+  /* late / early form */
+  #stage #v-notice.ntfit-1 .nt-time-seg { font-size: 36px !important; padding: 4px 8px !important; min-width: 68px !important; }
+  #stage #v-notice.ntfit-1 #nt-time-diff { margin-bottom: 14px !important; padding: 8px 12px !important; }
+  #stage #v-notice.ntfit-1 #nt-form-screen div:has(> #nt-fs-name) { margin-bottom: 12px !important; }
+
+  #stage #v-notice.ntfit-2 .nt-time-seg,
+  #stage #v-notice.ntfit-3 .nt-time-seg,
+  #stage #v-notice.ntfit-4 .nt-time-seg,
+  #stage #v-notice.ntfit-5 .nt-time-seg { font-size: 30px !important; padding: 2px 6px !important; min-width: 60px !important; }
+  #stage #v-notice[class*="ntfit-"] #nt-fs-reason { margin-bottom: 10px !important; }
+  #stage #v-notice.ntfit-2 #nt-fs-reason { height: 84px; }
+  #stage #v-notice.ntfit-3 #nt-fs-reason { height: 68px; }
+  #stage #v-notice.ntfit-4 #nt-fs-reason { height: 54px; }
+  #stage #v-notice.ntfit-5 #nt-fs-reason { height: 44px; }
+  #stage #v-notice.ntfit-3 #nt-time-diff,
+  #stage #v-notice.ntfit-4 #nt-time-diff { font-size: 12px !important; padding: 5px 10px !important; margin-bottom: 8px !important; }
+  #stage #v-notice.ntfit-5 #nt-time-diff { display: none !important; }
+  #stage #v-notice.ntfit-4 .nt-time-seg,
+  #stage #v-notice.ntfit-5 .nt-time-seg { font-size: 26px !important; }
+}

@@ -923,7 +923,7 @@ function rReset() {
   setRStep(1); setReqBar(0); closeReviewModal(); _isSubmitting = false; _pendingPayload = null; clearFieldErr();
 }
 function rIDClear() { document.getElementById('r-idfb').textContent = ''; }
-function setRStep(n) { const _vr = document.getElementById('v-request'); if (_vr) { const _rf = document.getElementById('req-form'); _vr.classList.toggle('rq-form', (n === 2 || n === 3) && !!_rf && _rf.style.display !== 'none'); } for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
+function setRStep(n) { if (window.fitFormSchedule) setTimeout(window.fitFormSchedule, 0); const _vr = document.getElementById('v-request'); if (_vr) { const _rf = document.getElementById('req-form'); _vr.classList.toggle('rq-form', (n === 2 || n === 3) && !!_rf && _rf.style.display !== 'none'); } for (let i = 1; i <= 4; i++) { const dot = document.getElementById('rsd' + i), si = document.getElementById('rsi' + i); dot.classList.remove('act', 'dn'); si.classList.remove('active'); if (i < n) { dot.classList.add('dn'); dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; } else if (i === n) { dot.classList.add('act'); dot.innerHTML = i; si.classList.add('active'); } else { dot.innerHTML = i; } } }
 async function rVerify() {
   const inputEl = document.getElementById('r-name-input');
   const idEl = document.getElementById('r-id-input');
@@ -1243,7 +1243,7 @@ function calcDays(now) {
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
         </svg>
-        <div><strong>Invalid Date Range:</strong> Return date (To Date) must be on or after start date (From Date).</div>
+        <div>${LANG === 'kh' ? '<strong>ចន្លោះកាលបរិច្ឆេទមិនត្រឹមត្រូវ៖</strong> ថ្ងៃត្រឡប់ (ដល់ថ្ងៃ) ត្រូវតែនៅថ្ងៃដូចគ្នា ឬក្រោយថ្ងៃចាប់ផ្តើម (ចាប់ពីថ្ងៃ)។' : '<strong>Invalid Date Range:</strong> Return date (To Date) must be on or after start date (From Date).'}</div>
       `;
       noticeEl.style.display = 'flex';
     }
@@ -1269,10 +1269,10 @@ function calcDays(now) {
   if (noticeEl) {
     if (wd === 0) {
       const skipReasons = [];
-      if (weCount > 0) skipReasons.push(`${weCount} weekend ${weCount === 1 ? 'day' : 'days'} (Sat/Sun)`);
+      if (weCount > 0) skipReasons.push(LANG === 'kh' ? `${weCount} ថ្ងៃចុងសប្តាហ៍ (សៅរ៍/អាទិត្យ)` : `${weCount} weekend ${weCount === 1 ? 'day' : 'days'} (Sat/Sun)`);
       if (holCount > 0) {
-        const holNames = holsInRange.map(h => h.name || 'Holiday').join(', ');
-        skipReasons.push(`${holCount} official holiday (${holNames})`);
+        const holNames = holsInRange.map(h => (LANG === 'kh' && h.nameKh) ? h.nameKh : (h.name || 'Holiday')).join(', ');
+        skipReasons.push(LANG === 'kh' ? `${holCount} ថ្ងៃបុណ្យផ្លូវការ (${holNames})` : `${holCount} official holiday (${holNames})`);
       }
       noticeEl.className = 'date-notice-card date-notice-warn';
       noticeEl.innerHTML = `
@@ -1282,17 +1282,17 @@ function calcDays(now) {
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
         <div>
-          <div style="font-weight:700;margin-bottom:2px">Non-Working Days Selected (0 Days Deducted)</div>
-          <div style="font-size:11.5px;opacity:0.95">All selected dates fall on ${skipReasons.join(' & ')}. You do not need to request annual leave for non-working days.</div>
+          <div style="font-weight:700;margin-bottom:2px">${LANG === 'kh' ? 'បានជ្រើសរើសថ្ងៃមិនធ្វើការ (កាត់ថ្ងៃច្បាប់ 0 ថ្ងៃ)' : 'Non-Working Days Selected (0 Days Deducted)'}</div>
+          <div style="font-size:11.5px;opacity:0.95">${LANG === 'kh' ? `កាលបរិច្ឆេទទាំងអស់ដែលបានជ្រើសរើសជា ${skipReasons.join(' និង ')}។ អ្នកមិនចាំបាច់សុំច្បាប់ប្រចាំឆ្នាំសម្រាប់ថ្ងៃមិនធ្វើការទេ។` : `All selected dates fall on ${skipReasons.join(' & ')}. You do not need to request annual leave for non-working days.`}</div>
         </div>
       `;
       noticeEl.style.display = 'flex';
     } else if (weCount > 0 || holCount > 0) {
       const skipDetails = [];
-      if (weCount > 0) skipDetails.push(`${weCount} weekend ${weCount === 1 ? 'day' : 'days'}`);
+      if (weCount > 0) skipDetails.push(LANG === 'kh' ? `${weCount} ថ្ងៃចុងសប្តាហ៍` : `${weCount} weekend ${weCount === 1 ? 'day' : 'days'}`);
       if (holCount > 0) {
-        const holNames = holsInRange.map(h => h.name || 'Holiday').join(', ');
-        skipDetails.push(`${holCount} holiday (${holNames})`);
+        const holNames = holsInRange.map(h => (LANG === 'kh' && h.nameKh) ? h.nameKh : (h.name || 'Holiday')).join(', ');
+        skipDetails.push(LANG === 'kh' ? `${holCount} ថ្ងៃបុណ្យ (${holNames})` : `${holCount} holiday (${holNames})`);
       }
       noticeEl.className = 'date-notice-card date-notice-info';
       noticeEl.innerHTML = `
@@ -1302,7 +1302,7 @@ function calcDays(now) {
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
         <div>
-          <span style="font-weight:700">Notice:</span> Total <strong>${calDays} calendar days</strong> = <strong>${wd} working days requested</strong> (${skipDetails.join(' & ')} automatically excluded from leave deduction).
+          ${LANG === 'kh' ? `<span style="font-weight:700">ចំណាំ៖</span> សរុប <strong>${calDays} ថ្ងៃតាមប្រតិទិន</strong> = <strong>${wd} ថ្ងៃធ្វើការដែលបានស្នើសុំ</strong> (${skipDetails.join(' និង ')} ត្រូវបានដកចេញដោយស្វ័យប្រវត្តិពីការកាត់ថ្ងៃច្បាប់)។` : `<span style="font-weight:700">Notice:</span> Total <strong>${calDays} calendar days</strong> = <strong>${wd} working days requested</strong> (${skipDetails.join(' & ')} automatically excluded from leave deduction).`}
         </div>
       `;
       noticeEl.style.display = 'flex';
@@ -6065,7 +6065,7 @@ async function importLegacyData() {
   const view = document.getElementById('v-notice');
   const form = document.getElementById('nt-form-screen');
   if (!view || !form) return;
-  const sync = () => view.classList.toggle('nt-form', form.style.display !== 'none');
+  const sync = () => { view.classList.toggle('nt-form', form.style.display !== 'none'); if (window.fitFormSchedule) window.fitFormSchedule(); };
   new MutationObserver(sync).observe(form, { attributes: true, attributeFilter: ['style'] });
   sync();
 })();
@@ -6252,4 +6252,77 @@ function khUIRefresh() {
   window.addEventListener('resize', fitAll);
   if (document.fonts) { document.fonts.ready.then(fitAll); document.fonts.addEventListener('loadingdone', fitAll); }
   fitAll();
+})();
+
+// ── PHONE FIT ENGINE ─────────────────────────────────────────────
+// The request form and the late / early form have a pinned bottom bar. Whatever is on screen (a notice box,
+// long Khmer text, a half day on both ends, a short phone), this measures whether the last field ends above
+// the bar and, if not, compacts the form one level at a time (class fit-1..5) until it does.
+(function formFit() {
+  const mq = window.matchMedia('(max-width: 768px)');
+  const MAXL = 5;
+  let busy = false, queued = false, raf = 0;
+  const kbOpen = () => document.body.classList.contains('keyboard-open');
+  const setLevel = (el, prefix, n) => { for (let i = 1; i <= MAXL; i++) el.classList.remove(prefix + i); if (n) el.classList.add(prefix + n); };
+  const gap = (barEl, lastEl, scroller) => {
+    if (!barEl || !lastEl || !scroller) return null;
+    const b = barEl.getBoundingClientRect(), l = lastEl.getBoundingClientRect();
+    if (!b.height || !l.height) return null;
+    return l.bottom + scroller.scrollTop - b.top;
+  };
+  function reqOverflow() {
+    const form = document.getElementById('req-form');
+    if (!form || form.style.display === 'none') return null;
+    const step = form.getAttribute('data-mobile-step') || '1';
+    return gap(document.querySelector(step === '1' ? '.mobile-wizard-actions' : '.req-action-row'),
+      document.getElementById(step === '1' ? 'rsc-dates' : 'rsc-reason'), document.getElementById('req-view-body'));
+  }
+  function ntOverflow() {
+    const form = document.getElementById('nt-form-screen');
+    if (!form || form.style.display === 'none') return null;
+    return gap(document.getElementById('nt-submit-btn'), document.getElementById('nt-fs-reason'), document.querySelector('#v-notice .view-body'));
+  }
+  function fit(view, prefix, overflowFn) {
+    setLevel(view, prefix, 0);
+    if (!mq.matches || kbOpen()) return;
+    let n = 0, o = overflowFn();
+    while (o !== null && o > 0 && n < MAXL) { n++; setLevel(view, prefix, n); o = overflowFn(); }
+  }
+  function run() {
+    if (busy) { queued = true; return; }
+    busy = true;
+    try {
+      const rv = document.getElementById('v-request'); if (rv) fit(rv, 'fit-', reqOverflow);
+      const nv = document.getElementById('v-notice'); if (nv) fit(nv, 'ntfit-', ntOverflow);
+    } finally { busy = false; }
+    if (queued) { queued = false; schedule(); }
+  }
+  // next frame, or 60 ms later if the page is not drawing (hidden tab): whichever comes first
+  function schedule() {
+    if (raf) return;
+    raf = 1;
+    const go = () => { if (!raf) return; raf = 0; run(); };
+    requestAnimationFrame(go);
+    setTimeout(go, 60);
+  }
+  window.fitFormSchedule = schedule;
+
+  // sizes of the scroll areas (screen size, keyboard) and of the content blocks (they grow when a notice appears)
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(schedule);
+    ['req-view-body', 'rsc-dates', 'rsc-type', 'rsc-reason', 'r-dpill', 'nt-form-screen'].forEach((id) => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    document.querySelectorAll('#req-form > *, #v-notice .view-body').forEach((el) => ro.observe(el));
+  }
+  // anything that changes inside the forms: text, show / hide, step
+  const watch = new MutationObserver(schedule);
+  ['req-form', 'nt-form-screen'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) watch.observe(el, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-mobile-step', 'class'] });
+  });
+  new MutationObserver(schedule).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('orientationchange', schedule);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', schedule);
+  if (document.fonts) document.fonts.addEventListener('loadingdone', schedule);
+  schedule();
 })();
