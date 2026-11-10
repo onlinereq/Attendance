@@ -7093,6 +7093,22 @@ body {
     font-weight: 700;
   }
 
+  /* full day is one wide button, morning and evening are each half of it */
+  #stage .hd-pill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  #stage .hd-pill-grid .hd-pill-opt:first-child { grid-column: 1 / -1; }
+
+  #stage .hd-pill-grid .hd-pill-opt {
+    min-height: 48px;
+    width: auto !important;
+    margin: 0 !important;
+    justify-content: center;
+  }
+
   #stage .hd-header {
     background: none !important;
     padding: 0 !important;
