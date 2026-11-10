@@ -7304,6 +7304,18 @@ body {
 
   #stage .hcard .hcard-icon svg { stroke: var(--red) !important; width: 22px; height: 22px; }
 
+  /* no small descriptions under the titles */
+  #stage .hcard .hcard-desc { display: none !important; }
+
+  /* the last card (history) gets its own colour */
+  #stage .hcard:nth-child(3) .hcard-icon {
+    background: var(--ok-soft) !important;
+    border-color: rgba(30, 122, 74, .18) !important;
+    color: var(--ok) !important;
+  }
+
+  #stage .hcard:nth-child(3) .hcard-icon svg { stroke: var(--ok) !important; }
+
   /* validation never pushes the layout: no summary box, messages overlay their label row */
   #stage #req-err-summary { display: none !important; }
 
