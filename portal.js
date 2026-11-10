@@ -1168,6 +1168,34 @@ function getHolidaysInRange(fromIso, toIso) {
 }
 
 let _cdT;
+// Phone summary strip under the name: type, dates and small chips (half-day parts, skipped days).
+// Display only; calcDays still sets the original text, which the phone layout hides.
+function renderDaySummary(o) {
+  const el = document.getElementById('r-dsum');
+  if (!el) return;
+  const kh = LANG === 'kh';
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  if (o.zero) {
+    el.innerHTML = '<div class="rdsum-t">' + esc(o.title) + '</div><div class="rdsum-d rdsum-muted"><span>' + esc(o.sub) + '</span></div>';
+    return;
+  }
+  const half = (v) => (v === 'morning' ? (kh ? 'ព្រឹក' : 'Morning') : v === 'afternoon' ? (kh ? 'ល្ងាច' : 'Evening') : '');
+  let typeName = o.type;
+  try { if (kh && KH_UI_MAP[o.type]) typeName = KH_UI_MAP[o.type]; } catch (e) { }
+  const cal = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const dates = o.single ? fmtDate(o.from) : fmtDate(o.from) + ' → ' + fmtDate(o.to);
+  const chips = [];
+  if (o.single && o.first !== 'full') chips.push(['half', (kh ? 'កន្លះថ្ងៃ' : 'Half day') + ' · ' + half(o.first)]);
+  if (!o.single) {
+    if (o.first !== 'full') chips.push(['half', (kh ? 'ថ្ងៃដំបូង: ' : 'First: ') + half(o.first)]);
+    if (o.last !== 'full') chips.push(['half', (kh ? 'ថ្ងៃចុងក្រោយ: ' : 'Last: ') + half(o.last)]);
+  }
+  if (o.skip > 0) chips.push(['skip', kh ? 'រំលង ' + o.skip + ' ថ្ងៃមិនធ្វើការ' : o.skip + ' non-working days skipped']);
+  el.innerHTML = '<div class="rdsum-t">' + esc(typeName) + '</div>' +
+    '<div class="rdsum-d">' + cal + '<span>' + esc(dates) + '</span></div>' +
+    (chips.length ? '<div class="rdsum-chips">' + chips.map((c) => '<span class="rdsum-chip ' + c[0] + '">' + esc(c[1]) + '</span>').join('') + '</div>' : '');
+}
+
 function calcDays(now) {
   if (!now) { clearTimeout(_cdT); _cdT = setTimeout(() => calcDays(1), 30); return; }
   const from = getIsoDateVal('rf-from');
@@ -1290,6 +1318,7 @@ function calcDays(now) {
     if (di) di.textContent = (LANG === 'kh' ? 'មិនមានថ្ងៃធ្វើការ (ថ្ងៃបុណ្យ ឬចុងសប្តាហ៍)' : '0 Working Days (Weekends/Holidays)');
     const ds = document.getElementById('r-dsub');
     if (ds) ds.textContent = (LANG === 'kh' ? 'ថ្ងៃចុងសប្តាហ៍ និងថ្ងៃបុណ្យត្រូវបានរំលង' : 'Non-working days are excluded from deduction');
+    renderDaySummary({ zero: true, title: di ? di.textContent : '', sub: ds ? ds.textContent : '' });
     if (pill) pill.style.display = 'flex';
     if (row) row.style.display = 'none';
     return;
@@ -1333,6 +1362,7 @@ function calcDays(now) {
 
   const di = document.getElementById('r-dinfo'); if (di) di.textContent = mainTxt;
   const ds = document.getElementById('r-dsub'); if (ds) ds.textContent = subTxt;
+  renderDaySummary({ type: typeTxt, from, to, single, first: hdGetFirst(), last: single ? hdGetFirst() : hdGetLast(), skip: skipCount });
   if (pill) pill.style.display = 'flex';
 
   const hdRow = document.getElementById('halfday-row');
