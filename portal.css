@@ -7093,6 +7093,16 @@ body {
     font-weight: 700;
   }
 
+  /* From / To labels: same size as the half-day label */
+  #stage #f-rf-from > label,
+  #stage #f-rf-to > label {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    color: var(--txt2) !important;
+  }
+
   /* full day is one wide button, morning and evening are each half of it */
   #stage .hd-pill-grid {
     display: grid;
