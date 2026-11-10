@@ -7307,6 +7307,51 @@ body {
   /* no small descriptions under the titles */
   #stage .hcard .hcard-desc { display: none !important; }
 
+  /* card layout: icon on the left, title in the middle, arrow on the right */
+  #stage .home-cards { gap: 10px; }
+
+  #stage .hcard {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px !important;
+    min-height: 76px;
+  }
+
+  #stage .hcard .hcard-icon {
+    flex: none;
+    width: 46px !important;
+    height: 46px !important;
+    margin: 0 !important;
+    border-radius: 12px;
+  }
+
+  #stage .hcard .hcard-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0 !important;
+    font-family: var(--font) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1.45;
+    color: var(--txt);
+  }
+
+  #stage .hcard .hcard-arrow {
+    display: block !important;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin: 0 4px 0 0 !important;
+    padding: 0 !important;
+    font-size: 0;
+    border-right: 2px solid var(--txt3);
+    border-top: 2px solid var(--txt3);
+    transform: rotate(45deg);
+    opacity: 1;
+  }
+
   /* the last card (history) gets its own colour */
   #stage .hcard:nth-child(3) .hcard-icon {
     background: var(--ok-soft) !important;
