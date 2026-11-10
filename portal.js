@@ -1193,7 +1193,7 @@ function renderDaySummary(o) {
   if (o.skip > 0) chips.push(['skip', kh ? 'រំលង ' + o.skip + ' ថ្ងៃមិនធ្វើការ' : o.skip + ' non-working days skipped']);
   el.innerHTML = '<div class="rdsum-t">' + esc(typeName) + '</div>' +
     '<div class="rdsum-d">' + cal + '<span>' + esc(dates) + '</span></div>' +
-    (chips.length ? '<div class="rdsum-chips">' + chips.map((c) => '<span class="rdsum-chip ' + c[0] + '">' + esc(c[1]) + '</span>').join('') + '</div>' : '');
+    '<div class="rdsum-chips">' + chips.map((c) => '<span class="rdsum-chip ' + c[0] + '">' + esc(c[1]) + '</span>').join('') + '</div>';
 }
 
 function calcDays(now) {

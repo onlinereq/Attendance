@@ -7951,19 +7951,18 @@ html.lang-kh .hd-pill-opt span::before { content: "សម្រាក"; font-wei
 
   #stage .rdsum-muted { font-size: 13px; }
 
-  #stage .rdsum-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  #stage .rdsum-chips { display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 6px; min-height: 20px; }
 
   #stage .rdsum-chip {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    line-height: 1.5;
-    padding: 2px 10px;
-    border-radius: 999px;
-    background: var(--surface2);
+    line-height: 20px;
+    padding: 0;
+    background: none;
     color: var(--txt2);
   }
 
-  #stage .rdsum-chip.half { background: var(--ok-soft); color: var(--ok); }
+  #stage .rdsum-chip.half { color: var(--ok); }
 }
 
 @media (max-width: 768px) and (max-height: 700px) {
