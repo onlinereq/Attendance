@@ -5,6 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <script>
+    // Stage: track the area the user can really see (browser bars, keyboard, notch) -> --vvt / --kb
+    (() => {
+      const r = document.documentElement, v = window.visualViewport;
+      const fit = () => {
+        const h = innerHeight, top = v ? v.offsetTop : 0, vh = v ? v.height : h;
+        r.style.setProperty('--vvt', top + 'px');
+        r.style.setProperty('--kb', Math.max(0, h - vh - top) + 'px');
+      };
+      ['resize', 'orientationchange', 'fullscreenchange'].forEach(e => addEventListener(e, fit));
+      if (v) { v.addEventListener('resize', fit); v.addEventListener('scroll', fit); }
+      fit();
+    })();
+  </script>
   <title>Attendance &amp; Leave Portal</title>
 
   <link rel="manifest" href="manifest.json">
@@ -563,6 +577,8 @@
       style="margin-top:28px;font-size:13px;color:var(--txt3, #888);letter-spacing:.02em;min-height:20px;transition:opacity .3s ease;text-align:center">
       Connecting to server...</div>
   </div>
+
+  <div id="stage">
 
   <style>
     @keyframes splash-spin {
@@ -1470,8 +1486,9 @@
                 
                 // Move modal to body to ensure it breaks out of any parent transforms
                 const modalEl = document.getElementById('special-leave-modal');
-                if (modalEl.parentNode !== document.body) {
-                  document.body.appendChild(modalEl);
+                const modalHost = document.getElementById('stage') || document.body;
+                if (modalEl.parentNode !== modalHost) {
+                  modalHost.appendChild(modalEl);
                 }
                 
                 // Show modal
@@ -2848,6 +2865,8 @@
   </div>
 
   <div id="toast"></div>
+
+  </div><!-- /#stage -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

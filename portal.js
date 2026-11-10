@@ -120,6 +120,7 @@ function goTo(v) {
   const targetView = document.getElementById('v-' + v);
   if (targetView) targetView.classList.add('active');
   window.scrollTo(0, 0);
+  if (targetView) targetView.scrollTop = 0; // phone Stage: the view scrolls, not the page
   try {
     if (v === 'request') rReset();
     if (v === 'status') stReset();
@@ -2438,7 +2439,7 @@ function _gmoStart(gateId, msgs, durs) {
       <div class="gmo-prog-fill" id="gmo-b-${gateId}"></div>
     </div>
   </div>`;
-  document.body.appendChild(ov);
+  (document.getElementById('stage') || document.body).appendChild(ov);
   const tEl = document.getElementById('gmo-t-' + gateId);
   const dEl = document.getElementById('gmo-d-' + gateId);
   const bEl = document.getElementById('gmo-b-' + gateId);
