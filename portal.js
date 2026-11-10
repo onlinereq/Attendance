@@ -1912,7 +1912,7 @@ function rPopulateSuccess() {
 const DEFAULT_PRINT_CSS = `
 *{margin:0;padding:0;box-sizing:border-box}
 #tg-pdf-container{
-  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Battambang',sans-serif;font-size:11pt;color:#000000;
+  position:absolute;left:-9999px;top:0;width:794px;background:#ffffff;z-index:-9999;overflow:visible;box-sizing:border-box;font-family:'Hanuman',serif;font-size:11pt;color:#000000;
 }
 #tg-pdf-container, #tg-pdf-container *{
   color:#000000 !important;
@@ -1932,37 +1932,37 @@ const DEFAULT_PRINT_CSS = `
   flex-direction:column !important;
   justify-content:space-between !important;
   overflow:hidden !important;
-  font-family:'Battambang',sans-serif !important;
+  font-family:'Hanuman',serif !important;
   font-size:11pt !important;
   color:#000000 !important;
 }
 #tg-pdf-container .content{flex:1}
 #tg-pdf-container .pf-header-row{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-bottom:5mm}
 #tg-pdf-container .pf-logo{height:95px;object-fit:contain;display:block;margin:0 0 0 auto}
-#tg-pdf-container .pf-title{font-family:'Moul',serif;font-size:13.5pt;text-align:center;margin-bottom:3mm;line-height:1.8;color:#000000}
+#tg-pdf-container .pf-title{font-family:'Hanuman',serif;font-weight:700;font-size:13.5pt;text-align:center;margin-bottom:3mm;line-height:1.8;color:#000000}
 #tg-pdf-container .pf-body-section{margin-bottom:2.5mm}
-#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Battambang',sans-serif;font-size:11pt;line-height:1.9;margin:0;color:#000000}
+#tg-pdf-container .pf-line,#tg-pdf-container .pf-para{font-family:'Hanuman',serif;font-size:11pt;line-height:1.9;margin:0;color:#000000}
 #tg-pdf-container .pf-para{text-align:justify}
 #tg-pdf-container .pf-to-section{text-align:center;margin:2.5mm 0}
-#tg-pdf-container .pf-to-section p{font-family:'Moul',serif;font-size:11pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-bold{font-family:'Moul',serif;color:#000000}
+#tg-pdf-container .pf-to-section p{font-family:'Hanuman',serif;font-weight:700;font-size:11pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-bold{font-family:'Hanuman',serif;font-weight:700;color:#000000}
 #tg-pdf-container .pf-via-section{margin:2.5mm 0}
 #tg-pdf-container .pf-via-row{display:flex;align-items:baseline;font-size:11pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-via-lbl{font-family:'Moul',serif;min-width:25mm;white-space:nowrap;font-size:10.5pt;color:#000000}
+#tg-pdf-container .pf-via-lbl{font-family:'Hanuman',serif;font-weight:700;min-width:25mm;white-space:nowrap;font-size:10.5pt;color:#000000}
 #tg-pdf-container .pf-colon{margin:0 3mm;color:#000000}
 #tg-pdf-container .pf-sp{display:inline-block;min-width:20mm;padding:0 3px;vertical-align:bottom;font-weight:bold;text-align:center;color:#000000}
 #tg-pdf-container .pf-date-row{text-align:right;font-size:11pt;line-height:1.9;margin:2.5mm 0 2mm;color:#000000}
 #tg-pdf-container .pf-sig-table{width:100%;border-collapse:collapse;margin-top:3mm}
 #tg-pdf-container .pf-sig-cell{width:50%;vertical-align:top;padding:0 6mm;color:#000000}
 #tg-pdf-container .pf-sig-right{text-align:right}
-#tg-pdf-container .pf-sig-label{font-family:'Moul',serif;font-size:10.5pt;line-height:1.9;color:#000000}
-#tg-pdf-container .pf-sig-sublabel{font-family:'Battambang',sans-serif;font-size:11pt;color:#000000}
+#tg-pdf-container .pf-sig-label{font-family:'Hanuman',serif;font-weight:700;font-size:10.5pt;line-height:1.9;color:#000000}
+#tg-pdf-container .pf-sig-sublabel{font-family:'Hanuman',serif;font-size:11pt;color:#000000}
 #tg-pdf-container .pf-sig-space{height:16mm}
 #tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
 #tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
 #tg-pdf-container .pf-footer-left{flex:1}
-#tg-pdf-container .pf-footer-co{font-family:'Moul',serif;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
-#tg-pdf-container .pf-footer-kh{font-family:'Battambang',sans-serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
+#tg-pdf-container .pf-footer-co{font-family:'Hanuman',serif;font-weight:700;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
+#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
 #tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;line-height:1.5;display:block}
 #tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
 #tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
@@ -1986,7 +1986,7 @@ const DEFAULT_PRINT_HTML = `
     </div>
     <div class="pf-via-section">
       <div class="pf-via-row"><span class="pf-via-lbl">តាមរយៈ</span><span class="pf-colon">៖</span><span>ប្រធានផ្នែករដ្ឋបាល និងធនធានមនុស្ស</span></div>
-      <div class="pf-via-row"><span class="pf-via-lbl">កម្មវត្ថុ</span><span class="pf-colon">៖</span><span>សំណើ សុំច្បាប់ ៖ <strong id="pf-leavetype" style="font-family:'Battambang',sans-serif;font-weight:700"></strong></span></div>
+      <div class="pf-via-row"><span class="pf-via-lbl">កម្មវត្ថុ</span><span class="pf-colon">៖</span><span>សំណើ សុំច្បាប់ ៖ <strong id="pf-leavetype" style="font-family:'Hanuman',serif;font-weight:700"></strong></span></div>
     </div>
     <div class="pf-body-section">
       <p class="pf-para" style="text-align:center">តបតាមសេចក្តីចែងក្នុងកម្មវត្ថុ ខាងលើ ខ្ញុំបាទ/នាងខ្ញុំ សូមជម្រាបជូនលោកប្រធានក្រុម ប្រឹក្សាភិបាល មេត្តាជ្រាបថា ៖</p>

@@ -47,8 +47,8 @@
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 16px;
-  --font: 'Outfit', 'NK', sans-serif;
-  --font-disp: 'Playfair Display', serif;
+  --font: 'Outfit', 'Hanuman', 'NK', sans-serif;
+  --font-disp: 'Playfair Display', 'Hanuman', 'NK', serif;
 }
 
 * {
