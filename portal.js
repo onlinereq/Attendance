@@ -154,7 +154,8 @@ function goTo(v) {
 }
 
 // ── LANG ────────────────────────────────────────
-let LANG = localStorage.getItem('lang') || 'en';
+// Khmer is the default on phones (<=768px) until the user picks a language; wider screens default to English.
+let LANG = localStorage.getItem('lang') || ((window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 'kh' : 'en');
 const T = {
   en: { "hEy": "Late / Leave Early / Annual Leave Request", "hSub": "Insurance Brokers (Cambodia) Co., Ltd.", "reqLeaveTitle": "Request Leave", "hC1d": "Submit a new annual or special leave request", "leaveStatusTitle": "My Leave Status", "hC2d": "Check remaining days, history and print past requests", "hrDashboardTitle": "HR Dashboard", "hC3d": "Approve, manage requests and staff records", "back": "Back", "enterEmpIdTitle": "Enter Your Employee ID", "rgSub": "Your identity will be verified before proceeding", "rgBtn": "Verify & Continue", "stgSub": "View your leave balance and history", "stgBtn": "View My Leave", "rsl1": "Verify ID", "rsl2": "Fill Form", "rsl3": "Review", "rsl4": "Confirm", "rsh1": "Staff Information", "rsh2": "Leave Details", "rsh3": "Submission Info", "lblEmpId": "Employee ID", "lblFullName": "Full Name", "lblGender": "Gender", "lblPosition": "Position", "lblLeaveType": "Leave Type", "rlFrom": "From Date", "rlTo": "To Date", "lblReason": "Reason", "rlSdate": "Submission Date", "rlSloc": "Location", "lt1": "Annual Leave", "lt2": "Sick Leave", "lt3": "Emergency Leave", "lt4": "Special Leave", "lt5": "Unpaid Leave", "lt6": "Other", "lt7": "Training / Mission", "dinfo": "Working days requested", "dsub": "Excluding weekends", "balUsed": "Used this year", "rpBtn": "Continue →", "rprTitle": "Review Your Request", "pnHd": "", "pnBd": "Your request has been sent to the HR team.<br><br><strong>Please print the form, sign it yourself, and bring it to management for approval.</strong><br><br>HR will notify you when your request is approved.", "editBtn": "Edit", "conTxt": "Confirm & Print", "stTotLbl": "Total Days", "lblUsed": "Used", "lblRemaining": "Remaining", "stBalTitle": "Annual Leave Balance", "stHistTitle": "Leave History", "thId": "ID", "thType": "Type", "thFrom": "From", "thTo": "To", "thDays": "Days", "thStatus": "Status", "stTh7": "Print", "stNoData": "No leave history found.", "hrLt": "HR Access", "hrLs": "Authorised personnel only", "hrLu": "Username", "hrLp": "Password", "hrLbtn": "Login", "hrLerr": "Invalid credentials.", "hrGreet": "Welcome back, ", "hrGsub": "Lockton IBS HR Portal", "hrLo": "Logout", "hrNt1": "Requests", "hrNt2": "Staff Records", "lblTotal": "Total", "lblPending": "Pending", "lblApproved": "Approved", "lblRejected": "Rejected", "hftAll": "All", "hrTh1": "Req ID", "hrTh2": "Staff", "hrTh7": "Action", "hrApprove": "Approve", "hrReject": "Reject", "hrSh": "Staff Registry", "hrSth2": "Name", "approveQ": "Approve this request?", "rejectQ": "Reject this request?", "notFound": "Employee ID not found.", "daysRem": "days remaining", "errFields": "Please fill in all required fields.", "errDate": "End date must be after start date.", "errType": "Please select a leave type.", "sending": "Submitting...", "success": "Submitted! Preparing print...", "errSubmit": "Submission failed. Try again.", "male": "Male", "female": "Female", "ptDays": "Working Days", "ptSub": "Submitted", "tourGuide": "Guide" },
   kh: { "hEy": "មកយឺត / ចេញមុនម៉ោង / សុំច្បាប់ឈប់សម្រាក", "hSub": "ការសុំច្បាប់ឈប់សម្រាក", "reqLeaveTitle": "សុំច្បាប់ឈប់សម្រាក", "hC1d": "ដាក់ពាក្យសុំច្បាប់ឈប់សម្រាក ឬច្បាប់ពិសេស", "leaveStatusTitle": "មើលប្រវត្តិសុំច្បាប់", "hC2d": "មើលថ្ងៃច្បាប់នៅសល់ ប្រវត្តិសុំច្បាប់ និងព្រីនទម្រង់ចាស់ៗ", "hrDashboardTitle": "ផ្ទាំងគ្រប់គ្រង HR", "hC3d": "អនុម័ត គ្រប់គ្រងការសុំច្បាប់ និងព័ត៌មានបុគ្គលិក", "back": "ត្រឡប់ក្រោយ", "enterEmpIdTitle": "បញ្ចូលលេខកូដបុគ្គលិក", "rgSub": "យើងនឹងផ្ទៀងផ្ទាត់អត្តសញ្ញាណរបស់អ្នក", "rgBtn": "បន្តទៅមុខ", "stgSub": "មើលថ្ងៃឈប់សម្រាកនៅសល់ និងប្រវត្តិសុំច្បាប់", "stgBtn": "មើលច្បាប់របស់ខ្ញុំ", "rsl1": "ផ្ទៀងលេខកូដ", "rsl2": "បំពេញព័ត៌មាន", "rsl3": "ពិនិត្យឡើងវិញ", "rsl4": "បញ្ជាក់", "rsh1": "ព័ត៌មានបុគ្គលិក", "rsh2": "ព័ត៌មានសុំច្បាប់", "rsh3": "ព័ត៌មាននៃការដាក់ពាក្យ", "lblEmpId": "លេខកូដបុគ្គលិក", "lblFullName": "ឈ្មោះបុគ្គលិក", "lblGender": "ភេទ", "lblPosition": "តួនាទី", "lblLeaveType": "ប្រភេទច្បាប់", "rlFrom": "ចាប់ពីថ្ងៃ", "rlTo": "ដល់ថ្ងៃ", "lblReason": "មូលហេតុ", "rlSdate": "ថ្ងៃដាក់ពាក្យ", "rlSloc": "ទីតាំង", "lt1": "ច្បាប់ប្រចាំឆ្នាំ", "lt2": "ច្បាប់ឈឺ", "lt3": "ច្បាប់បន្ទាន់", "lt4": "ច្បាប់ពិសេស", "lt5": "ច្បាប់អត់ប្រាក់ខែ", "lt6": "ផ្សេងៗ", "lt7": "បេសកកម្ម / វគ្គបណ្តុះបណ្តាល", "dinfo": "ចំនួនថ្ងៃសុំច្បាប់", "dsub": "មិនរាប់ថ្ងៃចុងសប្តាហ៍", "balUsed": "បានឈប់ឆ្នាំនេះ", "rpBtn": "បន្ត →", "rprTitle": "ពិនិត្យមើលពាក្យសុំរបស់អ្នក", "pnHd": "សំខាន់:", "pnBd": " ពាក្យសុំត្រូវបានបញ្ជូនទៅ HR។ សូមព្រីនទម្រង់នេះ ចុះហត្ថលេខា ហើយយកទៅឲ្យប្រធានអនុម័ត។", "editBtn": "កែតម្រូវ", "conTxt": "បញ្ជាក់ & ព្រីន", "stTotLbl": "ចំនួនថ្ងៃសរុប", "lblUsed": "បានឈប់", "lblRemaining": "នៅសល់", "stBalTitle": "ច្បាប់ប្រចាំឆ្នាំនៅសល់", "stHistTitle": "ប្រវត្តិសុំច្បាប់", "thId": "លេខកូដ", "thType": "ប្រភេទ", "thFrom": "ចាប់ពី", "thTo": "ដល់", "thDays": "ចំនួនថ្ងៃ", "thStatus": "ស្ថានភាព", "stTh7": "ព្រីន", "stNoData": "មិនមានប្រវត្តិសុំច្បាប់ទេ។", "hrLt": "ចូលប្រព័ន្ធ HR", "hrLs": "សម្រាប់បុគ្គលិក HR ប៉ុណ្ណោះ", "hrLu": "ឈ្មោះអ្នកប្រើប្រាស់", "hrLp": "ពាក្យសម្ងាត់", "hrLbtn": "ចូលប្រព័ន្ធ", "hrLerr": "ឈ្មោះ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។", "hrGreet": "សូមស្វាគមន៍, ", "hrGsub": "ផ្ទាំងគ្រប់គ្រង HR - Lockton IBS", "hrLo": "ចាកចេញ", "hrNt1": "ពាក្យសុំច្បាប់", "hrNt2": "បញ្ជីឈ្មោះបុគ្គលិក", "lblTotal": "សរុប", "lblPending": "រង់ចាំការអនុម័ត", "lblApproved": "អនុម័តរួច", "lblRejected": "បដិសេធ", "hftAll": "ទាំងអស់", "hrTh1": "លេខសំណុំ", "hrTh2": "បុគ្គលិក", "hrTh7": "សកម្មភាព", "hrApprove": "អនុម័ត", "hrReject": "បដិសេធ", "hrSh": "បញ្ជីឈ្មោះបុគ្គលិក", "hrSth2": "ឈ្មោះ", "approveQ": "តើអ្នកពិតជាចង់អនុម័តមែនទេ?", "rejectQ": "តើអ្នកពិតជាចង់បដិសេធមែនទេ?", "notFound": "រកលេខកូដបុគ្គលិកមិនឃើញទេ។", "daysRem": "ថ្ងៃនៅសល់", "errFields": "សូមបំពេញព័ត៌មានឲ្យបានគ្រប់គ្រាន់។", "errDate": "ថ្ងៃបញ្ចប់ត្រូវនៅក្រោយថ្ងៃចាប់ផ្តើម។", "errType": "សូមជ្រើសរើសប្រភេទច្បាប់។", "sending": "កំពុងបញ្ជូន...", "success": "បញ្ជូនជោគជ័យ! កំពុងរៀបចំឯកសារព្រីន...", "errSubmit": "បញ្ជូនបរាជ័យ។ សូមព្យាយាមម្តងទៀត។", "male": "ប្រុស", "female": "ស្រី", "ptDays": "ចំនួនថ្ងៃ", "ptSub": "ថ្ងៃដាក់ពាក្យ", "tourGuide": "របៀបប្រើ" }
@@ -177,7 +178,10 @@ function tx(k) {
   }
   return (T[LANG] || T.en)[k] || T.en[k] || k;
 }
-function setLang(l) { LANG = l; localStorage.setItem('lang', l); document.querySelectorAll('.lb').forEach(b => b.classList.remove('on')); document.querySelectorAll('.lb[data-lang="' + l + '"]').forEach(b => b.classList.add('on')); applyLang(); }
+// Language used for printed forms and PDFs sent to Telegram: only an explicit EN / ខ្មែរ choice counts, so the Khmer
+// phone default never changes what gets printed or sent (same as before).
+function printLang() { try { return localStorage.getItem('lang') || 'en'; } catch (e) { return 'en'; } }
+function setLang(l) { LANG = l; localStorage.setItem('lang', l); document.querySelectorAll('.lb').forEach(b => b.classList.remove('on')); document.querySelectorAll('.lb[data-lang="' + l + '"]').forEach(b => b.classList.add('on')); applyLang(); khUIRefresh(); }
 function applyLang() {
   const s = (id, k) => { const e = document.getElementById(id); if (e) e.textContent = tx(k); };
   s('h-ey', 'hEy'); s('h-sub', 'hSub'); s('h-c1t', 'reqLeaveTitle'); s('h-c1d', 'hC1d'); s('h-c2t', 'leaveStatusTitle'); s('h-c2d', 'hC2d'); s('h-c3t', 'hrDashboardTitle'); s('h-c3d', 'hC3d');
@@ -1010,7 +1014,8 @@ function rLoadForm() {
   const eidEl = document.getElementById('rf-eid'); if (eidEl) eidEl.value = s.empId || '';
   const nameEl = document.getElementById('rf-name'); if (nameEl) nameEl.value = name;
   const genEl = document.getElementById('rf-gen'); if (genEl) genEl.value = formatGender(s.gender, 'en');
-  const posEl = document.getElementById('rf-pos'); if (posEl) posEl.value = (pos === '—' ? '' : pos);
+  // saved position is always the English one (what goes to the Sheet); only the on-screen text follows the language
+  const posEl = document.getElementById('rf-pos'); if (posEl) posEl.value = (s.position && s.position !== 'undefined' && s.position !== '—') ? s.position : '';
   const sdateEl = document.getElementById('rf-sdate'); if (sdateEl) sdateEl.value = today;
   const slocEl = document.getElementById('rf-sloc'); if (slocEl) slocEl.value = loc;
 
@@ -1493,7 +1498,7 @@ function rShowPreview() {
     [tx('lblEmpId'), s.empId, false],
     [tx('lblFullName'), name, false],
     [tx('lblGender'), gen, false],
-    [tx('lblPosition'), document.getElementById('rf-pos').value || pos, false],
+    [tx('lblPosition'), pos, false],
     [tx('lblLeaveType'), typeDisplay, true],
     [tx('thFrom'), fmtDate(from), true],
     [tx('thTo'), fmtDate(to), true],
@@ -1588,7 +1593,7 @@ async function rConfirm() {
   }
   const halfNote = getHalfNote(from, to);
   const clientReqId = 'REQ-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-  const payload = { clientRequestId: clientReqId, employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: LANG.toUpperCase(), timestamp: new Date().toISOString() };
+  const payload = { clientRequestId: clientReqId, employeeId: rStaff.empId, name: rStaff.name, gender: rStaff.gender, position: document.getElementById('rf-pos').value || rStaff.position, leaveType: (ltype.value === 'Other' ? (document.getElementById('rf-other-type').value.trim() || 'Other') : ltype.value) + (halfNote), dateFrom: from, dateTo: to, workingDays: days, halfFirstDay: hdGetFirst(), halfLastDay: hdGetLast(), reason: document.getElementById('rf-rsn').value, submissionDate: todayFmt(), submittedFrom: document.getElementById('rf-sloc').value || 'Phnom Penh', status: 'Pending', language: printLang().toUpperCase(), timestamp: new Date().toISOString() };
   if (isTraining) {
     if (_appInitData) {
       if (!_appInitData.history) _appInitData.history = [];
@@ -2324,7 +2329,7 @@ async function generateTelegramLeavePdf(printData) {
 
 function buildPrintData(d, from, to, days) {
   const s = rStaff || stStaff || {};
-  const lang = d.lang || LANG || 'en';
+  const lang = d.lang || printLang();
   const name = lang === 'kh' ? (s.nameKh || s.name || d.name) : (s.name || d.name);
   const pos = lang === 'kh' ? (s.positionKh || s.position || d.position) : (s.position || d.position);
   const gen = formatGender(d.gender || s.gender, lang);
@@ -2345,7 +2350,7 @@ function buildPrintData(d, from, to, days) {
 
 function buildPrintDataFromRecord(r, staff) {
   const s = staff || stStaff || rStaff || {};
-  const lang = LANG || 'en';
+  const lang = printLang();
   const name = lang === 'kh' ? (s.nameKh || s.name || r.name) : (s.name || r.name);
   const pos = lang === 'kh' ? (s.positionKh || s.position || r.position) : (s.position || r.position);
   const gen = formatGender(s.gender || r.gender, lang);
@@ -6033,4 +6038,161 @@ async function importLegacyData() {
   const sync = () => view.classList.toggle('nt-form', form.style.display !== 'none');
   new MutationObserver(sync).observe(form, { attributes: true, attributeFilter: ['style'] });
   sync();
+})();
+
+// ── KHMER DISPLAY LAYER ─────────────────────────────────────────
+// Display only. When the UI language is Khmer, visible English labels are swapped for Khmer text.
+// Nothing that is saved, sent to the backend, printed or put in a PDF is touched: values, radio values,
+// payload fields and stored data stay in English. Switching to EN restores the original text.
+const KH_UI_MAP = {
+  // general
+  'Back': 'ត្រឡប់ក្រោយ', '← Back': '← ត្រឡប់ក្រោយ', 'Next': 'បន្ទាប់', 'Next →': 'បន្ទាប់ →',
+  'Continue': 'បន្ត', 'Continue →': 'បន្ត →', 'Cancel': 'បោះបង់', 'Edit': 'កែតម្រូវ', '← Edit': '← កែតម្រូវ',
+  'Days': 'ថ្ងៃ', 'DAYS': 'ថ្ងៃ', 'Leave': 'ច្បាប់', 'Reason': 'មូលហេតុ', 'Type': 'ប្រភេទ', 'From': 'ចាប់ពី', 'To': 'ដល់',
+  'Male': 'ប្រុស', 'Female': 'ស្រី', 'Total': 'សរុប', 'Used': 'បានប្រើ', 'Remaining': 'នៅសល់',
+  'Approved': 'បានអនុម័ត', 'Pending': 'កំពុងរង់ចាំ', 'Rejected': 'បានបដិសេធ', 'Late': 'មកយឺត', 'Early': 'ចេញមុន',
+  // login pages
+  'Staff Select': 'ជ្រើសរើសបុគ្គលិក', 'Enter your Full Name': 'បញ្ចូលឈ្មោះពេញរបស់អ្នក',
+  'View My Leave': 'មើលច្បាប់របស់ខ្ញុំ', 'View My Leave Status': 'មើលស្ថានភាពច្បាប់របស់ខ្ញុំ',
+  // home
+  'Request Leave': 'សុំច្បាប់ឈប់សម្រាក', 'My Leave Status': 'ស្ថានភាពច្បាប់របស់ខ្ញុំ',
+  'Submit a new annual or special leave request': 'ដាក់ពាក្យសុំច្បាប់ប្រចាំឆ្នាំ ឬច្បាប់ពិសេសថ្មី',
+  'Check remaining days, history and print past requests': 'ពិនិត្យថ្ងៃនៅសល់ ប្រវត្តិ និងបោះពុម្ពពាក្យសុំចាស់',
+  'Notify HR of late arrival or early departure': 'ជូនដំណឹងដល់ HR ពីការមកយឺត ឬចេញមុន',
+  // request form
+  'Leave Dates & Duration': 'កាលបរិច្ឆេទ និងរយៈពេលច្បាប់',
+  'Select your start and return dates': 'ជ្រើសរើសថ្ងៃចាប់ផ្តើម និងថ្ងៃត្រឡប់មកវិញ',
+  'From Date': 'ចាប់ពីថ្ងៃ', 'To Date': 'ដល់ថ្ងៃ',
+  'Half Day Adjustment': 'កែសម្រួលកន្លះថ្ងៃ', 'Full Day': 'ពេញមួយថ្ងៃ', 'Morning Only': 'ព្រឹកតែប៉ុណ្ណោះ', 'Evening Only': 'ល្ងាចតែប៉ុណ្ណោះ',
+  'Morning': 'ព្រឹក', 'Evening': 'ល្ងាច', 'First Day:': 'ថ្ងៃដំបូង:', 'Last Day:': 'ថ្ងៃចុងក្រោយ:',
+  'Choose Leave Type': 'ជ្រើសរើសប្រភេទច្បាប់', 'Select the category for your request': 'ជ្រើសរើសប្រភេទសម្រាប់ពាក្យសុំរបស់អ្នក',
+  'Reason / Description': 'មូលហេតុ / ការពិពណ៌នា', 'Brief note for HR and management review': 'កំណត់ចំណាំខ្លីសម្រាប់ HR និងថ្នាក់គ្រប់គ្រងពិនិត្យ',
+  'Annual Leave': 'ច្បាប់ប្រចាំឆ្នាំ', 'Sick Leave': 'ច្បាប់ឈឺ', 'Emergency Leave': 'ច្បាប់បន្ទាន់', 'Special Leave': 'ច្បាប់ពិសេស',
+  'Training / Mission': 'បេសកកម្ម / វគ្គបណ្តុះបណ្តាល', 'Other': 'ផ្សេងៗ',
+  'Please select a leave category.': 'សូមជ្រើសរើសប្រភេទច្បាប់។', 'Please choose start date.': 'សូមជ្រើសរើសថ្ងៃចាប់ផ្តើម។',
+  'Please choose end date.': 'សូមជ្រើសរើសថ្ងៃបញ្ចប់។', 'End date cannot be earlier than start date.': 'ថ្ងៃបញ្ចប់មិនអាចមុនថ្ងៃចាប់ផ្តើមទេ។',
+  // calendar
+  'Select Date': 'ជ្រើសរើសកាលបរិច្ឆេទ', 'Start Date (From)': 'ថ្ងៃចាប់ផ្តើម (ចាប់ពី)', 'End Date (To)': 'ថ្ងៃបញ្ចប់ (ដល់)',
+  'ចាប់ផ្តើម (From)': 'ចាប់ផ្តើម (ចាប់ពី)', 'បញ្ចប់ (To)': 'បញ្ចប់ (ដល់)',
+  'Prev': 'មុន', 'Today': 'ថ្ងៃនេះ', 'Clear': 'សម្អាត', 'Apply Date': 'អនុវត្តកាលបរិច្ឆេទ',
+  'Workday': 'ថ្ងៃធ្វើការ', 'Weekend': 'ចុងសប្តាហ៍', 'Holiday': 'ថ្ងៃបុណ្យ', 'Selected': 'បានជ្រើស', 'OFF': 'ឈប់', 'HOL': 'បុណ្យ',
+  'Mon': 'ច', 'Tue': 'អ', 'Wed': 'ព', 'Thu': 'ព្រ', 'Fri': 'សុ', 'Sat': 'ស', 'Sun': 'អា',
+  // review + success
+  'Review Your Request': 'ពិនិត្យមើលពាក្យសុំរបស់អ្នក', 'Check everything before confirming': 'ពិនិត្យអ្វីៗទាំងអស់មុនបញ្ជាក់',
+  'Employee ID': 'លេខកូដបុគ្គលិក', 'Full Name': 'ឈ្មោះពេញ', 'Gender': 'ភេទ', 'Position': 'តួនាទី', 'Leave Type': 'ប្រភេទច្បាប់',
+  'Working Days': 'ថ្ងៃធ្វើការ', 'Submitted': 'ថ្ងៃដាក់ពាក្យ', 'Slide to confirm': 'អូសដើម្បីបញ្ជាក់',
+  'Request Submitted!': 'បានដាក់ពាក្យសុំរួចរាល់!',
+  'Your request has been recorded. Print and sign to finalise.': 'ពាក្យសុំរបស់អ្នកត្រូវបានកត់ត្រា។ សូមបោះពុម្ព និងចុះហត្ថលេខាដើម្បីបញ្ចប់។',
+  'Submitted Request': 'ពាក្យសុំដែលបានដាក់', 'Reprint': 'បោះពុម្ពម្តងទៀត', '← New Request': '← ពាក្យសុំថ្មី',
+  // late / early notice
+  'Late / Early Notice': 'សុំមកយឺត សុំចេញមុនម៉ោង', 'Are you?': 'សូមជ្រើសរើស', 'Coming Late': 'មកយឺត', 'Requesting Leave Early': 'សុំចេញមុនម៉ោង',
+  '← Change my information': '← ប្តូរព័ត៌មានរបស់ខ្ញុំ', 'Arrives at': 'មកដល់ម៉ោង', 'Leaving at': 'ចេញម៉ោង',
+  'You are arriving': 'អ្នកមកដល់', 'You are leaving': 'អ្នកចេញ',
+  'Send Notice to HR': 'ផ្ញើដំណឹងទៅ HR', 'Notice Sent!': 'បានផ្ញើដំណឹងរួចរាល់!',
+  'Your notice has been sent to the HR Telegram group.': 'ដំណឹងរបស់អ្នកត្រូវបានផ្ញើទៅក្រុម Telegram របស់ HR។',
+  '← Back to Home': '← ត្រឡប់ទៅទំព័រដើម',
+  'Please select a time': 'សូមជ្រើសរើសម៉ោង', 'Please enter a reason': 'សូមបញ្ចូលមូលហេតុ', 'Failed to send. Try again.': 'ផ្ញើមិនបាន សូមព្យាយាមម្តងទៀត',
+  // status
+  'Leave History': 'ប្រវត្តិច្បាប់', 'Late / Early Notices': 'ការសុំមកយឺត / ចេញមុន', 'Previous Requests': 'ពាក្យសុំមុនៗ',
+  'No previous requests found.': 'មិនមានពាក្យសុំមុនទេ។', 'Your Leave Balance': 'សមតុល្យច្បាប់របស់អ្នក',
+  'Annual Total': 'សរុបប្រចាំឆ្នាំ', 'Annual Used': 'បានប្រើប្រចាំឆ្នាំ', 'Annual Left': 'នៅសល់ប្រចាំឆ្នាំ', 'Special Used': 'ច្បាប់ពិសេសបានប្រើ',
+  'Annual Leave Balance': 'សមតុល្យច្បាប់ប្រចាំឆ្នាំ'
+};
+const KH_UI_PLACEHOLDERS = {
+  'Enter Full Name...': 'បញ្ចូលឈ្មោះពេញ...', 'Enter Employee ID...': 'បញ្ចូលលេខកូដបុគ្គលិក...',
+  'Brief explanation...': 'ពន្យល់ដោយសង្ខេប...', 'Please specify leave type...': 'សូមបញ្ជាក់ប្រភេទច្បាប់...',
+  'DD': 'ថ្ងៃ', 'Mon': 'ខែ', 'YYYY': 'ឆ្នាំ'
+};
+const KH_UI_MONTHS = { January: 'មករា', February: 'កុម្ភៈ', March: 'មីនា', April: 'មេសា', May: 'ឧសភា', June: 'មិថុនា', July: 'កក្កដា', August: 'សីហា', September: 'កញ្ញា', October: 'តុលា', November: 'វិច្ឆិកា', December: 'ធ្នូ' };
+const KH_UI_TOKENS = [['First:', 'ថ្ងៃដំបូង:'], ['Last:', 'ថ្ងៃចុងក្រោយ:'], ['working days', 'ថ្ងៃធ្វើការ'], ['working day', 'ថ្ងៃធ្វើការ'], ['Morning', 'ព្រឹក'], ['Evening', 'ល្ងាច'], ['Only', 'ប៉ុណ្ណោះ']];
+
+function khUIRule(t) {
+  let m;
+  if ((m = t.match(/^([\d.]+) Working Days?$/))) return m[1] + ' ថ្ងៃធ្វើការ';
+  if ((m = t.match(/^([\d.]+) days?$/))) return m[1] + ' ថ្ងៃ';
+  if ((m = t.match(/^(January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/))) return KH_UI_MONTHS[m[1]] + ' ' + m[2];
+  if ((m = t.match(/^Half day (Morning|Evening) · (.+)$/))) return 'កន្លះថ្ងៃ' + (m[1] === 'Morning' ? 'ព្រឹក' : 'ល្ងាច') + ' · ' + m[2];
+  if ((m = t.match(/^(?:([\d]+) hrs?)? ?(?:([\d]+) mins?)? (late|early)$/)) && (m[1] || m[2])) {
+    return (m[3] === 'late' ? 'យឺត' : 'មុន') + (m[1] ? ' ' + m[1] + ' ម៉ោង' : '') + (m[2] ? ' ' + m[2] + ' នាទី' : '');
+  }
+  if ((m = t.match(/^(.+?) \((.+)\)$/)) && (KH_UI_MAP[m[1]] !== undefined)) {
+    let inner = m[2];
+    KH_UI_TOKENS.forEach(([en, kh]) => { inner = inner.split(en).join(kh); });
+    return KH_UI_MAP[m[1]] + ' (' + inner + ')';
+  }
+  return null;
+}
+
+const _khNodeOrig = new WeakMap();
+let _khObserver = null;
+
+function khUIString(s) {
+  const t = s.trim();
+  if (!t) return null;
+  const key = t.replace(/\s+/g, ' ');
+  const out = KH_UI_MAP[key] !== undefined ? KH_UI_MAP[key] : khUIRule(key);
+  if (out === null || out === undefined) return null;
+  return s.slice(0, s.indexOf(t)) + out + s.slice(s.indexOf(t) + t.length);
+}
+
+function khUINode(n) {
+  const p = n.parentNode;
+  if (!p || /^(SCRIPT|STYLE|TEXTAREA|OPTION)$/.test(p.nodeName)) return;
+  const prev = _khNodeOrig.get(n);
+  if (prev && n.nodeValue === prev.kh) return;
+  const out = khUIString(n.nodeValue);
+  if (out !== null && out !== n.nodeValue) { _khNodeOrig.set(n, { en: n.nodeValue, kh: out }); n.nodeValue = out; }
+}
+
+function khUIPlaceholder(el) {
+  const cur = el.getAttribute('placeholder');
+  if (cur && KH_UI_PLACEHOLDERS[cur] !== undefined) {
+    el.dataset.phEn = cur;
+    el.setAttribute('placeholder', KH_UI_PLACEHOLDERS[cur]);
+  }
+}
+
+function khUIWalk(root) {
+  if (root.nodeType === 3) { khUINode(root); return; }
+  if (root.nodeType !== 1) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = []; let n;
+  while ((n = w.nextNode())) nodes.push(n);
+  nodes.forEach(khUINode);
+  if (root.hasAttribute && root.hasAttribute('placeholder')) khUIPlaceholder(root);
+  root.querySelectorAll('[placeholder]').forEach(khUIPlaceholder);
+}
+
+function khUIRestore() {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = []; let n;
+  while ((n = w.nextNode())) nodes.push(n);
+  nodes.forEach((node) => {
+    const prev = _khNodeOrig.get(node);
+    if (prev && node.nodeValue === prev.kh) node.nodeValue = prev.en;
+    _khNodeOrig.delete(node);
+  });
+  document.querySelectorAll('[data-ph-en]').forEach((el) => { el.setAttribute('placeholder', el.dataset.phEn); delete el.dataset.phEn; });
+}
+
+function khUIRefresh() {
+  if (_khObserver) { _khObserver.disconnect(); _khObserver = null; }
+  khUIRestore();
+  if (LANG !== 'kh') return;
+  khUIWalk(document.body);
+  _khObserver = new MutationObserver((muts) => {
+    muts.forEach((m) => {
+      if (m.type === 'characterData') khUINode(m.target);
+      else if (m.type === 'attributes') { if (m.target.getAttribute('placeholder') !== null && !m.target.dataset.phEn) khUIPlaceholder(m.target); }
+      else m.addedNodes.forEach(khUIWalk);
+    });
+  });
+  _khObserver.observe(document.body, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['placeholder'] });
+}
+
+// Apply the starting language (saved choice, or Khmer by default on phones) to the static labels and the EN / ខ្មែរ switch.
+(function applyStartLang() {
+  document.querySelectorAll('.lb').forEach((b) => b.classList.toggle('on', b.dataset.lang === LANG));
+  if (LANG !== 'en') applyLang();
+  khUIRefresh();
 })();
