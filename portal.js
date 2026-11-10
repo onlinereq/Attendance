@@ -5587,7 +5587,7 @@ const KH_UI_MAP = {
   'Your request has been recorded. Print and sign to finalise.': 'ពាក្យសុំរបស់អ្នកត្រូវបានកត់ត្រា។ សូមបោះពុម្ព និងចុះហត្ថលេខាដើម្បីបញ្ចប់។',
   'Submitted Request': 'ពាក្យសុំដែលបានដាក់', 'Reprint': 'បោះពុម្ពម្តងទៀត', '← New Request': '← ពាក្យសុំថ្មី',
   // late / early notice
-  'Late / Early Notice': 'សុំមកយឺត សុំចេញមុនម៉ោង', 'Are you?': 'សូមជ្រើសរើស', 'Coming Late': 'មកយឺត', 'Requesting Leave Early': 'សុំចេញមុនម៉ោង',
+  'Late / Early Notice': 'សុំមកយឺត សុំចេញមុនម៉ោង', "Who's On Leave": 'បុគ្គលិកឈប់សម្រាក', 'Are you?': 'សូមជ្រើសរើស', 'Coming Late': 'មកយឺត', 'Requesting Leave Early': 'សុំចេញមុនម៉ោង',
   '← Change my information': '← ប្តូរព័ត៌មានរបស់ខ្ញុំ', 'Arrives at': 'មកដល់ម៉ោង', 'Leaving at': 'ចេញម៉ោង',
   'You are arriving': 'អ្នកមកដល់', 'You are leaving': 'អ្នកចេញ',
   'Send Notice to HR': 'ផ្ញើដំណឹងទៅ HR', 'Notice Sent!': 'បានផ្ញើដំណឹងរួចរាល់!',
