@@ -7336,6 +7336,17 @@ body {
     color: var(--txt);
   }
 
+  #stage .date-wrap {
+    position: relative;
+    min-height: 52px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+
+  #stage .date-wrap:focus-within { border-color: var(--red); }
+
   #stage .date-wrap #rf-from,
   #stage .date-wrap #rf-to {
     position: absolute;
