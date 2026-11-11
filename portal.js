@@ -1813,10 +1813,10 @@ const DEFAULT_PRINT_CSS = `
 #tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
 #tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:flex-start}
 #tg-pdf-container .pf-footer-left{flex:1;min-width:0}
-#tg-pdf-container .pf-footer-co{font-family:'Times New Roman',Times,serif;font-weight:700;font-size:8pt;color:#000000;display:block;height:4mm;line-height:4mm;white-space:nowrap}
-#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:6.8pt;color:#000000;line-height:4mm;display:block;white-space:nowrap}
-#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:6pt;color:#000000;line-height:4mm;display:block;white-space:nowrap}
-#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:4mm;padding-top:4mm;line-height:4mm}
+#tg-pdf-container .pf-footer-co{font-family:'Times New Roman',Times,serif;font-weight:700;font-size:8pt;color:#000000;display:block;height:4.4mm;line-height:4.4mm;white-space:nowrap}
+#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:7.5pt;color:#000000;line-height:4.4mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;line-height:4.4mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:4mm;padding-top:4.4mm;line-height:4.4mm}
 #tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
 `;
 
