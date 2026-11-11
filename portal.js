@@ -1890,7 +1890,7 @@ let _cachedPrintTemplate = null;
 async function getPrintTemplateAndCss() {
   if (_cachedPrintTemplate) return _cachedPrintTemplate;
   try {
-    const res = await fetch('print/index.html');
+    const res = await fetch('print/index.html?v=2.4.2');
     if (res.ok) {
       const htmlText = await res.text();
       const parser = new DOMParser();
@@ -2223,7 +2223,7 @@ function buildPrintDataFromRecord(r, staff) {
 
 function openPrint(data) {
   localStorage.setItem('lbs_print_data', JSON.stringify(data));
-  window.open('print/index.html', '_blank');
+  window.open('print/index.html?v=2.4.2', '_blank');
 }
 function fillPrint(d, from, to, days) {
   openPrint(buildPrintData(d, from, to, days));
