@@ -1811,12 +1811,12 @@ const DEFAULT_PRINT_CSS = `
 #tg-pdf-container .pf-sig-sublabel{font-family:'Hanuman',serif;font-size:11pt;color:#000000}
 #tg-pdf-container .pf-sig-space{height:16mm}
 #tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
-#tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
+#tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:flex-start}
 #tg-pdf-container .pf-footer-left{flex:1;min-width:0}
-#tg-pdf-container .pf-footer-co{font-family:'Times New Roman',Times,serif;font-weight:700;font-size:8pt;color:#000000;display:block;height:4.2mm;line-height:4.2mm;white-space:nowrap}
-#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:6.8pt;color:#000000;height:4.2mm;line-height:4.2mm;display:block;white-space:nowrap}
-#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:6pt;color:#000000;height:4.2mm;line-height:4.2mm;display:block;white-space:nowrap}
-#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:4mm;line-height:4.2mm}
+#tg-pdf-container .pf-footer-co{font-family:'Times New Roman',Times,serif;font-weight:700;font-size:8pt;color:#000000;display:block;height:4mm;line-height:4mm;white-space:nowrap}
+#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:6.8pt;color:#000000;line-height:4mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:6pt;color:#000000;line-height:4mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:4mm;padding-top:4mm;line-height:4mm}
 #tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
 `;
 
@@ -1874,11 +1874,11 @@ const DEFAULT_PRINT_HTML = `
       <div class="pf-footer-inner">
         <div class="pf-footer-left">
           <span class="pf-footer-co">LOCKTON IBS INSURANCE BROKERS (CAMBODIA) CO., LTD.</span>
-          <span class="pf-footer-kh">អគារលេខ ១២០ និង ១២២, ផ្លូវ The Premier Land សែនសុខ, ភូមិបាយ៉ាប់, សង្កាត់ភ្នំពេញថ្មី, ខណ្ឌសែនសុខ, រាជធានីភ្នំពេញ</span>
-          <span class="pf-footer-en">Building No.120 &amp; 122, Street The Premier Land Sen Sok, Bayab Village, Sangkat Phnom Penh Thmey, Khan Sen Sok, Phnom Penh, Cambodia</span>
+          <span class="pf-footer-kh">អគារលេខ ១២០ និង ១២២, ផ្លូវ The Premier Land សែនសុខ,<br>ភូមិបាយ៉ាប់, សង្កាត់ភ្នំពេញថ្មី, ខណ្ឌសែនសុខ, រាជធានីភ្នំពេញ</span>
+          <span class="pf-footer-en">Building No.120 &amp; 122, Street The Premier Land Sen Sok,<br>Bayab Village, Sangkat Phnom Penh Thmey, Khan Sen Sok, Phnom Penh, Cambodia</span>
         </div>
         <div class="pf-footer-right">
-          +855 (0) 23 988 111<br>+855 (0) 89 788 111<br>www.lockton-ibs.com
+          +855 (0) 23 988 111<br>+855 (0) 89 788 111<br>www.lockton-ibs.com<br>op@lockton-ibs.com
         </div>
       </div>
     </div>
