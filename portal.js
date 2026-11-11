@@ -1812,11 +1812,11 @@ const DEFAULT_PRINT_CSS = `
 #tg-pdf-container .pf-sig-space{height:16mm}
 #tg-pdf-container .pf-footer{border-top:2.5pt solid #000000;padding:2mm 0 0;margin-top:4mm}
 #tg-pdf-container .pf-footer-inner{display:flex;justify-content:space-between;align-items:center}
-#tg-pdf-container .pf-footer-left{flex:1}
-#tg-pdf-container .pf-footer-co{font-family:'Hanuman',serif;font-weight:700;font-size:8pt;color:#000000;display:block;margin-bottom:.5mm}
-#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:8.5pt;color:#000000;line-height:1.6;display:block}
-#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;line-height:1.5;display:block}
-#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:8.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:6mm;line-height:1.7}
+#tg-pdf-container .pf-footer-left{flex:1;min-width:0}
+#tg-pdf-container .pf-footer-co{font-family:'Times New Roman',Times,serif;font-weight:700;font-size:8pt;color:#000000;display:block;height:4.2mm;line-height:4.2mm;white-space:nowrap}
+#tg-pdf-container .pf-footer-kh{font-family:'Hanuman',serif;font-size:6.8pt;color:#000000;height:4.2mm;line-height:4.2mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-en{font-family:Arial,sans-serif;font-size:6pt;color:#000000;height:4.2mm;line-height:4.2mm;display:block;white-space:nowrap}
+#tg-pdf-container .pf-footer-right{font-family:Arial,sans-serif;font-size:7.5pt;color:#000000;text-align:right;white-space:nowrap;padding-left:4mm;line-height:4.2mm}
 #tg-pdf-container .pf-reqid{text-align:right;font-family:Arial,sans-serif;font-size:6.5pt;color:#000000;letter-spacing:.4px;margin-bottom:1.5mm}
 `;
 
@@ -1890,7 +1890,7 @@ let _cachedPrintTemplate = null;
 async function getPrintTemplateAndCss() {
   if (_cachedPrintTemplate) return _cachedPrintTemplate;
   try {
-    const res = await fetch('print/index.html');
+    const res = await fetch('print/index.html?v=2.4.2');
     if (res.ok) {
       const htmlText = await res.text();
       const parser = new DOMParser();
@@ -2223,7 +2223,7 @@ function buildPrintDataFromRecord(r, staff) {
 
 function openPrint(data) {
   localStorage.setItem('lbs_print_data', JSON.stringify(data));
-  window.open('print/index.html', '_blank');
+  window.open('print/index.html?v=2.4.2', '_blank');
 }
 function fillPrint(d, from, to, days) {
   openPrint(buildPrintData(d, from, to, days));
